@@ -16,9 +16,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{BAA9
 		scripts\build.ps1 = scripts\build.ps1
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "skill", "skill", "{C58B3958-B260-46F0-8376-9CFD7BA27903}"
+	ProjectSection(SolutionItems) = preProject
+		skill\ra-commands-development\SKILL.md = skill\ra-commands-development\SKILL.md
+		skill\ra-commands-development\references\add-native-command.md = skill\ra-commands-development\references\add-native-command.md
+	EndProjectSection
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{12B53DC2-C8E9-4E83-9178-70556C487877}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		AGENTS.md = AGENTS.md
 		RACommandsPlugin.sln = RACommandsPlugin.sln
 		RACommandsPlugin.vcxproj = RACommandsPlugin.vcxproj
 		RACommandsPlugin.vcxproj.filters = RACommandsPlugin.vcxproj.filters
