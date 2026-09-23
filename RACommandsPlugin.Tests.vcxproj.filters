@@ -13,6 +13,9 @@
     <Filter Include="src\Commands\AutoLoadCommand">
       <UniqueIdentifier>{0F3A0001-2026-4000-8000-000000000004}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Commands\TeslaChargeCommand">
+      <UniqueIdentifier>{BAA7D9BA-C351-4676-9F2D-30310C5A9A03}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Tests">
       <UniqueIdentifier>{0F3A0001-2026-4000-8000-000000000005}</UniqueIdentifier>
     </Filter>
@@ -21,11 +24,20 @@
     <ClCompile Include="src\Tests\AutoLoadPureTests.cpp">
       <Filter>src\Tests</Filter>
     </ClCompile>
+    <ClCompile Include="src\Tests\TeslaChargePureTests.cpp">
+      <Filter>src\Tests</Filter>
+    </ClCompile>
     <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.cpp">
       <Filter>src\Commands\AutoLoadCommand</Filter>
     </ClCompile>
     <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadCommandService.cpp">
       <Filter>src\Commands\AutoLoadCommand</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Commands\TeslaChargeCommand\TeslaChargePlanner.cpp">
+      <Filter>src\Commands\TeslaChargeCommand</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Commands\TeslaChargeCommand\TeslaChargeCommandService.cpp">
+      <Filter>src\Commands\TeslaChargeCommand</Filter>
     </ClCompile>
     <ClCompile Include="src\ClickedMission\ClickedMissionQueue.cpp">
       <Filter>src\ClickedMission</Filter>
@@ -41,6 +53,15 @@
     </ClInclude>
     <ClInclude Include="src\Commands\AutoLoadCommand\IAutoLoadGamePort.h">
       <Filter>src\Commands\AutoLoadCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\TeslaChargeCommand\TeslaChargePlanner.h">
+      <Filter>src\Commands\TeslaChargeCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\TeslaChargeCommand\TeslaChargeCommandService.h">
+      <Filter>src\Commands\TeslaChargeCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\TeslaChargeCommand\ITeslaChargeGamePort.h">
+      <Filter>src\Commands\TeslaChargeCommand</Filter>
     </ClInclude>
     <ClInclude Include="src\ClickedMission\ClickedMissionQueue.h">
       <Filter>src\ClickedMission</Filter>

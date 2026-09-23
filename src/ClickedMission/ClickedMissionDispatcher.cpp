@@ -55,6 +55,11 @@ namespace ra_commands::commands
             : ClickedMissionEnqueueResult::WrongEpoch;
     }
 
+    std::size_t ClickedMissionDispatcher::CancelByProducer(ClickedMissionProducer producer)
+    {
+        return mQueue.CancelByProducer(producer);
+    }
+
     void ClickedMissionDispatcher::Reset()
     {
         mQueue.Reset(++mEpoch);

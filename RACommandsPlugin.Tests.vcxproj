@@ -44,13 +44,19 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Tests\AutoLoadPureTests.cpp" />
+    <ClCompile Include="src\Tests\TeslaChargePureTests.cpp" />
     <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.cpp" />
     <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadCommandService.cpp" />
+    <ClCompile Include="src\Commands\TeslaChargeCommand\TeslaChargePlanner.cpp" />
+    <ClCompile Include="src\Commands\TeslaChargeCommand\TeslaChargeCommandService.cpp" />
     <ClCompile Include="src\ClickedMission\ClickedMissionQueue.cpp" />
     <ClCompile Include="src\ClickedMission\ClickedMissionDispatcher.cpp" />
     <ClInclude Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.h" />
     <ClInclude Include="src\Commands\AutoLoadCommand\AutoLoadCommandService.h" />
     <ClInclude Include="src\Commands\AutoLoadCommand\IAutoLoadGamePort.h" />
+    <ClInclude Include="src\Commands\TeslaChargeCommand\TeslaChargePlanner.h" />
+    <ClInclude Include="src\Commands\TeslaChargeCommand\TeslaChargeCommandService.h" />
+    <ClInclude Include="src\Commands\TeslaChargeCommand\ITeslaChargeGamePort.h" />
     <ClInclude Include="src\ClickedMission\ClickedMissionQueue.h" />
     <ClInclude Include="src\ClickedMission\ClickedMissionDispatcher.h" />
     <ClInclude Include="src\ClickedMission\IClickedMissionGamePort.h" />

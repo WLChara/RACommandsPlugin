@@ -311,6 +311,8 @@ namespace
     }
 }
 
+void RunTeslaChargeTests();
+
 int main()
 {
     try
@@ -323,6 +325,7 @@ int main()
         TestCapacityAndEpoch();
         TestServiceBackpressureAndSessionReset();
         TestSharedDispatcherOrderAndCapacity();
+        RunTeslaChargeTests();
         std::cout << "RACommandsPlugin pure tests passed\n";
         return 0;
     }

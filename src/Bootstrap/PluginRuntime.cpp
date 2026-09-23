@@ -4,6 +4,9 @@
 #include "ClickedMission/ClickedMissionDispatcher.h"
 #include "Commands/AutoLoadCommand/AutoLoadCommandRegistry.h"
 #include "Commands/AutoLoadCommand/AutoLoadGameAdapter.h"
+#include "Commands/TeslaChargeCommand/TeslaChargeCommandRegistry.h"
+#include "Commands/TeslaChargeCommand/TeslaChargeCommandService.h"
+#include "Commands/TeslaChargeCommand/TeslaChargeGameAdapter.h"
 #include "ClickedMission/ClickedMissionGameAdapter.h"
 #include "Game/GameSymbols.h"
 #include "Hooks/MainFrameHook.h"
@@ -30,13 +33,18 @@ namespace ra_commands::bootstrap
         game::GameSymbols g_GameSymbols;
         game::ClickedMissionGameAdapter g_ClickedMissionGameAdapter;
         game::AutoLoadGameAdapter g_AutoLoadGameAdapter;
+        game::TeslaChargeGameAdapter g_TeslaChargeGameAdapter;
         commands::ClickedMissionDispatcher g_ClickedMissionDispatcher(g_ClickedMissionGameAdapter);
         autoload::AutoLoadCommandService g_AutoLoadCommandService(
             g_AutoLoadGameAdapter, g_ClickedMissionDispatcher);
+        tesla_charge::TeslaChargeCommandService g_TeslaChargeCommandService(
+            g_TeslaChargeGameAdapter, g_ClickedMissionDispatcher);
         std::string g_LastError;
         bool g_IsInitialized = false;
         bool g_IsAutoStartCancelled = false;
-        CommandState g_CommandState = CommandState::WaitingForGame;
+        CommandState g_AutoLoadCommandState = CommandState::WaitingForGame;
+        CommandState g_TeslaChargeCommandState = CommandState::WaitingForGame;
+        bool g_HotkeysReloaded = false;
         DWORD g_GameThreadId = 0;
 
         void OnAutoLoadHotkey()
@@ -46,6 +54,15 @@ namespace ra_commands::bootstrap
             if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
             {
                 g_AutoLoadCommandService.OnHotkey();
+            }
+        }
+
+        void OnTeslaChargeHotkey()
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
+            {
+                g_TeslaChargeCommandService.OnHotkey();
             }
         }
 
@@ -70,33 +87,57 @@ namespace ra_commands::bootstrap
             }
 
             g_ClickedMissionDispatcher.OnGameFrame();
-            if (g_CommandState != CommandState::WaitingForGame ||
-                !g_ClickedMissionGameAdapter.IsMatchReady())
+            g_TeslaChargeCommandService.OnGameFrame();
+            if (!g_ClickedMissionGameAdapter.IsMatchReady())
             {
                 return;
             }
 
-            const auto registration = game::TryRegisterAutoLoadCommand(
-                g_GameSymbols, &OnAutoLoadHotkey, g_LastError);
-            if (registration == game::CommandRegistrationResult::Pending)
+            if (g_AutoLoadCommandState == CommandState::WaitingForGame)
             {
-                return;
-            }
-            if (registration != game::CommandRegistrationResult::Registered)
-            {
-                g_CommandState = CommandState::Failed;
-                OutputDebugStringA(("[RACommandsPlugin] " + g_LastError + "\n").c_str());
-                return;
+                const auto registration = game::TryRegisterAutoLoadCommand(
+                    g_GameSymbols, &OnAutoLoadHotkey, g_LastError);
+                if (registration == game::CommandRegistrationResult::Registered)
+                {
+                    g_AutoLoadCommandState = CommandState::Registered;
+                }
+                else if (registration != game::CommandRegistrationResult::Pending)
+                {
+                    g_AutoLoadCommandState = CommandState::Failed;
+                    OutputDebugStringA(("[RACommandsPlugin] " + g_LastError + "\n").c_str());
+                }
             }
 
-            g_CommandState = CommandState::Registered;
-            if (!g_GameSymbols.ReloadKeyboardHotkeys())
+            if (g_TeslaChargeCommandState == CommandState::WaitingForGame)
             {
-                OutputDebugStringA("[RACommandsPlugin] native hotkey reload failed\n");
+                const auto registration = game::TryRegisterTeslaChargeCommand(
+                    g_GameSymbols, &OnTeslaChargeHotkey, g_LastError);
+                if (registration == game::CommandRegistrationResult::Registered)
+                {
+                    g_TeslaChargeCommandState = CommandState::Registered;
+                }
+                else if (registration != game::CommandRegistrationResult::Pending)
+                {
+                    g_TeslaChargeCommandState = CommandState::Failed;
+                    OutputDebugStringA(("[RACommandsPlugin] " + g_LastError + "\n").c_str());
+                }
             }
-            else
+
+            if (!g_HotkeysReloaded &&
+                g_AutoLoadCommandState != CommandState::WaitingForGame &&
+                g_TeslaChargeCommandState != CommandState::WaitingForGame &&
+                (g_AutoLoadCommandState == CommandState::Registered ||
+                    g_TeslaChargeCommandState == CommandState::Registered))
             {
-                OutputDebugStringA("[RACommandsPlugin] YRHMAutoLoad registered\n");
+                g_HotkeysReloaded = true;
+                if (!g_GameSymbols.ReloadKeyboardHotkeys())
+                {
+                    OutputDebugStringA("[RACommandsPlugin] native hotkey reload failed\n");
+                }
+                else
+                {
+                    OutputDebugStringA("[RACommandsPlugin] native commands registered\n");
+                }
             }
         }
 
@@ -153,8 +194,12 @@ namespace ra_commands::bootstrap
         g_IsInitialized = false;
         game::DisableMainFrameCallback();
         game::DisableAutoLoadCommand();
+        game::DisableTeslaChargeCommand();
+        g_TeslaChargeCommandService.Reset();
         g_ClickedMissionDispatcher.Reset();
-        g_CommandState = CommandState::WaitingForGame;
+        g_AutoLoadCommandState = CommandState::WaitingForGame;
+        g_TeslaChargeCommandState = CommandState::WaitingForGame;
+        g_HotkeysReloaded = false;
         g_GameThreadId = 0;
         g_LastError.clear();
         g_GameSymbols = {};

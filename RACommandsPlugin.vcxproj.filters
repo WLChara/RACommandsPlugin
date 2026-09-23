@@ -16,6 +16,9 @@
     <Filter Include="src\Commands\AutoLoadCommand">
       <UniqueIdentifier>{0F3A0000-2026-4000-8000-000000000005}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Commands\TeslaChargeCommand">
+      <UniqueIdentifier>{FB904567-C084-4A75-8B6A-8EEAF7074621}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Game">
       <UniqueIdentifier>{0F3A0000-2026-4000-8000-000000000006}</UniqueIdentifier>
     </Filter>
@@ -869,6 +872,33 @@
     </ClInclude>
     <ClInclude Include="src\Commands\AutoLoadCommand\IAutoLoadGamePort.h">
       <Filter>src\Commands\AutoLoadCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\TeslaChargeCommand\TeslaChargePlanner.cpp">
+      <Filter>src\Commands\TeslaChargeCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\TeslaChargeCommand\TeslaChargePlanner.h">
+      <Filter>src\Commands\TeslaChargeCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\TeslaChargeCommand\TeslaChargeCommandService.cpp">
+      <Filter>src\Commands\TeslaChargeCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\TeslaChargeCommand\TeslaChargeCommandService.h">
+      <Filter>src\Commands\TeslaChargeCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\TeslaChargeCommand\ITeslaChargeGamePort.h">
+      <Filter>src\Commands\TeslaChargeCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\TeslaChargeCommand\TeslaChargeCommandRegistry.cpp">
+      <Filter>src\Commands\TeslaChargeCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\TeslaChargeCommand\TeslaChargeCommandRegistry.h">
+      <Filter>src\Commands\TeslaChargeCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\TeslaChargeCommand\TeslaChargeGameAdapter.cpp">
+      <Filter>src\Commands\TeslaChargeCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\TeslaChargeCommand\TeslaChargeGameAdapter.h">
+      <Filter>src\Commands\TeslaChargeCommand</Filter>
     </ClInclude>
     <ClCompile Include="src\Bootstrap\PluginRuntime.cpp">
       <Filter>src\Bootstrap</Filter>

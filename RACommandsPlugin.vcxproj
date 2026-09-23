@@ -299,6 +299,15 @@
     <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadCommandService.cpp" />
     <ClInclude Include="src\Commands\AutoLoadCommand\AutoLoadCommandService.h" />
     <ClInclude Include="src\Commands\AutoLoadCommand\IAutoLoadGamePort.h" />
+    <ClCompile Include="src\Commands\TeslaChargeCommand\TeslaChargePlanner.cpp" />
+    <ClInclude Include="src\Commands\TeslaChargeCommand\TeslaChargePlanner.h" />
+    <ClCompile Include="src\Commands\TeslaChargeCommand\TeslaChargeCommandService.cpp" />
+    <ClInclude Include="src\Commands\TeslaChargeCommand\TeslaChargeCommandService.h" />
+    <ClInclude Include="src\Commands\TeslaChargeCommand\ITeslaChargeGamePort.h" />
+    <ClCompile Include="src\Commands\TeslaChargeCommand\TeslaChargeCommandRegistry.cpp" />
+    <ClInclude Include="src\Commands\TeslaChargeCommand\TeslaChargeCommandRegistry.h" />
+    <ClCompile Include="src\Commands\TeslaChargeCommand\TeslaChargeGameAdapter.cpp" />
+    <ClInclude Include="src\Commands\TeslaChargeCommand\TeslaChargeGameAdapter.h" />
     <ClCompile Include="src\Bootstrap\PluginRuntime.cpp" />
     <ClInclude Include="src\Bootstrap\PluginRuntime.h" />
     <ClCompile Include="src\ClickedMission\ClickedMissionDispatcher.cpp" />

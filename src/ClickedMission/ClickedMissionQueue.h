@@ -18,6 +18,12 @@ namespace ra_commands::commands
         bool operator==(const ClickedMissionIdentity&) const = default;
     };
 
+    enum class ClickedMissionProducer
+    {
+        Unspecified,
+        TeslaCharge,
+    };
+
     struct ClickedMissionIntent
     {
         ClickedMissionIdentity Actor;
@@ -25,6 +31,7 @@ namespace ra_commands::commands
         std::optional<ClickedMissionIdentity> Target;
         std::optional<ClickedMissionIdentity> TargetCell;
         std::optional<ClickedMissionIdentity> Nearest;
+        ClickedMissionProducer Producer = ClickedMissionProducer::Unspecified;
         std::uint32_t Epoch = 0;
         std::uint32_t CreatedFrame = 0;
         std::int32_t FrameSendRate = 30;
@@ -48,6 +55,7 @@ namespace ra_commands::commands
         std::uint64_t RejectedByValidation = 0;
         std::uint64_t Attempted = 0;
         std::uint64_t ClearedByReset = 0;
+        std::uint64_t Cancelled = 0;
     };
 
     struct ClickedMissionDrainResult
@@ -86,6 +94,8 @@ namespace ra_commands::commands
             const NativeFreeCount& getNativeFreeCount,
             const ValidateIntent& validate,
             const IssueIntent& issue);
+
+        std::size_t CancelByProducer(ClickedMissionProducer producer);
 
         // 对局代次变化时清除待发意图，避免旧对象身份在新对局被复用。
         void Reset(std::uint32_t epoch);

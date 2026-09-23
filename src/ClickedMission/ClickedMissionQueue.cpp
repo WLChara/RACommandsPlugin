@@ -1,5 +1,7 @@
 #include "ClickedMission/ClickedMissionQueue.h"
 
+#include <algorithm>
+
 namespace ra_commands::commands
 {
     namespace
@@ -91,6 +93,19 @@ namespace ra_commands::commands
         }
 
         return result;
+    }
+
+    std::size_t ClickedMissionQueue::CancelByProducer(ClickedMissionProducer producer)
+    {
+        const auto before = mPending.size();
+        mPending.erase(std::remove_if(mPending.begin(), mPending.end(),
+            [producer](const ClickedMissionIntent& intent)
+            {
+                return intent.Producer == producer;
+            }), mPending.end());
+        const auto cancelled = before - mPending.size();
+        mCounters.Cancelled += cancelled;
+        return cancelled;
     }
 
     void ClickedMissionQueue::Reset(std::uint32_t epoch)

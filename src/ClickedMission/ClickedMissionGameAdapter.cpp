@@ -21,6 +21,15 @@ namespace ra_commands::game
                 intent.Actor.Epoch == intent.Epoch &&
                 intent.TargetCell->Epoch == intent.Epoch;
         }
+
+        bool IsSupportedTeslaChargeIntent(const commands::ClickedMissionIntent& intent)
+        {
+            return intent.Producer == commands::ClickedMissionProducer::TeslaCharge &&
+                intent.Mission == static_cast<std::int32_t>(Mission::Attack) &&
+                intent.Target && !intent.TargetCell && !intent.Nearest &&
+                intent.Actor.Epoch == intent.Epoch &&
+                intent.Target->Epoch == intent.Epoch;
+        }
     }
 
     bool ClickedMissionGameAdapter::IsMatchReady() const
@@ -49,27 +58,40 @@ namespace ra_commands::game
     bool ClickedMissionGameAdapter::ValidateClickedMissionIntent(
         const commands::ClickedMissionIntent& intent) const
     {
-        if (!IsSupportedEnterIntent(intent))
+        if (IsSupportedEnterIntent(intent))
         {
-            return false;
+            return CanEnterTransport(ResolveIdentity(intent.Actor),
+                ResolveIdentity(*intent.TargetCell));
         }
-        return CanEnterTransport(ResolveIdentity(intent.Actor),
-            ResolveIdentity(*intent.TargetCell));
+        if (IsSupportedTeslaChargeIntent(intent))
+        {
+            return CanChargeTesla(ResolveIdentity(intent.Actor),
+                ResolveIdentity(*intent.Target));
+        }
+        return false;
     }
 
     void ClickedMissionGameAdapter::AttemptClickedMission(
         const commands::ClickedMissionIntent& intent) const
     {
-        if (!IsSupportedEnterIntent(intent))
+        if (IsSupportedEnterIntent(intent))
         {
+            auto* const passenger = ResolveIdentity(intent.Actor);
+            auto* const transport = ResolveIdentity(*intent.TargetCell);
+            if (CanEnterTransport(passenger, transport))
+            {
+                passenger->ClickedMission(Mission::Enter, nullptr, transport, nullptr);
+            }
             return;
         }
-
-        auto* const passenger = ResolveIdentity(intent.Actor);
-        auto* const transport = ResolveIdentity(*intent.TargetCell);
-        if (CanEnterTransport(passenger, transport))
+        if (IsSupportedTeslaChargeIntent(intent))
         {
-            passenger->ClickedMission(Mission::Enter, nullptr, transport, nullptr);
+            auto* const charger = ResolveIdentity(intent.Actor);
+            auto* const tesla = ResolveIdentity(*intent.Target);
+            if (CanChargeTesla(charger, tesla))
+            {
+                charger->ClickedMission(Mission::Attack, tesla, nullptr, nullptr);
+            }
         }
     }
 }
