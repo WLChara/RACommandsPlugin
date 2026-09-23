@@ -359,12 +359,13 @@ namespace ra_commands::autoload
                 return false;
             });
 
+            const UnitId primaryTransportId = transports.empty() ? 0 : transports.front();
             std::vector<UnitId> vehiclePassengers;
             for (const UnitId id : snapshot.SelectedVehicles)
             {
-                const bool isTransport = std::find(transports.begin(), transports.end(), id) != transports.end();
                 const Unit* unit = FindUnit(snapshot, id);
-                if (!isTransport && unit && ValidVehiclePassenger(*unit))
+                // 其他空载具即使自己能载人，也可以进入本轮的主载具。
+                if (id != primaryTransportId && unit && ValidVehiclePassenger(*unit))
                 {
                     vehiclePassengers.push_back(id);
                 }
@@ -401,7 +402,8 @@ namespace ra_commands::autoload
                 return infantryFallback();
             }
 
-            auto result = Assign(snapshot, vehiclePassengers, transports,
+            // 只把主载具作为目标，避免同一辆车同时被规划为乘客和载具。
+            auto result = Assign(snapshot, vehiclePassengers, { primaryTransportId },
                 PairKind::VehicleIntoVehicle);
             return result.empty() ? infantryFallback() : result;
         }

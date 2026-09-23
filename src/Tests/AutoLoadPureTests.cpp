@@ -96,6 +96,15 @@ namespace
             vehiclePairs[0].Kind == autoload::PairKind::VehicleIntoVehicle,
             "vehicle-only selection should prefer vehicle loading");
 
+        snapshot.Units[1].PassengerCapacity = 1;
+        const auto transportPassengerPairs = autoload::Plan(snapshot);
+        Require(transportPassengerPairs.size() == 1 &&
+            transportPassengerPairs[0].Passenger == 2 &&
+            transportPassengerPairs[0].Transport == 1 &&
+            transportPassengerPairs[0].Kind == autoload::PairKind::VehicleIntoVehicle,
+            "an empty transport-capable vehicle should also be loadable into the primary transport");
+        snapshot.Units[1].PassengerCapacity = 0;
+
         snapshot.Units[1].Size = 3.0;
         const auto fallbackPairs = autoload::Plan(snapshot);
         Require(fallbackPairs.size() == 1 && fallbackPairs[0].Passenger == 3 &&
@@ -108,6 +117,30 @@ namespace
         Require(flyingFallback.size() == 1 && flyingFallback[0].Passenger == 3 &&
             flyingFallback[0].Kind == autoload::PairKind::InfantryFallback,
             "flying vehicle passengers must not suppress infantry fallback");
+    }
+
+    void TestSeveralTransportCapableVehicles()
+    {
+        autoload::Snapshot snapshot;
+        snapshot.Units = {
+            Vehicle(1, 2, 2.0), Vehicle(2, 1, 1.0), Vehicle(3, 1, 1.0)
+        };
+        snapshot.SelectedVehicles = { 1, 2, 3 };
+
+        const auto pairs = autoload::Plan(snapshot);
+        Require(pairs.size() == 2 &&
+            pairs[0].Transport == 1 && pairs[1].Transport == 1 &&
+            pairs[0].Passenger != pairs[1].Passenger &&
+            pairs[0].Kind == autoload::PairKind::VehicleIntoVehicle &&
+            pairs[1].Kind == autoload::PairKind::VehicleIntoVehicle,
+            "transport-capable passengers must share the primary transport without cycles");
+
+        snapshot.Units[1].PassengerCount = 1;
+        const auto occupiedPassengerPairs = autoload::Plan(snapshot);
+        Require(occupiedPassengerPairs.size() == 1 &&
+            occupiedPassengerPairs[0].Passenger == 3 &&
+            occupiedPassengerPairs[0].Transport == 1,
+            "a vehicle carrying passengers must not become a nested passenger");
     }
 
     void TestPriorityLimitAndOccupiedSeats()
@@ -204,6 +237,7 @@ namespace
     {
     public:
         bool MatchReady = true;
+        bool VehicleOnly = false;
         std::uintptr_t Session = 1;
         std::uint32_t Frame = 100;
         mutable std::uint32_t NativeFree = 12;
@@ -215,6 +249,13 @@ namespace
         std::uintptr_t GetSessionIdentity() const override { return Session; }
         bool CaptureSnapshot(autoload::Snapshot& outSnapshot) const override
         {
+            if (VehicleOnly)
+            {
+                outSnapshot.Units = { Vehicle(1, 2, 2.0), Vehicle(2, 1, 1.0) };
+                outSnapshot.SelectedInfantries.clear();
+                outSnapshot.SelectedVehicles = { 1, 2 };
+                return true;
+            }
             outSnapshot.Units = { Infantry(1), Vehicle(2, 1, 2.0) };
             outSnapshot.SelectedInfantries = { 1 };
             outSnapshot.SelectedVehicles = { 2 };
@@ -280,6 +321,24 @@ namespace
         Require(game.Attempts == 1, "old-session intent must not execute in a new session");
     }
 
+    void TestVehicleServiceDispatch()
+    {
+        FakeGame game;
+        game.VehicleOnly = true;
+        game.NativeFree = 13;
+        commands::ClickedMissionDispatcher dispatcher(game);
+        autoload::AutoLoadCommandService service(game, dispatcher);
+        dispatcher.OnGameFrame();
+        service.OnHotkey();
+        Require(game.Deselects == 2,
+            "vehicle loading should deselect the passenger and primary transport");
+
+        ++game.Frame;
+        dispatcher.OnGameFrame();
+        Require(game.AttemptedActors.size() == 1 && game.AttemptedActors[0] == 2,
+            "vehicle loading should submit the secondary vehicle as the Enter actor");
+    }
+
     void TestSharedDispatcherOrderAndCapacity()
     {
         FakeGame game;
@@ -320,10 +379,12 @@ int main()
         TestMixedSelection();
         TestInfantryOnly();
         TestVehicleModeAndFallback();
+        TestSeveralTransportCapableVehicles();
         TestPriorityLimitAndOccupiedSeats();
         TestIntentDedupeAndDeadline();
         TestCapacityAndEpoch();
         TestServiceBackpressureAndSessionReset();
+        TestVehicleServiceDispatch();
         TestSharedDispatcherOrderAndCapacity();
         RunTeslaChargeTests();
         std::cout << "RACommandsPlugin pure tests passed\n";
