@@ -1,0 +1,7 @@
+/build/**
+!/build/.gitkeep
+*.user
+*.suo
+.vs/
+/docs/*
+!/docs/README.md

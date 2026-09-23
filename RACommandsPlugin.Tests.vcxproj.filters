@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{0F3A0001-2026-4000-8000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ClickedMission">
+      <UniqueIdentifier>{0F3A0001-2026-4000-8000-000000000002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Commands">
+      <UniqueIdentifier>{0F3A0001-2026-4000-8000-000000000003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Commands\AutoLoadCommand">
+      <UniqueIdentifier>{0F3A0001-2026-4000-8000-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Tests">
+      <UniqueIdentifier>{0F3A0001-2026-4000-8000-000000000005}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Tests\AutoLoadPureTests.cpp">
+      <Filter>src\Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.cpp">
+      <Filter>src\Commands\AutoLoadCommand</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadCommandService.cpp">
+      <Filter>src\Commands\AutoLoadCommand</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ClickedMission\ClickedMissionQueue.cpp">
+      <Filter>src\ClickedMission</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ClickedMission\ClickedMissionDispatcher.cpp">
+      <Filter>src\ClickedMission</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.h">
+      <Filter>src\Commands\AutoLoadCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\AutoLoadCommand\AutoLoadCommandService.h">
+      <Filter>src\Commands\AutoLoadCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\AutoLoadCommand\IAutoLoadGamePort.h">
+      <Filter>src\Commands\AutoLoadCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ClickedMission\ClickedMissionQueue.h">
+      <Filter>src\ClickedMission</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ClickedMission\ClickedMissionDispatcher.h">
+      <Filter>src\ClickedMission</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ClickedMission\IClickedMissionGamePort.h">
+      <Filter>src\ClickedMission</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

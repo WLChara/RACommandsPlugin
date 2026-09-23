@@ -1,0 +1,458 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{E183CAEA-806A-4C4E-B5D5-1BE92E6B1F2D}</ProjectGuid>
+    <RootNamespace>RACommandsPlugin</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <GameSdkVersion Condition="'$(GameSdkVersion)'==''">mo-7cd005d2</GameSdkVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(MSBuildProjectDirectory)\build\Win32\Release\</OutDir>
+    <IntDir>$(MSBuildProjectDirectory)\build\obj\Win32\Release\$(GameSdkVersion)\</IntDir>
+    <TargetName>RACommandsPlugin</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp23</LanguageStandard>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory)\src;$(MSBuildProjectDirectory)\src\SDK\YRpp\$(GameSdkVersion);$(MSBuildProjectDirectory)\third_party;$(MSBuildProjectDirectory)\third_party\libhat\include;$(MSBuildProjectDirectory)\third_party\minhook\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <ModuleDefinitionFile>$(MSBuildProjectDirectory)\src\RACommandsPlugin.def</ModuleDefinitionFile>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalLibraryDirectories>$(MSBuildProjectDirectory)\third_party\libhat\Win32\Release\v143\static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libhat.lib;bcrypt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup Label="ProjectFiles">
+    <None Include="src\SDK\README.md" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\AbstractClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\AbstractTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\AircraftClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\AircraftTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\AirstrikeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\AITriggerTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\AlphaShapeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\AnimClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\AnimTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\ArrayClasses.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\ASMMacros.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Audio.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\BasicStructures.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitPlainXlat.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitPlainXlatAlpha.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitPlainXlatZRead.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitPlainXlatZReadWrite.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransDarken.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransDarkenZRead.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransDarkenZReadWrite.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent25.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent25Alpha.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent25AlphaZRead.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent25AlphaZReadWarp.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent25AlphaZReadWrite.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent25ZRead.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent25ZReadWarp.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent25ZReadWrite.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent50.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent50Alpha.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent50AlphaZRead.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent50AlphaZReadWarp.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent50AlphaZReadWrite.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTranslucent50NonzeroAlpha.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTranslucent50ZeroAlpha.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent50ZRead.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent50ZReadWarp.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent50ZReadWrite.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent75.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent75Alpha.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent75AlphaZRead.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent75AlphaZReadWarp.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent75AlphaZReadWrite.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent75ZRead.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent75ZReadWarp.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransLucent75ZReadWrite.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTranslucentWriteAlpha.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransRemapDest.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransRemapXlat.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransXlat.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransXlatAlpha.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransXlatAlphaZRead.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransXlatAlphaZReadWrite.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransXlatMultWriteAlpha.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransXlatWriteAlpha.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransXlatZRead.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransXlatZReadWrite.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransZRemapXlat.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransZRemapXlatAlpha.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransZRemapXlatAlphaZRead.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransZRemapXlatAlphaZReadWrite.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransZRemapXlatZRead.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Blitter\BlitTransZremapXlatZReadWrite.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Blitters\Includer.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\BombClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\BombListClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\BounceClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\BuildingClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\BuildingLightClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\BuildingTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\BulletClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\BulletTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\CampaignClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\CaptureManagerClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\CCFileClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\CCINIClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\CD.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\CellClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\CellSpread.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Checksummer.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\ColorScheme.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\CommandClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Conversions.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\ConvertClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\CRT.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\DiscreteDistributionClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\DiscreteSelectionClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\DiskLaserClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\DisplayClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Drawing.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\EBolt.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\EMPulseClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\FactoryClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\fakewindows.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\FileFormats\_Loader.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\FileFormats\HVA.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\FileFormats\SHP.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\FileFormats\VXL.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\FileSystem.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\FlyLocomotionClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\FootClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\FPSCounter.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Fundamentals.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\GameClasses.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\GameModeOptionsClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\GameOptionsClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\GeneralDefinitions.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\GeneralStructures.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\GenericList.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\GetCDClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\GScreenClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Helpers\Cast.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Helpers\CompileTime.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Helpers\ComPtr.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Helpers\Enumerators.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Helpers\EnumFlags.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Helpers\Iterators.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Helpers\Macro.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Helpers\String.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Helpers\Template.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\HouseClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\HouseTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\InfantryClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\InfantryTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\InputManagerClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Interfaces.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Ion.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\IonBlastClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\IsometricTileClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\IsometricTileTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Kamikaze.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\LaserDrawClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\LightSourceClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\LineTrail.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\LinkClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\LoadOptionsClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\LoadProgressManager.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\LocomotionClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\MapClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\MapSeedClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Memory.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\MessageBox.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\MessageListClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\MissionClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\MixFileClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\MouseClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\MPGameModeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\MPTeams.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\NetworkEvents.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Networking.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\NeuronClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Notifications.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\ObjectClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\ObjectTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\OverlayClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\OverlayTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\ParasiteClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\ParticleClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\ParticleSystemClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\ParticleSystemTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\ParticleTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\PCX.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\PlanningTokenClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\PowerClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Powerups.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\ProgressScreenClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\ProgressTimer.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Quaternion.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\RadarClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\RadarEventClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\RadBeam.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\RadioClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\RadSiteClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Randomizer.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\RocketLocomotionClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\RulesClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\ScenarioClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\ScriptClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\ScriptTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\SessionClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\SidebarClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\SideClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\SlaveManagerClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\SmudgeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\SmudgeTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\SpawnManagerClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\SpecificStructures.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\SpotlightClass.h" />
+    <None Include="src\SDK\YRpp\mo-7cd005d2\StaticInits.cpp" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\StringTable.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\SuperClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\SuperWeaponTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Surface.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\SwizzleManagerClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Syringe.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\TacticalClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\TActionClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\TagClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\TagTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\TaskForceClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\TeamClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\TeamTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\TechnoClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\TechnoTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\TeleportLocomotionClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\TemporalClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\TerrainClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\TerrainTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\TEventClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Theater.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\TiberiumClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\TransitionTimer.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\TriggerClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\TriggerTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\UI.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\UnitClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\UnitTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Unsorted.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\Vault.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\VocClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\VoxClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\VoxelAnimClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\VoxelAnimTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\VTables.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\WarheadTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\WaveClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\WaypointPathClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\WeaponTypeClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\WOLAPIInterfaces.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\WWMouseClass.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\YRAllocator.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\YRCom.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\YRDDraw.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\YRMath.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\YRMathVector.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\YRPP.h" />
+    <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\YRPPCore.h" />
+    <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.cpp" />
+    <ClInclude Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.h" />
+    <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadCommandService.cpp" />
+    <ClInclude Include="src\Commands\AutoLoadCommand\AutoLoadCommandService.h" />
+    <ClInclude Include="src\Commands\AutoLoadCommand\IAutoLoadGamePort.h" />
+    <ClCompile Include="src\Bootstrap\PluginRuntime.cpp" />
+    <ClInclude Include="src\Bootstrap\PluginRuntime.h" />
+    <ClCompile Include="src\ClickedMission\ClickedMissionDispatcher.cpp" />
+    <ClInclude Include="src\ClickedMission\ClickedMissionDispatcher.h" />
+    <ClCompile Include="src\ClickedMission\ClickedMissionQueue.cpp" />
+    <ClInclude Include="src\ClickedMission\ClickedMissionQueue.h" />
+    <ClInclude Include="src\ClickedMission\IClickedMissionGamePort.h" />
+    <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadCommandRegistry.cpp" />
+    <ClInclude Include="src\Commands\AutoLoadCommand\AutoLoadCommandRegistry.h" />
+    <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadGameAdapter.cpp" />
+    <ClInclude Include="src\Commands\AutoLoadCommand\AutoLoadGameAdapter.h" />
+    <ClCompile Include="src\ClickedMission\ClickedMissionGameAdapter.cpp" />
+    <ClInclude Include="src\ClickedMission\ClickedMissionGameAdapter.h" />
+    <ClInclude Include="src\Commands\CommandRegistrationResult.h" />
+    <ClCompile Include="src\Game\GameObjectAccess.cpp" />
+    <ClInclude Include="src\Game\GameObjectAccess.h" />
+    <ClCompile Include="src\Game\GameSymbols.cpp" />
+    <ClInclude Include="src\Game\GameSymbols.h" />
+    <ClCompile Include="src\Hooks\MainFrameHook.cpp" />
+    <ClInclude Include="src\Hooks\MainFrameHook.h" />
+    <ClCompile Include="src\Commands\NativeCommandRegistry.cpp" />
+    <ClInclude Include="src\Commands\NativeCommandRegistry.h" />
+    <ClCompile Include="src\Game\TargetVersion.cpp" />
+    <ClInclude Include="src\Game\TargetVersion.h" />
+    <ClCompile Include="src\Game\YRppAbiSmoke.cpp" />
+    <ClCompile Include="src\Signature\OperandDecoder.cpp" />
+    <ClInclude Include="src\Signature\OperandDecoder.h" />
+    <ClCompile Include="src\Signature\PeImage.cpp" />
+    <ClInclude Include="src\Signature\PeImage.h" />
+    <ClCompile Include="src\Memory\ProcessMemory.cpp" />
+    <ClInclude Include="src\Memory\ProcessMemory.h" />
+    <ClCompile Include="src\Signature\SignatureScanner.cpp" />
+    <ClInclude Include="src\Signature\SignatureScanner.h" />
+    <ClCompile Include="src\Plugin.cpp" />
+    <None Include="src\RACommandsPlugin.def" />
+    <ClInclude Include="src\Game\TargetProfiles\CommandSignatures.h" />
+    <ClCompile Include="src\Signature\SignatureResolver.cpp" />
+    <ClInclude Include="src\Signature\SignatureResolver.h" />
+    <ClInclude Include="src\Signature\SignatureSpec.h" />
+    <ClInclude Include="third_party\libhat\include\libhat.hpp" />
+    <ClInclude Include="third_party\libhat\include\libhat\access.hpp" />
+    <ClInclude Include="third_party\libhat\include\libhat\c\libhat.h" />
+    <ClInclude Include="third_party\libhat\include\libhat\concepts.hpp" />
+    <ClInclude Include="third_party\libhat\include\libhat\cow.hpp" />
+    <ClInclude Include="third_party\libhat\include\libhat\cstring_view.hpp" />
+    <ClInclude Include="third_party\libhat\include\libhat\defines.hpp" />
+    <ClInclude Include="third_party\libhat\include\libhat\detail\compressed_pair.hpp" />
+    <ClInclude Include="third_party\libhat\include\libhat\experimental.hpp" />
+    <ClInclude Include="third_party\libhat\include\libhat\experimental\call_wrapper.hpp" />
+    <ClInclude Include="third_party\libhat\include\libhat\export.hpp" />
+    <ClInclude Include="third_party\libhat\include\libhat\fixed_string.hpp" />
+    <ClInclude Include="third_party\libhat\include\libhat\memory_protector.hpp" />
+    <ClInclude Include="third_party\libhat\include\libhat\memory.hpp" />
+    <ClInclude Include="third_party\libhat\include\libhat\platform.h" />
+    <ClInclude Include="third_party\libhat\include\libhat\process.hpp" />
+    <ClInclude Include="third_party\libhat\include\libhat\result.hpp" />
+    <ClInclude Include="third_party\libhat\include\libhat\scanner.hpp" />
+    <ClInclude Include="third_party\libhat\include\libhat\signature.hpp" />
+    <ClInclude Include="third_party\libhat\include\libhat\strconv.hpp" />
+    <ClInclude Include="third_party\libhat\include\libhat\string_literal.hpp" />
+    <ClInclude Include="third_party\libhat\include\libhat\system.hpp" />
+    <ClInclude Include="third_party\libhat\include\libhat\type_traits.hpp" />
+    <ClInclude Include="third_party\libhat\include\libhat\utility.hpp" />
+    <ClInclude Include="third_party\libhat\libhat.hpp" />
+    <ClInclude Include="third_party\libhat\libhat\access.hpp" />
+    <ClInclude Include="third_party\libhat\libhat\c\libhat.h" />
+    <ClInclude Include="third_party\libhat\libhat\compressed_pair.hpp" />
+    <ClInclude Include="third_party\libhat\libhat\concepts.hpp" />
+    <ClInclude Include="third_party\libhat\libhat\cow.hpp" />
+    <ClInclude Include="third_party\libhat\libhat\cstring_view.hpp" />
+    <ClInclude Include="third_party\libhat\libhat\defines.hpp" />
+    <ClInclude Include="third_party\libhat\libhat\experimental.hpp" />
+    <ClInclude Include="third_party\libhat\libhat\experimental\call_wrapper.hpp" />
+    <ClInclude Include="third_party\libhat\libhat\export.hpp" />
+    <ClInclude Include="third_party\libhat\libhat\fixed_string.hpp" />
+    <ClInclude Include="third_party\libhat\libhat\memory_protector.hpp" />
+    <ClInclude Include="third_party\libhat\libhat\memory.hpp" />
+    <ClInclude Include="third_party\libhat\libhat\platform.h" />
+    <ClInclude Include="third_party\libhat\libhat\process.hpp" />
+    <ClInclude Include="third_party\libhat\libhat\result.hpp" />
+    <ClInclude Include="third_party\libhat\libhat\scanner.hpp" />
+    <ClInclude Include="third_party\libhat\libhat\signature.hpp" />
+    <ClInclude Include="third_party\libhat\libhat\strconv.hpp" />
+    <ClInclude Include="third_party\libhat\libhat\string_literal.hpp" />
+    <ClInclude Include="third_party\libhat\libhat\system.hpp" />
+    <ClInclude Include="third_party\libhat\libhat\type_traits.hpp" />
+    <ClInclude Include="third_party\libhat\libhat\utility.hpp" />
+    <None Include="third_party\libhat\LICENSE" />
+    <None Include="third_party\libhat\Win32\Release\v143\static\libhat.lib" />
+    <ClInclude Include="third_party\minhook\include\MinHook.h" />
+    <None Include="third_party\minhook\LICENSE.txt" />
+    <ClInclude Include="third_party\minhook\MinHook.h" />
+    <ClCompile Include="third_party\minhook\src\buffer.c" />
+    <ClInclude Include="third_party\minhook\src\buffer.h" />
+    <ClCompile Include="third_party\minhook\src\hde\hde32.c" />
+    <ClInclude Include="third_party\minhook\src\hde\hde32.h" />
+    <None Include="third_party\minhook\src\hde\hde64.c" />
+    <ClInclude Include="third_party\minhook\src\hde\hde64.h" />
+    <ClInclude Include="third_party\minhook\src\hde\pstdint.h" />
+    <ClInclude Include="third_party\minhook\src\hde\table32.h" />
+    <ClInclude Include="third_party\minhook\src\hde\table64.h" />
+    <ClCompile Include="third_party\minhook\src\hook.c" />
+    <ClCompile Include="third_party\minhook\src\trampoline.c" />
+    <ClInclude Include="third_party\minhook\src\trampoline.h" />
+    <ClInclude Include="third_party\nlohmann\adl_serializer.hpp" />
+    <ClInclude Include="third_party\nlohmann\byte_container_with_subtype.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\abi_macros.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\conversions\from_json.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\conversions\to_chars.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\conversions\to_json.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\exceptions.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\hash.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\input\binary_reader.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\input\input_adapters.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\input\json_sax.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\input\lexer.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\input\parser.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\input\position_t.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\iterators\internal_iterator.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\iterators\iter_impl.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\iterators\iteration_proxy.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\iterators\iterator_traits.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\iterators\json_reverse_iterator.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\iterators\primitive_iterator.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\json_custom_base_class.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\json_pointer.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\json_ref.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\macro_scope.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\macro_unscope.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\meta\call_std\begin.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\meta\call_std\end.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\meta\cpp_future.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\meta\detected.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\meta\identity_tag.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\meta\is_sax.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\meta\std_fs.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\meta\type_traits.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\meta\void_t.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\output\binary_writer.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\output\output_adapters.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\output\serializer.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\string_concat.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\string_escape.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\string_utils.hpp" />
+    <ClInclude Include="third_party\nlohmann\detail\value_t.hpp" />
+    <ClInclude Include="third_party\nlohmann\json_fwd.hpp" />
+    <ClInclude Include="third_party\nlohmann\json.hpp" />
+    <ClInclude Include="third_party\nlohmann\ordered_map.hpp" />
+    <ClInclude Include="third_party\nlohmann\thirdparty\hedley\hedley_undef.hpp" />
+    <ClInclude Include="third_party\nlohmann\thirdparty\hedley\hedley.hpp" />
+  </ItemGroup>
+  <!-- 已列出的文件供 VS 文件夹视图使用；新增源文件仍可在手动加入项目之前参与编译。 -->
+  <ItemGroup Label="NewSourceFallback">
+    <ClCompile Include="src\**\*.cpp" Exclude="src\Tests\**\*.cpp;src\SDK\**\*.cpp;@(ClCompile)" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

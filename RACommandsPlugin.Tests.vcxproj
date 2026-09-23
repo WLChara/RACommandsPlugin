@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{D20827AF-2B8E-48A2-B7E3-79241136A945}</ProjectGuid>
+    <RootNamespace>RACommandsPluginTests</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(MSBuildProjectDirectory)\build\Win32\Release\</OutDir>
+    <IntDir>$(MSBuildProjectDirectory)\build\obj\Win32\Release\Tests\</IntDir>
+    <TargetName>RACommandsPlugin.Tests</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <LanguageStandard>stdcpp23</LanguageStandard>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory)\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Tests\AutoLoadPureTests.cpp" />
+    <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.cpp" />
+    <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadCommandService.cpp" />
+    <ClCompile Include="src\ClickedMission\ClickedMissionQueue.cpp" />
+    <ClCompile Include="src\ClickedMission\ClickedMissionDispatcher.cpp" />
+    <ClInclude Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.h" />
+    <ClInclude Include="src\Commands\AutoLoadCommand\AutoLoadCommandService.h" />
+    <ClInclude Include="src\Commands\AutoLoadCommand\IAutoLoadGamePort.h" />
+    <ClInclude Include="src\ClickedMission\ClickedMissionQueue.h" />
+    <ClInclude Include="src\ClickedMission\ClickedMissionDispatcher.h" />
+    <ClInclude Include="src\ClickedMission\IClickedMissionGamePort.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

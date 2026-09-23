@@ -1,0 +1,42 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "RACommandsPlugin", "RACommandsPlugin.vcxproj", "{E183CAEA-806A-4C4E-B5D5-1BE92E6B1F2D}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "RACommandsPlugin.Tests", "RACommandsPlugin.Tests.vcxproj", "{D20827AF-2B8E-48A2-B7E3-79241136A945}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{A1A9838A-BC56-4C79-912E-52EDE119B967}"
+	ProjectSection(SolutionItems) = preProject
+		docs\README.md = docs\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{BAA9F6C1-C8D3-4B11-916B-4AEF205EB784}"
+	ProjectSection(SolutionItems) = preProject
+		scripts\build.ps1 = scripts\build.ps1
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{12B53DC2-C8E9-4E83-9178-70556C487877}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		RACommandsPlugin.sln = RACommandsPlugin.sln
+		RACommandsPlugin.vcxproj = RACommandsPlugin.vcxproj
+		RACommandsPlugin.vcxproj.filters = RACommandsPlugin.vcxproj.filters
+		RACommandsPlugin.Tests.vcxproj = RACommandsPlugin.Tests.vcxproj
+		RACommandsPlugin.Tests.vcxproj.filters = RACommandsPlugin.Tests.vcxproj.filters
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E183CAEA-806A-4C4E-B5D5-1BE92E6B1F2D}.Release|Win32.ActiveCfg = Release|Win32
+		{E183CAEA-806A-4C4E-B5D5-1BE92E6B1F2D}.Release|Win32.Build.0 = Release|Win32
+		{D20827AF-2B8E-48A2-B7E3-79241136A945}.Release|Win32.ActiveCfg = Release|Win32
+		{D20827AF-2B8E-48A2-B7E3-79241136A945}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
