@@ -1,23 +1,22 @@
 #include "ClickedMission/ClickedMissionGameAdapter.h"
 
 #include "Game/GameObjectAccess.h"
+#include "Game/NativeEventCapacity.h"
 
 #include <YRPPCore.h>
 #include <FootClass.h>
 #include <HouseClass.h>
-#include <Networking.h>
+#include <MapClass.h>
 
 namespace ra_commands::game
 {
     namespace
     {
-        // 当前目标样本的原生 OutList 物理容量，见 docs/ida-evidence.md。
-        constexpr int NATIVE_OUTLIST_CAPACITY = 128;
-
         bool IsSupportedEnterIntent(const commands::ClickedMissionIntent& intent)
         {
             return intent.Mission == static_cast<std::int32_t>(Mission::Enter) &&
                 !intent.Target && intent.TargetCell && !intent.Nearest &&
+                !intent.DestinationCell &&
                 intent.Actor.Epoch == intent.Epoch &&
                 intent.TargetCell->Epoch == intent.Epoch;
         }
@@ -27,8 +26,79 @@ namespace ra_commands::game
             return intent.Producer == commands::ClickedMissionProducer::TeslaCharge &&
                 intent.Mission == static_cast<std::int32_t>(Mission::Attack) &&
                 intent.Target && !intent.TargetCell && !intent.Nearest &&
+                !intent.DestinationCell &&
                 intent.Actor.Epoch == intent.Epoch &&
                 intent.Target->Epoch == intent.Epoch;
+        }
+
+        bool IsSupportedAirSpreadMoveIntent(const commands::ClickedMissionIntent& intent)
+        {
+            return intent.Producer == commands::ClickedMissionProducer::AirSpread &&
+                intent.Mission == static_cast<std::int32_t>(Mission::Move) &&
+                !intent.Target && !intent.TargetCell && !intent.Nearest &&
+                intent.DestinationCell && intent.Actor.Epoch == intent.Epoch;
+        }
+
+        CellClass* ResolveAirSpreadMoveCell(
+            const commands::ClickedMissionIntent& intent,
+            TechnoClass*& actor)
+        {
+            actor = nullptr;
+            if (!IsSupportedAirSpreadMoveIntent(intent))
+            {
+                return nullptr;
+            }
+
+            actor = ResolveIdentity(intent.Actor);
+            if (!actor || !actor->Owner || actor->Owner != HouseClass::Player.get() ||
+                !actor->IsAlive || !actor->IsOnMap || actor->InLimbo ||
+                !actor->IsInPlayfield || actor->IsDead())
+            {
+                return nullptr;
+            }
+
+            const auto kind = actor->WhatAmI();
+            if (kind != AbstractType::Aircraft)
+            {
+                if (kind != AbstractType::Infantry && kind != AbstractType::Unit)
+                {
+                    return nullptr;
+                }
+                const auto* const type = actor->GetTechnoType();
+                if (!type || (type->MovementZone != MovementZone::Fly &&
+                    type->SpeedType != SpeedType::Winged))
+                {
+                    return nullptr;
+                }
+            }
+
+            if (actor->Transporter)
+            {
+                return nullptr;
+            }
+
+            // GetCellIndex shifts Y by 9; keep both axes in its 512x512 range.
+            const auto destination = *intent.DestinationCell;
+            if (destination.X < 0 || destination.X >= 512 ||
+                destination.Y < 0 || destination.Y >= 512)
+            {
+                return nullptr;
+            }
+            auto* const map = MapClass::Instance.get();
+            if (!map)
+            {
+                return nullptr;
+            }
+            const CellStruct coords{
+                static_cast<short>(destination.X), static_cast<short>(destination.Y) };
+            // 排除虽然有 Cell 对象、但不属于可用战场的边缘格。
+            if (!map->CoordinatesLegal(coords) ||
+                !map->IsWithinUsableArea(coords, false))
+            {
+                return nullptr;
+            }
+            auto* const cell = map->TryGetCellAt(coords);
+            return cell && cell->MapCoords == coords ? cell : nullptr;
         }
     }
 
@@ -49,10 +119,7 @@ namespace ra_commands::game
 
     std::uint32_t ClickedMissionGameAdapter::GetNativeFreeSlots() const
     {
-        const int queued = Networking::LastEventIndex();
-        return queued >= 0 && queued <= NATIVE_OUTLIST_CAPACITY
-            ? static_cast<std::uint32_t>(NATIVE_OUTLIST_CAPACITY - queued)
-            : 0;
+        return GetNativeEventFreeSlots();
     }
 
     bool ClickedMissionGameAdapter::ValidateClickedMissionIntent(
@@ -67,6 +134,11 @@ namespace ra_commands::game
         {
             return CanChargeTesla(ResolveIdentity(intent.Actor),
                 ResolveIdentity(*intent.Target));
+        }
+        if (IsSupportedAirSpreadMoveIntent(intent))
+        {
+            TechnoClass* actor = nullptr;
+            return ResolveAirSpreadMoveCell(intent, actor) != nullptr;
         }
         return false;
     }
@@ -91,6 +163,16 @@ namespace ra_commands::game
             if (CanChargeTesla(charger, tesla))
             {
                 charger->ClickedMission(Mission::Attack, tesla, nullptr, nullptr);
+            }
+            return;
+        }
+        if (IsSupportedAirSpreadMoveIntent(intent))
+        {
+            TechnoClass* actor = nullptr;
+            auto* const cell = ResolveAirSpreadMoveCell(intent, actor);
+            if (cell)
+            {
+                actor->ClickedMission(Mission::Move, nullptr, cell, nullptr);
             }
         }
     }
