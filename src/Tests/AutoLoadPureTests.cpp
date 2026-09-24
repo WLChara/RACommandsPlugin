@@ -588,6 +588,18 @@ namespace
 }
 
 void RunTeslaChargeTests();
+void RunSelectionTests();
+void RunSelectionServiceTests();
+void RunAirSpreadTests();
+void RunAirSpreadServiceTests();
+void RunAutoRepairTests();
+void RunMoveIntentTests();
+void RunIfvKeyPressTrackerTests();
+void RunAFloorTests();
+void RunBeaconClearTests();
+void RunBeaconDeletePacketTests();
+void RunBeaconRecipientProgressTests();
+void RunRangeDisplayTests();
 
 int main()
 {
@@ -611,6 +623,18 @@ int main()
         TestVehicleServiceDispatch();
         TestSharedDispatcherOrderAndCapacity();
         RunTeslaChargeTests();
+        RunSelectionTests();
+        RunSelectionServiceTests();
+        RunAirSpreadTests();
+        RunAirSpreadServiceTests();
+        RunAutoRepairTests();
+        RunMoveIntentTests();
+        RunIfvKeyPressTrackerTests();
+        RunAFloorTests();
+        RunBeaconClearTests();
+        RunBeaconDeletePacketTests();
+        RunBeaconRecipientProgressTests();
+        RunRangeDisplayTests();
         std::cout << "RACommandsPlugin pure tests passed\n";
         return 0;
     }
