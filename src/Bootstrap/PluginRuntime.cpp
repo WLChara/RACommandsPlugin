@@ -4,16 +4,43 @@
 #include "ClickedMission/ClickedMissionDispatcher.h"
 #include "Commands/AutoLoadCommand/AutoLoadCommandRegistry.h"
 #include "Commands/AutoLoadCommand/AutoLoadGameAdapter.h"
+#include "Commands/AutoRepairCommand/AutoRepairCommandRegistry.h"
+#include "Commands/AutoRepairCommand/AutoRepairCommandService.h"
+#include "Commands/AutoRepairCommand/AutoRepairGameAdapter.h"
+#include "Commands/AirSpreadCommand/AirSpreadCommandRegistry.h"
+#include "Commands/AirSpreadCommand/AirSpreadCommandService.h"
+#include "Commands/AirSpreadCommand/AirSpreadGameAdapter.h"
+#include "Commands/AFloorCommand/AFloorCommandRegistry.h"
+#include "Commands/AFloorCommand/AFloorCommandService.h"
+#include "Commands/AFloorCommand/AFloorGameAdapter.h"
+#include "Commands/BeaconClearCommand/BeaconClearCommandRegistry.h"
+#include "Commands/BeaconClearCommand/BeaconClearCommandService.h"
+#include "Commands/BeaconClearCommand/BeaconClearGameAdapter.h"
+#include "Commands/RangeDisplayCommand/RangeDisplayCommandRegistry.h"
+#include "Commands/RangeDisplayCommand/RangeDisplayCommandService.h"
+#include "Commands/RangeDisplayCommand/RangeDisplayGameAdapter.h"
 #include "Commands/TeslaChargeCommand/TeslaChargeCommandRegistry.h"
 #include "Commands/TeslaChargeCommand/TeslaChargeCommandService.h"
 #include "Commands/TeslaChargeCommand/TeslaChargeGameAdapter.h"
+#include "Commands/Selection/SelectionCommandService.h"
+#include "Commands/IfvModeSelectCommand/IfvModeSelectCommandRegistry.h"
+#include "Commands/MindControlSelectCommand/MindControlSelectCommandRegistry.h"
+#include "Commands/UnitKindSelectCommand/UnitKindSelectCommandRegistry.h"
+#include "Commands/AmmoSelectCommand/AmmoSelectCommandRegistry.h"
+#include "Commands/PassengerSelectCommand/PassengerSelectCommandRegistry.h"
+#include "Commands/CycleSelectCommand/CycleSelectCommandRegistry.h"
+#include "Commands/UndoSelectionCommand/UndoSelectionCommandRegistry.h"
 #include "ClickedMission/ClickedMissionGameAdapter.h"
 #include "Game/GameSymbols.h"
+#include "Game/SelectionGameAdapter.h"
 #include "Hooks/MainFrameHook.h"
+#include "Hooks/AFloorHook.h"
+#include "Hooks/RangeDisplayHook.h"
 #include "Game/TargetVersion.h"
 
 #include <Windows.h>
 
+#include <array>
 #include <cstdint>
 #include <mutex>
 #include <string>
@@ -29,22 +56,51 @@ namespace ra_commands::bootstrap
             Failed
         };
 
+        using RegisterCommand = game::CommandRegistrationResult(*)(
+            const game::GameSymbols&, std::string&);
+
+        template<auto TRegister, auto TCallback>
+        game::CommandRegistrationResult RegisterConfiguredCommand(
+            const game::GameSymbols& symbols, std::string& outError)
+        {
+            return TRegister(symbols, TCallback, outError);
+        }
+
+        struct CommandEntry
+        {
+            RegisterCommand Register;
+            void(*Disable)();
+            CommandState State = CommandState::WaitingForGame;
+        };
+
         std::mutex g_StateMutex;
         game::GameSymbols g_GameSymbols;
         game::ClickedMissionGameAdapter g_ClickedMissionGameAdapter;
         game::AutoLoadGameAdapter g_AutoLoadGameAdapter;
+        game::AutoRepairGameAdapter g_AutoRepairGameAdapter;
         game::TeslaChargeGameAdapter g_TeslaChargeGameAdapter;
+        game::SelectionGameAdapter g_SelectionGameAdapter;
+        game::AFloorGameAdapter g_AFloorGameAdapter;
+        game::BeaconClearGameAdapter g_BeaconClearGameAdapter;
+        game::RangeDisplayGameAdapter g_RangeDisplayGameAdapter;
         commands::ClickedMissionDispatcher g_ClickedMissionDispatcher(g_ClickedMissionGameAdapter);
+        game::AirSpreadGameAdapter g_AirSpreadGameAdapter(g_ClickedMissionDispatcher);
         autoload::AutoLoadCommandService g_AutoLoadCommandService(
             g_AutoLoadGameAdapter, g_ClickedMissionDispatcher);
+        auto_repair::AutoRepairCommandService g_AutoRepairCommandService(g_AutoRepairGameAdapter);
+        air_spread::AirSpreadCommandService g_AirSpreadCommandService(g_AirSpreadGameAdapter);
         tesla_charge::TeslaChargeCommandService g_TeslaChargeCommandService(
             g_TeslaChargeGameAdapter, g_ClickedMissionDispatcher);
+        selection::SelectionCommandService g_SelectionCommandService(g_SelectionGameAdapter);
+        a_floor::AFloorCommandService g_AFloorCommandService(g_AFloorGameAdapter);
+        beacon_clear::BeaconClearCommandService g_BeaconClearCommandService(g_BeaconClearGameAdapter);
+        range_display::RangeDisplayCommandService g_RangeDisplayCommandService(g_RangeDisplayGameAdapter);
         std::string g_LastError;
         bool g_IsInitialized = false;
         bool g_IsAutoStartCancelled = false;
-        CommandState g_AutoLoadCommandState = CommandState::WaitingForGame;
-        CommandState g_TeslaChargeCommandState = CommandState::WaitingForGame;
         bool g_HotkeysReloaded = false;
+        bool g_AFloorHooksReady = false;
+        bool g_RangeDisplayHookReady = false;
         DWORD g_GameThreadId = 0;
 
         void OnAutoLoadHotkey()
@@ -66,6 +122,155 @@ namespace ra_commands::bootstrap
             }
         }
 
+        void OnAutoRepairHotkey()
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
+            {
+                g_AutoRepairCommandService.OnHotkey();
+            }
+        }
+
+        void OnAirSpreadHotkey()
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
+            {
+                (void)g_AirSpreadCommandService.OnHotkey();
+            }
+        }
+
+        void OnAFloorHotkey()
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_AFloorHooksReady &&
+                g_GameThreadId == GetCurrentThreadId())
+            {
+                g_AFloorCommandService.OnHotkey();
+            }
+        }
+
+        void OnBeaconClearHotkey()
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
+            {
+                g_BeaconClearCommandService.OnHotkey();
+            }
+        }
+
+        void OnRangeDisplayHotkey()
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_RangeDisplayHookReady &&
+                g_GameThreadId == GetCurrentThreadId())
+            {
+                g_RangeDisplayCommandService.OnHotkey();
+            }
+        }
+
+        bool IsRangeDisplayModeEnabled()
+        {
+            return g_RangeDisplayCommandService.IsEnabled();
+        }
+
+        game::CommandRegistrationResult RegisterRangeWhenHookReady(
+            const game::GameSymbols& symbols, void(*callback)(), std::string& outError)
+        {
+            if (!g_RangeDisplayHookReady)
+            {
+                outError = "range display hook is unavailable";
+                return game::CommandRegistrationResult::Failed;
+            }
+            return game::TryRegisterRangeDisplayCommand(symbols, callback, outError);
+        }
+
+        bool IsAFloorModeEnabled()
+        {
+            return g_AFloorCommandService.IsEnabled();
+        }
+
+        game::CommandRegistrationResult RegisterAFloorWhenHookReady(
+            const game::GameSymbols& symbols, void(*callback)(), std::string& outError)
+        {
+            if (!g_AFloorHooksReady)
+            {
+                outError = "A-floor hooks are unavailable";
+                return game::CommandRegistrationResult::Failed;
+            }
+            return game::TryRegisterAFloorCommand(symbols, callback, outError);
+        }
+
+        void DispatchSelectionHotkey(void (selection::SelectionCommandService::*action)())
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
+            {
+                (g_SelectionCommandService.*action)();
+            }
+        }
+
+        void OnMindControlSelectHotkey()
+        {
+            DispatchSelectionHotkey(&selection::SelectionCommandService::OnMindControlHotkey);
+        }
+
+        void OnUnitKindSelectHotkey()
+        {
+            DispatchSelectionHotkey(&selection::SelectionCommandService::OnKindHotkey);
+        }
+
+        void OnAmmoSelectHotkey()
+        {
+            DispatchSelectionHotkey(&selection::SelectionCommandService::OnAmmoHotkey);
+        }
+
+        void OnPassengerSelectHotkey()
+        {
+            DispatchSelectionHotkey(&selection::SelectionCommandService::OnPassengersHotkey);
+        }
+
+        void OnCycleSelectHotkey()
+        {
+            DispatchSelectionHotkey(&selection::SelectionCommandService::OnCycleHotkey);
+        }
+
+        void OnUndoSelectionHotkey()
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
+            {
+                (void)g_SelectionCommandService.Undo();
+            }
+        }
+
+        void OnIfvModeSelectHotkey(bool secondPress)
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
+            {
+                g_SelectionCommandService.OnIfvHotkey(secondPress, GetDoubleClickTime());
+            }
+        }
+
+        // 所有原生命令共享主帧注册时机与一次热键重读。
+        std::array<CommandEntry, 14> g_Commands{{
+            {&RegisterConfiguredCommand<&game::TryRegisterAutoLoadCommand, &OnAutoLoadHotkey>, &game::DisableAutoLoadCommand},
+            {&RegisterConfiguredCommand<&game::TryRegisterTeslaChargeCommand, &OnTeslaChargeHotkey>, &game::DisableTeslaChargeCommand},
+            {&RegisterConfiguredCommand<&game::TryRegisterAutoRepairCommand, &OnAutoRepairHotkey>, &game::DisableAutoRepairCommand},
+            {&RegisterConfiguredCommand<&game::TryRegisterAirSpreadCommand, &OnAirSpreadHotkey>, &game::DisableAirSpreadCommand},
+            {&RegisterConfiguredCommand<&game::TryRegisterMindControlSelectCommand, &OnMindControlSelectHotkey>, &game::DisableMindControlSelectCommand},
+            {&RegisterConfiguredCommand<&game::TryRegisterUnitKindSelectCommand, &OnUnitKindSelectHotkey>, &game::DisableUnitKindSelectCommand},
+            {&RegisterConfiguredCommand<&game::TryRegisterAmmoSelectCommand, &OnAmmoSelectHotkey>, &game::DisableAmmoSelectCommand},
+            {&RegisterConfiguredCommand<&game::TryRegisterPassengerSelectCommand, &OnPassengerSelectHotkey>, &game::DisablePassengerSelectCommand},
+            {&RegisterConfiguredCommand<&game::TryRegisterCycleSelectCommand, &OnCycleSelectHotkey>, &game::DisableCycleSelectCommand},
+            {&RegisterConfiguredCommand<&game::TryRegisterUndoSelectionCommand, &OnUndoSelectionHotkey>, &game::DisableUndoSelectionCommand},
+            {&RegisterConfiguredCommand<&game::TryRegisterIfvModeSelectCommand, &OnIfvModeSelectHotkey>, &game::DisableIfvModeSelectCommand},
+            {&RegisterConfiguredCommand<&RegisterAFloorWhenHookReady, &OnAFloorHotkey>, &game::DisableAFloorCommand},
+            {&RegisterConfiguredCommand<&game::TryRegisterBeaconClearCommand, &OnBeaconClearHotkey>, &game::DisableBeaconClearCommand},
+            {&RegisterConfiguredCommand<&RegisterRangeWhenHookReady, &OnRangeDisplayHotkey>, &game::DisableRangeDisplayCommand}
+        }};
+
         void OnGameFrame()
         {
             // 该锁也覆盖游戏调用，防止外部 Shutdown 在半次提交中清空状态。
@@ -86,48 +291,55 @@ namespace ra_commands::bootstrap
                 return;
             }
 
+            if (g_AFloorHooksReady)
+            {
+                game::SetAFloorGameThread(threadId);
+            }
+            if (g_RangeDisplayHookReady)
+            {
+                game::SetRangeDisplayGameThread(threadId);
+            }
+
             g_ClickedMissionDispatcher.OnGameFrame();
             g_TeslaChargeCommandService.OnGameFrame();
+            g_AutoRepairCommandService.OnGameFrame();
+            g_SelectionCommandService.OnGameFrame();
+            g_AFloorCommandService.OnGameFrame();
+            g_BeaconClearCommandService.OnGameFrame();
+            g_RangeDisplayCommandService.OnGameFrame();
             if (!g_ClickedMissionGameAdapter.IsMatchReady())
             {
                 return;
             }
 
-            if (g_AutoLoadCommandState == CommandState::WaitingForGame)
+            for (auto& command : g_Commands)
             {
-                const auto registration = game::TryRegisterAutoLoadCommand(
-                    g_GameSymbols, &OnAutoLoadHotkey, g_LastError);
+                if (command.State != CommandState::WaitingForGame)
+                {
+                    continue;
+                }
+
+                const auto registration = command.Register(g_GameSymbols, g_LastError);
                 if (registration == game::CommandRegistrationResult::Registered)
                 {
-                    g_AutoLoadCommandState = CommandState::Registered;
+                    command.State = CommandState::Registered;
                 }
                 else if (registration != game::CommandRegistrationResult::Pending)
                 {
-                    g_AutoLoadCommandState = CommandState::Failed;
+                    command.State = CommandState::Failed;
                     OutputDebugStringA(("[RACommandsPlugin] " + g_LastError + "\n").c_str());
                 }
             }
 
-            if (g_TeslaChargeCommandState == CommandState::WaitingForGame)
+            bool allCommandsSettled = true;
+            bool hasRegisteredCommand = false;
+            for (const auto& command : g_Commands)
             {
-                const auto registration = game::TryRegisterTeslaChargeCommand(
-                    g_GameSymbols, &OnTeslaChargeHotkey, g_LastError);
-                if (registration == game::CommandRegistrationResult::Registered)
-                {
-                    g_TeslaChargeCommandState = CommandState::Registered;
-                }
-                else if (registration != game::CommandRegistrationResult::Pending)
-                {
-                    g_TeslaChargeCommandState = CommandState::Failed;
-                    OutputDebugStringA(("[RACommandsPlugin] " + g_LastError + "\n").c_str());
-                }
+                allCommandsSettled &= command.State != CommandState::WaitingForGame;
+                hasRegisteredCommand |= command.State == CommandState::Registered;
             }
 
-            if (!g_HotkeysReloaded &&
-                g_AutoLoadCommandState != CommandState::WaitingForGame &&
-                g_TeslaChargeCommandState != CommandState::WaitingForGame &&
-                (g_AutoLoadCommandState == CommandState::Registered ||
-                    g_TeslaChargeCommandState == CommandState::Registered))
+            if (!g_HotkeysReloaded && allCommandsSettled && hasRegisteredCommand)
             {
                 g_HotkeysReloaded = true;
                 if (!g_GameSymbols.ReloadKeyboardHotkeys())
@@ -162,6 +374,19 @@ namespace ra_commands::bootstrap
                 return false;
             }
 
+            std::string hookError;
+            g_AFloorHooksReady = game::InstallAFloorHooks(&IsAFloorModeEnabled, hookError);
+            if (!g_AFloorHooksReady)
+            {
+                OutputDebugStringA(("[RACommandsPlugin] " + hookError + "\n").c_str());
+            }
+            g_RangeDisplayHookReady = game::InstallRangeDisplayHook(
+                &IsRangeDisplayModeEnabled, hookError);
+            if (!g_RangeDisplayHookReady)
+            {
+                OutputDebugStringA(("[RACommandsPlugin] " + hookError + "\n").c_str());
+            }
+
             g_IsInitialized = true;
             OutputDebugStringA("[RACommandsPlugin] command signatures resolved; main-frame hook installed\n");
             return true;
@@ -193,12 +418,23 @@ namespace ra_commands::bootstrap
         g_IsAutoStartCancelled = true;
         g_IsInitialized = false;
         game::DisableMainFrameCallback();
-        game::DisableAutoLoadCommand();
-        game::DisableTeslaChargeCommand();
+        for (auto& command : g_Commands)
+        {
+            command.Disable();
+            command.State = CommandState::WaitingForGame;
+        }
         g_TeslaChargeCommandService.Reset();
+        g_AutoRepairCommandService.Reset();
+        g_SelectionCommandService.Reset();
+        g_AFloorCommandService.Reset();
+        g_BeaconClearCommandService.Reset();
+        g_BeaconClearGameAdapter.Reset();
+        g_RangeDisplayCommandService.Reset();
+        game::DisableRangeDisplayHook();
+        g_RangeDisplayHookReady = false;
+        game::DisableAFloorHooks();
+        g_AFloorHooksReady = false;
         g_ClickedMissionDispatcher.Reset();
-        g_AutoLoadCommandState = CommandState::WaitingForGame;
-        g_TeslaChargeCommandState = CommandState::WaitingForGame;
         g_HotkeysReloaded = false;
         g_GameThreadId = 0;
         g_LastError.clear();

@@ -19,6 +19,45 @@
     <Filter Include="src\Commands\TeslaChargeCommand">
       <UniqueIdentifier>{FB904567-C084-4A75-8B6A-8EEAF7074621}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Commands\Selection">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B1001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Commands\AirSpreadCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B1002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Commands\AutoRepairCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B1010}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Commands\AFloorCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B1011}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Commands\BeaconClearCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B1012}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Commands\RangeDisplayCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B1013}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Commands\IfvModeSelectCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B1003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Commands\MindControlSelectCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B1004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Commands\UnitKindSelectCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B1005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Commands\AmmoSelectCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B1006}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Commands\PassengerSelectCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B1007}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Commands\CycleSelectCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B1008}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Commands\UndoSelectionCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B1009}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Game">
       <UniqueIdentifier>{0F3A0000-2026-4000-8000-000000000006}</UniqueIdentifier>
     </Filter>
@@ -888,6 +927,192 @@
     <ClInclude Include="src\Commands\TeslaChargeCommand\ITeslaChargeGamePort.h">
       <Filter>src\Commands\TeslaChargeCommand</Filter>
     </ClInclude>
+    <ClCompile Include="src\Commands\Selection\SelectionCore.cpp">
+      <Filter>src\Commands\Selection</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\Selection\SelectionCore.h">
+      <Filter>src\Commands\Selection</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\Selection\SelectionCommandService.cpp">
+      <Filter>src\Commands\Selection</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\Selection\SelectionCommandService.h">
+      <Filter>src\Commands\Selection</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\Selection\ISelectionGamePort.h">
+      <Filter>src\Commands\Selection</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\IfvModeSelectCommand\IfvModeSelectCommandRegistry.cpp">
+      <Filter>src\Commands\IfvModeSelectCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\IfvModeSelectCommand\IfvModeSelectCommandRegistry.h">
+      <Filter>src\Commands\IfvModeSelectCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\IfvModeSelectCommand\IfvKeyPressTracker.cpp">
+      <Filter>src\Commands\IfvModeSelectCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\IfvModeSelectCommand\IfvKeyPressTracker.h">
+      <Filter>src\Commands\IfvModeSelectCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\MindControlSelectCommand\MindControlSelectCommandRegistry.cpp">
+      <Filter>src\Commands\MindControlSelectCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\MindControlSelectCommand\MindControlSelectCommandRegistry.h">
+      <Filter>src\Commands\MindControlSelectCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\UnitKindSelectCommand\UnitKindSelectCommandRegistry.cpp">
+      <Filter>src\Commands\UnitKindSelectCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\UnitKindSelectCommand\UnitKindSelectCommandRegistry.h">
+      <Filter>src\Commands\UnitKindSelectCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\AmmoSelectCommand\AmmoSelectCommandRegistry.cpp">
+      <Filter>src\Commands\AmmoSelectCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\AmmoSelectCommand\AmmoSelectCommandRegistry.h">
+      <Filter>src\Commands\AmmoSelectCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\PassengerSelectCommand\PassengerSelectCommandRegistry.cpp">
+      <Filter>src\Commands\PassengerSelectCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\PassengerSelectCommand\PassengerSelectCommandRegistry.h">
+      <Filter>src\Commands\PassengerSelectCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\CycleSelectCommand\CycleSelectCommandRegistry.cpp">
+      <Filter>src\Commands\CycleSelectCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\CycleSelectCommand\CycleSelectCommandRegistry.h">
+      <Filter>src\Commands\CycleSelectCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\UndoSelectionCommand\UndoSelectionCommandRegistry.cpp">
+      <Filter>src\Commands\UndoSelectionCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\UndoSelectionCommand\UndoSelectionCommandRegistry.h">
+      <Filter>src\Commands\UndoSelectionCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\AirSpreadCommand\AirSpreadPlanner.cpp">
+      <Filter>src\Commands\AirSpreadCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\AirSpreadCommand\AirSpreadPlanner.h">
+      <Filter>src\Commands\AirSpreadCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\AirSpreadCommand\AirSpreadCommandService.cpp">
+      <Filter>src\Commands\AirSpreadCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\AirSpreadCommand\AirSpreadCommandService.h">
+      <Filter>src\Commands\AirSpreadCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\AirSpreadCommand\IAirSpreadGamePort.h">
+      <Filter>src\Commands\AirSpreadCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\AirSpreadCommand\AirSpreadGameAdapter.cpp">
+      <Filter>src\Commands\AirSpreadCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\AirSpreadCommand\AirSpreadGameAdapter.h">
+      <Filter>src\Commands\AirSpreadCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\AirSpreadCommand\AirSpreadCommandRegistry.cpp">
+      <Filter>src\Commands\AirSpreadCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\AirSpreadCommand\AirSpreadCommandRegistry.h">
+      <Filter>src\Commands\AirSpreadCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.cpp">
+      <Filter>src\Commands\AutoRepairCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.h">
+      <Filter>src\Commands\AutoRepairCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\AutoRepairCommand\IAutoRepairGamePort.h">
+      <Filter>src\Commands\AutoRepairCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\AutoRepairCommand\AutoRepairGameAdapter.cpp">
+      <Filter>src\Commands\AutoRepairCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\AutoRepairCommand\AutoRepairGameAdapter.h">
+      <Filter>src\Commands\AutoRepairCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\AutoRepairCommand\AutoRepairCommandRegistry.cpp">
+      <Filter>src\Commands\AutoRepairCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\AutoRepairCommand\AutoRepairCommandRegistry.h">
+      <Filter>src\Commands\AutoRepairCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\AFloorCommand\AFloorCommandService.cpp">
+      <Filter>src\Commands\AFloorCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\AFloorCommand\AFloorCommandService.h">
+      <Filter>src\Commands\AFloorCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\AFloorCommand\IAFloorGamePort.h">
+      <Filter>src\Commands\AFloorCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\AFloorCommand\AFloorGameAdapter.cpp">
+      <Filter>src\Commands\AFloorCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\AFloorCommand\AFloorGameAdapter.h">
+      <Filter>src\Commands\AFloorCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\AFloorCommand\AFloorCommandRegistry.cpp">
+      <Filter>src\Commands\AFloorCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\AFloorCommand\AFloorCommandRegistry.h">
+      <Filter>src\Commands\AFloorCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\BeaconClearCommand\BeaconClearCommandService.cpp">
+      <Filter>src\Commands\BeaconClearCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\BeaconClearCommand\BeaconClearCommandService.h">
+      <Filter>src\Commands\BeaconClearCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\BeaconClearCommand\IBeaconClearGamePort.h">
+      <Filter>src\Commands\BeaconClearCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\BeaconClearCommand\BeaconClearCommandRegistry.cpp">
+      <Filter>src\Commands\BeaconClearCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\BeaconClearCommand\BeaconClearCommandRegistry.h">
+      <Filter>src\Commands\BeaconClearCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\BeaconClearCommand\BeaconClearGameAdapter.cpp">
+      <Filter>src\Commands\BeaconClearCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\BeaconClearCommand\BeaconClearGameAdapter.h">
+      <Filter>src\Commands\BeaconClearCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\BeaconClearCommand\BeaconDeletePacket.cpp">
+      <Filter>src\Commands\BeaconClearCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\BeaconClearCommand\BeaconDeletePacket.h">
+      <Filter>src\Commands\BeaconClearCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\BeaconClearCommand\BeaconRecipientProgress.cpp">
+      <Filter>src\Commands\BeaconClearCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\BeaconClearCommand\BeaconRecipientProgress.h">
+      <Filter>src\Commands\BeaconClearCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\RangeDisplayCommand\RangeDisplayCommandService.cpp">
+      <Filter>src\Commands\RangeDisplayCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\RangeDisplayCommand\RangeDisplayCommandService.h">
+      <Filter>src\Commands\RangeDisplayCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\RangeDisplayCommand\IRangeDisplayGamePort.h">
+      <Filter>src\Commands\RangeDisplayCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\RangeDisplayCommand\RangeDisplayGameAdapter.cpp">
+      <Filter>src\Commands\RangeDisplayCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\RangeDisplayCommand\RangeDisplayGameAdapter.h">
+      <Filter>src\Commands\RangeDisplayCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\RangeDisplayCommand\RangeDisplayCommandRegistry.cpp">
+      <Filter>src\Commands\RangeDisplayCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\RangeDisplayCommand\RangeDisplayCommandRegistry.h">
+      <Filter>src\Commands\RangeDisplayCommand</Filter>
+    </ClInclude>
     <ClCompile Include="src\Commands\TeslaChargeCommand\TeslaChargeCommandRegistry.cpp">
       <Filter>src\Commands\TeslaChargeCommand</Filter>
     </ClCompile>
@@ -948,6 +1173,30 @@
     <ClInclude Include="src\Game\GameObjectAccess.h">
       <Filter>src\Game</Filter>
     </ClInclude>
+    <ClCompile Include="src\Game\SelectionAccess.cpp">
+      <Filter>src\Game</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Game\SelectionAccess.h">
+      <Filter>src\Game</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Game\SelectionGameAdapter.cpp">
+      <Filter>src\Game</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Game\SelectionGameAdapter.h">
+      <Filter>src\Game</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Game\NativeEventCapacity.cpp">
+      <Filter>src\Game</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Game\NativeEventCapacity.h">
+      <Filter>src\Game</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Game\CursorCellAccess.cpp">
+      <Filter>src\Game</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Game\CursorCellAccess.h">
+      <Filter>src\Game</Filter>
+    </ClInclude>
     <ClCompile Include="src\Game\GameSymbols.cpp">
       <Filter>src\Game</Filter>
     </ClCompile>
@@ -958,6 +1207,18 @@
       <Filter>src\Hooks</Filter>
     </ClCompile>
     <ClInclude Include="src\Hooks\MainFrameHook.h">
+      <Filter>src\Hooks</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Hooks\AFloorHook.cpp">
+      <Filter>src\Hooks</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Hooks\AFloorHook.h">
+      <Filter>src\Hooks</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Hooks\RangeDisplayHook.cpp">
+      <Filter>src\Hooks</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Hooks\RangeDisplayHook.h">
       <Filter>src\Hooks</Filter>
     </ClInclude>
     <ClCompile Include="src\Commands\NativeCommandRegistry.cpp">

@@ -16,6 +16,27 @@
     <Filter Include="src\Commands\TeslaChargeCommand">
       <UniqueIdentifier>{BAA7D9BA-C351-4676-9F2D-30310C5A9A03}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Commands\Selection">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B2001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Commands\AirSpreadCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B2002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Commands\IfvModeSelectCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B2004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Commands\AutoRepairCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B2003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Commands\AFloorCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B2005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Commands\BeaconClearCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B2006}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Commands\RangeDisplayCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B2007}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Tests">
       <UniqueIdentifier>{0F3A0001-2026-4000-8000-000000000005}</UniqueIdentifier>
     </Filter>
@@ -25,6 +46,42 @@
       <Filter>src\Tests</Filter>
     </ClCompile>
     <ClCompile Include="src\Tests\TeslaChargePureTests.cpp">
+      <Filter>src\Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tests\SelectionPureTests.cpp">
+      <Filter>src\Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tests\SelectionServicePureTests.cpp">
+      <Filter>src\Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tests\AirSpreadPureTests.cpp">
+      <Filter>src\Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tests\AirSpreadServicePureTests.cpp">
+      <Filter>src\Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tests\AutoRepairPureTests.cpp">
+      <Filter>src\Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tests\MoveIntentPureTests.cpp">
+      <Filter>src\Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tests\IfvKeyPressTrackerTests.cpp">
+      <Filter>src\Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tests\AFloorPureTests.cpp">
+      <Filter>src\Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tests\BeaconClearPureTests.cpp">
+      <Filter>src\Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tests\BeaconDeletePacketTests.cpp">
+      <Filter>src\Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tests\BeaconRecipientProgressTests.cpp">
+      <Filter>src\Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tests\RangeDisplayPureTests.cpp">
       <Filter>src\Tests</Filter>
     </ClCompile>
     <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.cpp">
@@ -38,6 +95,39 @@
     </ClCompile>
     <ClCompile Include="src\Commands\TeslaChargeCommand\TeslaChargeCommandService.cpp">
       <Filter>src\Commands\TeslaChargeCommand</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Commands\Selection\SelectionCore.cpp">
+      <Filter>src\Commands\Selection</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Commands\Selection\SelectionCommandService.cpp">
+      <Filter>src\Commands\Selection</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Commands\AirSpreadCommand\AirSpreadPlanner.cpp">
+      <Filter>src\Commands\AirSpreadCommand</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Commands\AirSpreadCommand\AirSpreadCommandService.cpp">
+      <Filter>src\Commands\AirSpreadCommand</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Commands\IfvModeSelectCommand\IfvKeyPressTracker.cpp">
+      <Filter>src\Commands\IfvModeSelectCommand</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.cpp">
+      <Filter>src\Commands\AutoRepairCommand</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Commands\AFloorCommand\AFloorCommandService.cpp">
+      <Filter>src\Commands\AFloorCommand</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Commands\BeaconClearCommand\BeaconClearCommandService.cpp">
+      <Filter>src\Commands\BeaconClearCommand</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Commands\BeaconClearCommand\BeaconDeletePacket.cpp">
+      <Filter>src\Commands\BeaconClearCommand</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Commands\BeaconClearCommand\BeaconRecipientProgress.cpp">
+      <Filter>src\Commands\BeaconClearCommand</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Commands\RangeDisplayCommand\RangeDisplayCommandService.cpp">
+      <Filter>src\Commands\RangeDisplayCommand</Filter>
     </ClCompile>
     <ClCompile Include="src\ClickedMission\ClickedMissionQueue.cpp">
       <Filter>src\ClickedMission</Filter>
@@ -62,6 +152,57 @@
     </ClInclude>
     <ClInclude Include="src\Commands\TeslaChargeCommand\ITeslaChargeGamePort.h">
       <Filter>src\Commands\TeslaChargeCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\Selection\SelectionCore.h">
+      <Filter>src\Commands\Selection</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\Selection\SelectionCommandService.h">
+      <Filter>src\Commands\Selection</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\Selection\ISelectionGamePort.h">
+      <Filter>src\Commands\Selection</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\AirSpreadCommand\AirSpreadPlanner.h">
+      <Filter>src\Commands\AirSpreadCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\AirSpreadCommand\AirSpreadCommandService.h">
+      <Filter>src\Commands\AirSpreadCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\AirSpreadCommand\IAirSpreadGamePort.h">
+      <Filter>src\Commands\AirSpreadCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\IfvModeSelectCommand\IfvKeyPressTracker.h">
+      <Filter>src\Commands\IfvModeSelectCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.h">
+      <Filter>src\Commands\AutoRepairCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\AutoRepairCommand\IAutoRepairGamePort.h">
+      <Filter>src\Commands\AutoRepairCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\AFloorCommand\AFloorCommandService.h">
+      <Filter>src\Commands\AFloorCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\AFloorCommand\IAFloorGamePort.h">
+      <Filter>src\Commands\AFloorCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\BeaconClearCommand\BeaconClearCommandService.h">
+      <Filter>src\Commands\BeaconClearCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\BeaconClearCommand\IBeaconClearGamePort.h">
+      <Filter>src\Commands\BeaconClearCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\BeaconClearCommand\BeaconDeletePacket.h">
+      <Filter>src\Commands\BeaconClearCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\BeaconClearCommand\BeaconRecipientProgress.h">
+      <Filter>src\Commands\BeaconClearCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\RangeDisplayCommand\RangeDisplayCommandService.h">
+      <Filter>src\Commands\RangeDisplayCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\RangeDisplayCommand\IRangeDisplayGamePort.h">
+      <Filter>src\Commands\RangeDisplayCommand</Filter>
     </ClInclude>
     <ClInclude Include="src\ClickedMission\ClickedMissionQueue.h">
       <Filter>src\ClickedMission</Filter>
