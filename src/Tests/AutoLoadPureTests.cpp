@@ -2,6 +2,7 @@
 #include "Commands/AutoLoadCommand/AutoLoadCommandService.h"
 #include "ClickedMission/ClickedMissionQueue.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <iostream>
 #include <stdexcept>
@@ -123,8 +124,9 @@ namespace
     {
         autoload::Snapshot snapshot;
         snapshot.Units = {
-            Vehicle(1, 2, 2.0), Vehicle(2, 1, 1.0), Vehicle(3, 1, 1.0)
+            Vehicle(1, 2, 2.0), Vehicle(2, 2, 0.5), Vehicle(3, 1, 0.5)
         };
+        snapshot.Units[0].Size = 5.0;
         snapshot.SelectedVehicles = { 1, 2, 3 };
 
         const auto pairs = autoload::Plan(snapshot);
@@ -140,7 +142,97 @@ namespace
         Require(occupiedPassengerPairs.size() == 1 &&
             occupiedPassengerPairs[0].Passenger == 3 &&
             occupiedPassengerPairs[0].Transport == 1,
-            "a vehicle carrying passengers must not become a nested passenger");
+            "a partially loaded vehicle must not become a nested passenger");
+
+        snapshot.Units[1].PassengerCount = 2;
+        const auto fullPassengerPairs = autoload::Plan(snapshot);
+        Require(fullPassengerPairs.size() == 2 &&
+            std::any_of(fullPassengerPairs.begin(), fullPassengerPairs.end(),
+                [](const autoload::Pair& pair) { return pair.Passenger == 2 && pair.Transport == 1; }),
+            "an already-full vehicle may enter a compatible larger transport");
+    }
+
+    void TestMultipleVehicleTransports()
+    {
+        autoload::Snapshot snapshot;
+        for (autoload::UnitId id = 1; id <= 4; ++id)
+        {
+            auto ship = Vehicle(id, 4, 2.0);
+            ship.Size = 5.0;
+            snapshot.Units.push_back(ship);
+            snapshot.SelectedVehicles.push_back(id);
+        }
+        for (autoload::UnitId id = 100; id < 113; ++id)
+        {
+            snapshot.Units.push_back(Vehicle(id, 0, 0.0));
+            snapshot.SelectedVehicles.push_back(id);
+        }
+
+        const auto pairs = autoload::Plan(snapshot);
+        int counts[4] = {};
+        for (const auto& pair : pairs)
+        {
+            Require(pair.Passenger >= 100 && pair.Passenger < 113 &&
+                pair.Transport >= 1 && pair.Transport <= 4 &&
+                pair.Kind == autoload::PairKind::VehicleIntoVehicle,
+                "only the 13 small vehicles should enter the four transports");
+            ++counts[pair.Transport - 1];
+        }
+        Require(pairs.size() == 13 && counts[0] == 4 && counts[1] == 4 &&
+            counts[2] == 4 && counts[3] == 1,
+            "13 vehicles should be distributed as 4/4/4/1");
+    }
+
+    void TestAmbivalentVehiclePrefersCarrying()
+    {
+        autoload::Snapshot snapshot;
+        auto large = Vehicle(1, 4, 3.0);
+        large.Size = 5.0;
+        auto middle = Vehicle(2, 2, 1.0);
+        middle.Size = 2.0;
+        snapshot.Units = { large, middle, Vehicle(3, 0, 0.0) };
+        snapshot.SelectedVehicles = { 1, 2, 3 };
+
+        const auto pairs = autoload::Plan(snapshot);
+        Require(pairs.size() == 1 && pairs[0].Passenger == 3 &&
+            pairs[0].Transport == 2,
+            "an ambivalent vehicle should carry its compatible child before entering a larger vehicle");
+
+        snapshot.Units[1].PassengerCount = 2;
+        const auto fullMiddlePairs = autoload::Plan(snapshot);
+        Require(std::any_of(fullMiddlePairs.begin(), fullMiddlePairs.end(),
+            [](const autoload::Pair& pair)
+            {
+                return pair.Passenger == 2 && pair.Transport == 1;
+            }), "a vehicle already full at snapshot time may enter a compatible larger vehicle");
+    }
+
+    void TestMutuallyCompatibleVehiclesAvoidCycle()
+    {
+        autoload::Snapshot snapshot;
+        snapshot.Units = { Vehicle(1, 2, 2.0), Vehicle(2, 1, 2.0) };
+        snapshot.SelectedVehicles = { 1, 2 };
+
+        const auto pairs = autoload::Plan(snapshot);
+        Require(pairs.size() == 1 && pairs[0].Passenger == 2 && pairs[0].Transport == 1,
+            "mutually compatible empty transports need one deterministic loading direction");
+    }
+
+    void TestVehicleFitIsCheckedPerTransport()
+    {
+        autoload::Snapshot snapshot;
+        auto first = Vehicle(1, 4, 1.0);
+        first.Size = 5.0;
+        auto second = Vehicle(2, 4, 3.0);
+        second.Size = 5.0;
+        auto passenger = Vehicle(3, 0, 0.0);
+        passenger.Size = 2.0;
+        snapshot.Units = { first, second, passenger };
+        snapshot.SelectedVehicles = { 1, 2, 3 };
+
+        const auto pairs = autoload::Plan(snapshot);
+        Require(pairs.size() == 1 && pairs[0].Passenger == 3 && pairs[0].Transport == 2,
+            "a transport that cannot fit one vehicle must not block another compatible transport");
     }
 
     void TestPriorityLimitAndOccupiedSeats()
@@ -164,6 +256,129 @@ namespace
         snapshot.Units[2].PassengerCount = 1;
         Require(autoload::Plan(snapshot).size() == 1,
             "occupied seats must reduce available capacity");
+    }
+
+    void TestOpenToppedDistributionByType()
+    {
+        autoload::Snapshot snapshot;
+        for (autoload::UnitId id = 1; id <= 10; ++id)
+        {
+            auto fortress = Vehicle(id, 5, 2.0);
+            fortress.TypeName = "BFRT";
+            fortress.IsOpenTopped = true;
+            snapshot.Units.push_back(fortress);
+            snapshot.SelectedVehicles.push_back(id);
+        }
+
+        const char* types[] = { "GGI", "GI", "GHOST", "SUPR" };
+        for (int typeIndex = 0; typeIndex < 4; ++typeIndex)
+        {
+            for (int unitIndex = 0; unitIndex < 10; ++unitIndex)
+            {
+                const auto id = static_cast<autoload::UnitId>(100 + typeIndex * 10 + unitIndex);
+                auto infantry = Infantry(id);
+                infantry.TypeName = types[typeIndex];
+                snapshot.Units.push_back(infantry);
+                snapshot.SelectedInfantries.push_back(id);
+            }
+        }
+
+        const auto pairs = autoload::Plan(snapshot);
+        int counts[10][4] = {};
+        for (const auto& pair : pairs)
+        {
+            Require(pair.Transport >= 1 && pair.Transport <= 10 &&
+                pair.Passenger >= 100 && pair.Passenger < 140,
+                "balanced loading must use selected infantry and fortresses");
+            ++counts[pair.Transport - 1][(pair.Passenger - 100) / 10];
+        }
+        Require(pairs.size() == 40, "all four infantry types must be assigned");
+        for (const auto& fortress : counts)
+        {
+            for (const int count : fortress)
+            {
+                Require(count == 1, "each fortress needs one passenger of each type");
+            }
+        }
+    }
+
+    void TestOpenToppedBalanceRespectsCompatibility()
+    {
+        autoload::Snapshot snapshot;
+        auto smallLimit = Vehicle(1, 2, 1.0);
+        auto largeLimit = Vehicle(2, 2, 2.0);
+        smallLimit.IsOpenTopped = true;
+        largeLimit.IsOpenTopped = true;
+        auto bigA = Infantry(10);
+        auto bigB = Infantry(11);
+        bigA.TypeName = bigB.TypeName = "BIG";
+        bigA.Size = bigB.Size = 2.0;
+        auto smallA = Infantry(12);
+        auto smallB = Infantry(13);
+        smallA.TypeName = smallB.TypeName = "SMALL";
+        snapshot.Units = { smallLimit, largeLimit, bigA, bigB, smallA, smallB };
+        snapshot.SelectedVehicles = { 1, 2 };
+        snapshot.SelectedInfantries = { 10, 11, 12, 13 };
+
+        const auto pairs = autoload::Plan(snapshot);
+        Require(pairs.size() == 4, "compatible passengers should use all available seats");
+        for (const auto& pair : pairs)
+        {
+            if (pair.Passenger == 10 || pair.Passenger == 11)
+            {
+                Require(pair.Transport == 2, "oversize infantry must skip the smaller SizeLimit");
+            }
+            else
+            {
+                Require(pair.Transport == 1, "remaining infantry should use the other transport");
+            }
+        }
+
+        snapshot.LoadPolicy.UseCustomRules = true;
+        snapshot.Units[0].PassengerCapacity = 5;
+        snapshot.Units[1].PassengerCapacity = 5;
+        auto smallC = Infantry(14);
+        auto smallD = Infantry(15);
+        smallC.TypeName = smallD.TypeName = "SMALL";
+        snapshot.Units.push_back(smallC);
+        snapshot.Units.push_back(smallD);
+        snapshot.SelectedInfantries.push_back(14);
+        snapshot.SelectedInfantries.push_back(15);
+        autoload::LoadingRule rule;
+        rule.Kind = autoload::RuleKind::Priority;
+        rule.PassengerName = "SMALL";
+        rule.Priority = 10;
+        rule.MaxCount = 1;
+        snapshot.LoadPolicy.LoadingRules.push_back(rule);
+        const auto limitedPairs = autoload::Plan(snapshot);
+        Require(std::count_if(limitedPairs.begin(), limitedPairs.end(),
+            [](const autoload::Pair& pair) { return pair.Passenger >= 12 && pair.Passenger <= 15; }) == 2,
+            "custom MaxCount must still limit each passenger type per transport");
+    }
+
+    void TestOpenToppedBalanceLeavesOtherTransportsAvailable()
+    {
+        autoload::Snapshot snapshot;
+        for (autoload::UnitId id = 1; id <= 2; ++id)
+        {
+            auto fortress = Vehicle(id, 2, 2.0);
+            fortress.IsOpenTopped = true;
+            snapshot.Units.push_back(fortress);
+            snapshot.SelectedVehicles.push_back(id);
+        }
+        snapshot.Units.push_back(Vehicle(3, 1, 2.0));
+        snapshot.SelectedVehicles.push_back(3);
+        for (autoload::UnitId id = 10; id < 15; ++id)
+        {
+            snapshot.Units.push_back(Infantry(id));
+            snapshot.SelectedInfantries.push_back(id);
+        }
+
+        const auto pairs = autoload::Plan(snapshot);
+        Require(pairs.size() == 5 &&
+            std::count_if(pairs.begin(), pairs.end(),
+                [](const autoload::Pair& pair) { return pair.Transport == 3; }) == 1,
+            "unassigned infantry should still enter a selected non-open-topped transport");
     }
 
     commands::ClickedMissionIntent EnterIntent(std::uint32_t frame, std::int32_t rate)
@@ -251,7 +466,9 @@ namespace
         {
             if (VehicleOnly)
             {
-                outSnapshot.Units = { Vehicle(1, 2, 2.0), Vehicle(2, 1, 1.0) };
+                auto primary = Vehicle(1, 2, 2.0);
+                primary.Size = 5.0;
+                outSnapshot.Units = { primary, Vehicle(2, 1, 0.5) };
                 outSnapshot.SelectedInfantries.clear();
                 outSnapshot.SelectedVehicles = { 1, 2 };
                 return true;
@@ -380,7 +597,14 @@ int main()
         TestInfantryOnly();
         TestVehicleModeAndFallback();
         TestSeveralTransportCapableVehicles();
+        TestMultipleVehicleTransports();
+        TestAmbivalentVehiclePrefersCarrying();
+        TestMutuallyCompatibleVehiclesAvoidCycle();
+        TestVehicleFitIsCheckedPerTransport();
         TestPriorityLimitAndOccupiedSeats();
+        TestOpenToppedDistributionByType();
+        TestOpenToppedBalanceRespectsCompatibility();
+        TestOpenToppedBalanceLeavesOtherTransportsAvailable();
         TestIntentDedupeAndDeadline();
         TestCapacityAndEpoch();
         TestServiceBackpressureAndSessionReset();

@@ -120,7 +120,9 @@ namespace ra_commands::game
         {
             return !static_cast<InfantryTypeClass*>(passengerType)->Doggie;
         }
-        return passenger->Passengers.NumPassengers <= 0;
+        return passenger->Passengers.NumPassengers <= 0 ||
+            (passengerType->Passengers > 0 &&
+                passenger->Passengers.NumPassengers >= passengerType->Passengers);
     }
 
     bool IsLocalTesla(TechnoClass* techno)

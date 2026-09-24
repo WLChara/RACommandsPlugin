@@ -93,10 +93,12 @@ namespace ra_commands::autoload
 
         bool ValidVehiclePassenger(const Unit& unit)
         {
-            // 先排除飞行载具，避免规划成功后被游戏适配器拒绝而失去步兵 fallback。
+            // 已载客的载具只有实际满员时才可尝试进入更大的载具。
             return unit.Kind == UnitKind::Vehicle && unit.HasOwner &&
                 !unit.IsInTransport && unit.IsInPlayfield && unit.HasType &&
-                !unit.UsesFlyingMovement && unit.PassengerCount <= 0;
+                !unit.UsesFlyingMovement &&
+                (unit.PassengerCount <= 0 ||
+                    (unit.PassengerCapacity > 0 && unit.PassengerCount >= unit.PassengerCapacity));
         }
 
         bool ValidCandidatePassenger(const Snapshot& snapshot, const Unit& unit, PairKind pairKind)
@@ -209,6 +211,10 @@ namespace ra_commands::autoload
                 std::size_t compatibleCount = 0;
                 for (const auto& state : states)
                 {
+                    if (pairKind == PairKind::VehicleIntoVehicle && passengerId == state.Id)
+                    {
+                        continue;
+                    }
                     const Unit* transport = FindUnit(snapshot, state.Id);
                     if (transport && passenger->Size <= transport->SizeLimit &&
                         LoadingAllowed(snapshot, *passenger, *transport))
@@ -223,6 +229,10 @@ namespace ra_commands::autoload
 
                 for (std::size_t transportIndex = 0; transportIndex < states.size(); ++transportIndex)
                 {
+                    if (pairKind == PairKind::VehicleIntoVehicle && passengerId == states[transportIndex].Id)
+                    {
+                        continue;
+                    }
                     const Unit* transport = FindUnit(snapshot, states[transportIndex].Id);
                     if (!transport || passenger->Size > transport->SizeLimit ||
                         !LoadingAllowed(snapshot, *passenger, *transport))
@@ -305,6 +315,135 @@ namespace ra_commands::autoload
             return result;
         }
 
+        std::vector<Pair> AssignOpenToppedEvenly(const Snapshot& snapshot,
+            const std::vector<UnitId>& passengers,
+            const std::vector<UnitId>& transports)
+        {
+            struct PassengerBucket
+            {
+                std::string TypeName;
+                std::vector<UnitId> Passengers;
+                int Priority = 0;
+            };
+
+            std::vector<TransportState> states;
+            states.reserve(transports.size());
+            for (const UnitId id : transports)
+            {
+                const Unit* transport = FindUnit(snapshot, id);
+                if (transport && ValidTransport(snapshot, *transport) &&
+                    transport->IsOpenTopped && transport->PassengerCapacity > 1)
+                {
+                    states.push_back({ id, SlotsLeft(*transport) });
+                }
+            }
+            if (states.empty())
+            {
+                return {};
+            }
+
+            std::vector<PassengerBucket> buckets;
+            for (const UnitId id : passengers)
+            {
+                const Unit* passenger = FindUnit(snapshot, id);
+                if (!passenger || !ValidCandidatePassenger(snapshot, *passenger, PairKind::Command))
+                {
+                    continue;
+                }
+                auto bucket = std::find_if(buckets.begin(), buckets.end(), [&](const PassengerBucket& item)
+                {
+                    return item.TypeName == passenger->TypeName;
+                });
+                if (bucket == buckets.end())
+                {
+                    buckets.push_back({ passenger->TypeName, { id } });
+                }
+                else
+                {
+                    bucket->Passengers.push_back(id);
+                }
+            }
+
+            for (auto& bucket : buckets)
+            {
+                const Unit* passenger = FindUnit(snapshot, bucket.Passengers.front());
+                for (const auto& state : states)
+                {
+                    const Unit* transport = FindUnit(snapshot, state.Id);
+                    if (passenger && transport && passenger->Size <= transport->SizeLimit &&
+                        LoadingAllowed(snapshot, *passenger, *transport))
+                    {
+                        int maxCount = 0;
+                        bucket.Priority = std::max(bucket.Priority,
+                            LoadingPriority(snapshot, *passenger, *transport, maxCount));
+                    }
+                }
+            }
+            std::stable_sort(buckets.begin(), buckets.end(),
+                [](const PassengerBucket& left, const PassengerBucket& right)
+                {
+                    if (left.Priority != right.Priority) return left.Priority > right.Priority;
+                    return left.Passengers.size() > right.Passengers.size();
+                });
+
+            std::vector<Pair> result;
+            std::vector<PriorityCounter> counters;
+            for (const auto& bucket : buckets)
+            {
+                std::size_t nextTransportIndex = 0;
+                for (const UnitId id : bucket.Passengers)
+                {
+                    const Unit* passenger = FindUnit(snapshot, id);
+                    if (!passenger || !ValidCandidatePassenger(snapshot, *passenger, PairKind::Command))
+                    {
+                        continue;
+                    }
+
+                    for (std::size_t attempt = 0; attempt < states.size(); ++attempt)
+                    {
+                        const std::size_t index = (nextTransportIndex + attempt) % states.size();
+                        auto& state = states[index];
+                        const Unit* transport = FindUnit(snapshot, state.Id);
+                        if (!transport || state.SlotsLeft <= 0 ||
+                            passenger->Size > transport->SizeLimit ||
+                            !LoadingAllowed(snapshot, *passenger, *transport))
+                        {
+                            continue;
+                        }
+
+                        int maxCount = 0;
+                        const int priority = LoadingPriority(snapshot, *passenger, *transport, maxCount);
+                        auto counter = std::find_if(counters.begin(), counters.end(), [&](const PriorityCounter& item)
+                        {
+                            return item.Transport == state.Id && item.PassengerType == passenger->TypeName;
+                        });
+                        if (priority > 0 && maxCount > 0 &&
+                            counter != counters.end() && counter->Count >= maxCount)
+                        {
+                            continue;
+                        }
+
+                        result.push_back({ id, state.Id, PairKind::Command, priority, maxCount });
+                        --state.SlotsLeft;
+                        if (priority > 0 && maxCount > 0)
+                        {
+                            if (counter == counters.end())
+                            {
+                                counters.push_back({ state.Id, passenger->TypeName, 1, maxCount });
+                            }
+                            else
+                            {
+                                ++counter->Count;
+                            }
+                        }
+                        nextTransportIndex = (index + 1) % states.size();
+                        break;
+                    }
+                }
+            }
+            return result;
+        }
+
         enum class OwnerScope
         {
             Any,
@@ -358,14 +497,83 @@ namespace ra_commands::autoload
                 if (left->SizeLimit != right->SizeLimit) return left->SizeLimit > right->SizeLimit;
                 return false;
             });
+            const auto rankedTransports = transports;
+            const auto canCarrySelected = [&](UnitId transportId)
+            {
+                const Unit* transport = FindUnit(snapshot, transportId);
+                if (!transport || !ValidTransport(snapshot, *transport))
+                {
+                    return false;
+                }
+                for (const UnitId passengerId : snapshot.SelectedVehicles)
+                {
+                    if (passengerId == transportId)
+                    {
+                        continue;
+                    }
+                    const Unit* passenger = FindUnit(snapshot, passengerId);
+                    if (passenger && ValidVehiclePassenger(*passenger) &&
+                        passenger->Size <= transport->SizeLimit &&
+                        LoadingAllowed(snapshot, *passenger, *transport))
+                    {
+                        // 双方都能互装时，只保留排名较高的一方作为本轮载具。
+                        const bool reverseAllowed = ValidTransport(snapshot, *passenger) &&
+                            ValidVehiclePassenger(*transport) &&
+                            transport->Size <= passenger->SizeLimit &&
+                            LoadingAllowed(snapshot, *transport, *passenger);
+                        if (reverseAllowed &&
+                            std::find(rankedTransports.begin(), rankedTransports.end(), transportId) >
+                                std::find(rankedTransports.begin(), rankedTransports.end(), passengerId))
+                        {
+                            continue;
+                        }
+                        return true;
+                    }
+                }
+                return false;
+            };
+            transports.erase(std::remove_if(transports.begin(), transports.end(),
+                [&](UnitId id) { return !canCarrySelected(id); }), transports.end());
 
-            const UnitId primaryTransportId = transports.empty() ? 0 : transports.front();
+            std::vector<UnitId> ambivalentTransports;
+            for (const UnitId id : transports)
+            {
+                const Unit* passenger = FindUnit(snapshot, id);
+                if (!passenger || !ValidVehiclePassenger(*passenger))
+                {
+                    continue;
+                }
+                for (const UnitId otherId : transports)
+                {
+                    if (id == otherId)
+                    {
+                        continue;
+                    }
+                    const Unit* other = FindUnit(snapshot, otherId);
+                    if (other && passenger->Size <= other->SizeLimit &&
+                        LoadingAllowed(snapshot, *passenger, *other))
+                    {
+                        ambivalentTransports.push_back(id);
+                        break;
+                    }
+                }
+            }
+            std::stable_sort(transports.begin(), transports.end(), [&](UnitId a, UnitId b)
+            {
+                const bool leftAmbivalent = std::find(ambivalentTransports.begin(),
+                    ambivalentTransports.end(), a) != ambivalentTransports.end();
+                const bool rightAmbivalent = std::find(ambivalentTransports.begin(),
+                    ambivalentTransports.end(), b) != ambivalentTransports.end();
+                if (leftAmbivalent != rightAmbivalent) return leftAmbivalent;
+                return false;
+            });
+
             std::vector<UnitId> vehiclePassengers;
             for (const UnitId id : snapshot.SelectedVehicles)
             {
                 const Unit* unit = FindUnit(snapshot, id);
-                // 其他空载具即使自己能载人，也可以进入本轮的主载具。
-                if (id != primaryTransportId && unit && ValidVehiclePassenger(*unit))
+                const bool canCarry = std::find(transports.begin(), transports.end(), id) != transports.end();
+                if (!canCarry && unit && ValidVehiclePassenger(*unit))
                 {
                     vehiclePassengers.push_back(id);
                 }
@@ -386,24 +594,7 @@ namespace ra_commands::autoload
                 return infantryFallback();
             }
 
-            const auto smallest = std::min_element(vehiclePassengers.begin(), vehiclePassengers.end(),
-                [&](UnitId a, UnitId b)
-                {
-                    const Unit* left = FindUnit(snapshot, a);
-                    const Unit* right = FindUnit(snapshot, b);
-                    return left->Size < right->Size;
-                });
-            const Unit* smallestPassenger = FindUnit(snapshot, *smallest);
-            const Unit* primaryTransport = FindUnit(snapshot, transports.front());
-            if (!smallestPassenger || !primaryTransport ||
-                smallestPassenger->Size > primaryTransport->SizeLimit ||
-                !LoadingAllowed(snapshot, *smallestPassenger, *primaryTransport))
-            {
-                return infantryFallback();
-            }
-
-            // 只把主载具作为目标，避免同一辆车同时被规划为乘客和载具。
-            auto result = Assign(snapshot, vehiclePassengers, { primaryTransportId },
+            auto result = Assign(snapshot, vehiclePassengers, transports,
                 PairKind::VehicleIntoVehicle);
             return result.empty() ? infantryFallback() : result;
         }
@@ -429,6 +620,46 @@ namespace ra_commands::autoload
         if (passengers.empty() || transports.empty())
         {
             return {};
+        }
+        if (mixedSelection)
+        {
+            std::vector<UnitId> openToppedTransports;
+            for (const UnitId id : transports)
+            {
+                const Unit* transport = FindUnit(snapshot, id);
+                if (transport && transport->IsOpenTopped && transport->PassengerCapacity > 1)
+                {
+                    openToppedTransports.push_back(id);
+                }
+            }
+            if (openToppedTransports.size() > 1)
+            {
+                auto balanced = AssignOpenToppedEvenly(snapshot, passengers, openToppedTransports);
+                if (!balanced.empty())
+                {
+                    std::vector<UnitId> remainingPassengers;
+                    for (const UnitId id : passengers)
+                    {
+                        if (std::none_of(balanced.begin(), balanced.end(),
+                                [id](const Pair& pair) { return pair.Passenger == id; }))
+                        {
+                            remainingPassengers.push_back(id);
+                        }
+                    }
+                    std::vector<UnitId> otherTransports;
+                    for (const UnitId id : transports)
+                    {
+                        if (std::find(openToppedTransports.begin(), openToppedTransports.end(), id) ==
+                            openToppedTransports.end())
+                        {
+                            otherTransports.push_back(id);
+                        }
+                    }
+                    auto remainder = Assign(snapshot, remainingPassengers, otherTransports, PairKind::Command);
+                    balanced.insert(balanced.end(), remainder.begin(), remainder.end());
+                    return balanced;
+                }
+            }
         }
         return Assign(snapshot, passengers, transports, PairKind::Command);
     }
