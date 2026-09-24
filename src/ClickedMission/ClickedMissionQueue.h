@@ -18,10 +18,19 @@ namespace ra_commands::commands
         bool operator==(const ClickedMissionIdentity&) const = default;
     };
 
+    struct CellCoordinate
+    {
+        std::int32_t X = 0;
+        std::int32_t Y = 0;
+
+        bool operator==(const CellCoordinate&) const = default;
+    };
+
     enum class ClickedMissionProducer
     {
         Unspecified,
         TeslaCharge,
+        AirSpread,
     };
 
     struct ClickedMissionIntent
@@ -31,6 +40,7 @@ namespace ra_commands::commands
         std::optional<ClickedMissionIdentity> Target;
         std::optional<ClickedMissionIdentity> TargetCell;
         std::optional<ClickedMissionIdentity> Nearest;
+        std::optional<CellCoordinate> DestinationCell;
         ClickedMissionProducer Producer = ClickedMissionProducer::Unspecified;
         std::uint32_t Epoch = 0;
         std::uint32_t CreatedFrame = 0;
@@ -41,6 +51,7 @@ namespace ra_commands::commands
     {
         Enqueued,
         Duplicate,
+        Replaced,
         Full,
         WrongEpoch,
     };
@@ -49,6 +60,7 @@ namespace ra_commands::commands
     {
         std::uint64_t Enqueued = 0;
         std::uint64_t Duplicates = 0;
+        std::uint64_t Superseded = 0;
         std::uint64_t RejectedFull = 0;
         std::uint64_t RejectedWrongEpoch = 0;
         std::uint64_t Expired = 0;
@@ -73,7 +85,7 @@ namespace ra_commands::commands
     class ClickedMissionQueue final
     {
     public:
-        // 一次普通 Enter 至多占一个原生槽，发送前留 13 槽以保留发送后的 12 槽。
+        // 每次发送前留 13 槽，为原生事件保留余量。
         static constexpr std::uint32_t MINIMUM_NATIVE_FREE = 13;
 
         using NativeFreeCount = std::function<std::uint32_t()>;
@@ -82,7 +94,7 @@ namespace ra_commands::commands
 
         explicit ClickedMissionQueue(std::size_t maximumPending, std::uint32_t epoch = 0);
 
-        // 仅对当前待发意图去重；重复提交不会延长原意图的到期帧。
+        // 重复意图不延长期限；同一 actor 的新 AirSpread Move 替换旧目标。
         ClickedMissionEnqueueResult Enqueue(const ClickedMissionIntent& intent);
 
         /**

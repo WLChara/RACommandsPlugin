@@ -40,6 +40,26 @@ namespace ra_commands::commands
             }
         }
 
+        if (intent.Producer == ClickedMissionProducer::AirSpread &&
+            intent.DestinationCell)
+        {
+            const auto before = mPending.size();
+            mPending.erase(std::remove_if(mPending.begin(), mPending.end(),
+                [&intent](const ClickedMissionIntent& pending)
+                {
+                    return pending.Producer == ClickedMissionProducer::AirSpread &&
+                        pending.DestinationCell && pending.Actor == intent.Actor &&
+                        pending.Mission == intent.Mission;
+                }), mPending.end());
+            const auto superseded = before - mPending.size();
+            if (superseded > 0)
+            {
+                mPending.push_back(intent);
+                mCounters.Superseded += superseded;
+                return ClickedMissionEnqueueResult::Replaced;
+            }
+        }
+
         if (mPending.size() >= mMaximumPending)
         {
             ++mCounters.RejectedFull;
@@ -149,8 +169,10 @@ namespace ra_commands::commands
         const ClickedMissionIntent& left,
         const ClickedMissionIntent& right) noexcept
     {
-        return left.Epoch == right.Epoch && left.Actor == right.Actor &&
-               left.Mission == right.Mission && left.Target == right.Target &&
-               left.TargetCell == right.TargetCell && left.Nearest == right.Nearest;
+        return left.Epoch == right.Epoch && left.Producer == right.Producer &&
+               left.Actor == right.Actor && left.Mission == right.Mission &&
+               left.Target == right.Target &&
+               left.TargetCell == right.TargetCell && left.Nearest == right.Nearest &&
+               left.DestinationCell == right.DestinationCell;
     }
 }
