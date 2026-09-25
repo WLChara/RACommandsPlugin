@@ -378,6 +378,15 @@
     <ClInclude Include="src\Commands\ForceShieldCommand\ForceShieldCommandRegistry.h" />
     <ClCompile Include="src\Commands\ForceShieldCommand\ForceShieldGameAdapter.cpp" />
     <ClInclude Include="src\Commands\ForceShieldCommand\ForceShieldGameAdapter.h" />
+    <ClCompile Include="src\Commands\AutoSuperWeapon\AutoSuperWeaponPlanner.cpp" />
+    <ClInclude Include="src\Commands\AutoSuperWeapon\AutoSuperWeaponPlanner.h" />
+    <ClCompile Include="src\Commands\AutoSuperWeapon\AutoSuperWeaponCommandService.cpp" />
+    <ClInclude Include="src\Commands\AutoSuperWeapon\AutoSuperWeaponCommandService.h" />
+    <ClInclude Include="src\Commands\AutoSuperWeapon\IAutoSuperWeaponGamePort.h" />
+    <ClCompile Include="src\Commands\AutoSuperWeapon\AutoSuperWeaponGameAdapter.cpp" />
+    <ClInclude Include="src\Commands\AutoSuperWeapon\AutoSuperWeaponGameAdapter.h" />
+    <ClCompile Include="src\Commands\AutoSuperWeapon\AutoSuperWeaponCommandRegistry.cpp" />
+    <ClInclude Include="src\Commands\AutoSuperWeapon\AutoSuperWeaponCommandRegistry.h" />
     <ClInclude Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.h" />
     <ClInclude Include="src\Commands\AutoRepairCommand\IAutoRepairGamePort.h" />
     <ClCompile Include="src\Commands\AutoRepairCommand\AutoRepairGameAdapter.cpp" />

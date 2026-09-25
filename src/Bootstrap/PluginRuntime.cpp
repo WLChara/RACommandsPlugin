@@ -6,6 +6,9 @@
 #include "Commands/AutoBuild/AutoBuildGameAdapter.h"
 #include "Commands/ForceShieldCommand/ForceShieldCommandRegistry.h"
 #include "Commands/ForceShieldCommand/ForceShieldGameAdapter.h"
+#include "Commands/AutoSuperWeapon/AutoSuperWeaponCommandRegistry.h"
+#include "Commands/AutoSuperWeapon/AutoSuperWeaponCommandService.h"
+#include "Commands/AutoSuperWeapon/AutoSuperWeaponGameAdapter.h"
 #include "Commands/AutoNanoCloudCommand/AutoNanoCloudCommandRegistry.h"
 #include "Commands/AutoNanoCloudCommand/AutoNanoCloudCommandService.h"
 #include "Commands/AutoNanoCloudCommand/AutoNanoCloudGameAdapter.h"
@@ -98,6 +101,7 @@ namespace ra_commands::bootstrap
         game::NativeNetworkEventAdapter g_NativeNetworkEventAdapter;
         game::AutoBuildGameAdapter g_AutoBuildGameAdapter(g_NativeNetworkEventAdapter);
         game::ForceShieldGameAdapter g_ForceShieldGameAdapter(g_NativeNetworkEventAdapter);
+        game::AutoSuperWeaponGameAdapter g_AutoSuperWeaponGameAdapter(g_NativeNetworkEventAdapter);
         game::AutoLoadGameAdapter g_AutoLoadGameAdapter;
         game::AutoNanoCloudGameAdapter g_AutoNanoCloudGameAdapter;
         game::AutoRepairGameAdapter g_AutoRepairGameAdapter;
@@ -120,6 +124,8 @@ namespace ra_commands::bootstrap
         auto_repair::AutoRepairCommandService g_AutoRepairCommandService(
             g_AutoRepairGameAdapter, safe_mode::g_IsSafeModeEnabled);
         auto_build::AutoBuildCommandService g_AutoBuildCommandService(g_AutoBuildGameAdapter);
+        auto_super_weapon::AutoSuperWeaponCommandService g_AutoSuperWeaponCommandService(
+            g_AutoSuperWeaponGameAdapter);
         air_spread::AirSpreadCommandService g_AirSpreadCommandService(g_AirSpreadGameAdapter);
         tesla_charge::TeslaChargeCommandService g_TeslaChargeCommandService(
             g_TeslaChargeGameAdapter, g_ClickedMissionDispatcher);
@@ -249,6 +255,26 @@ namespace ra_commands::bootstrap
             if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
             {
                 (void)g_ForceShieldGameAdapter.TryFireAtCursor();
+            }
+        }
+
+        void OnAutoIronCurtainHotkey()
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
+            {
+                (void)g_AutoSuperWeaponCommandService.OnHotkey(
+                    auto_super_weapon::Kind::IronCurtain);
+            }
+        }
+
+        void OnAutoRageInductorHotkey()
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
+            {
+                (void)g_AutoSuperWeaponCommandService.OnHotkey(
+                    auto_super_weapon::Kind::RageInductor);
             }
         }
 
@@ -408,6 +434,8 @@ namespace ra_commands::bootstrap
             {&RegisterConfiguredCommand<&game::TryRegisterMainAutoBuildCommand, &OnMainAutoBuildHotkey>, &game::DisableMainAutoBuildCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterDefenseAutoBuildCommand, &OnDefenseAutoBuildHotkey>, &game::DisableDefenseAutoBuildCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterForceShieldCommand, &OnForceShieldHotkey>, &game::DisableForceShieldCommand},
+            {&RegisterConfiguredCommand<&game::TryRegisterAutoIronCurtainCommand, &OnAutoIronCurtainHotkey>, &game::DisableAutoIronCurtainCommand},
+            {&RegisterConfiguredCommand<&game::TryRegisterAutoRageInductorCommand, &OnAutoRageInductorHotkey>, &game::DisableAutoRageInductorCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterAirSpreadCommand, &OnAirSpreadHotkey>, &game::DisableAirSpreadCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterMindControlSelectCommand, &OnMindControlSelectHotkey>, &game::DisableMindControlSelectCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterUnitKindSelectCommand, &OnUnitKindSelectHotkey>, &game::DisableUnitKindSelectCommand},
@@ -458,6 +486,7 @@ namespace ra_commands::bootstrap
             g_TeslaChargeCommandService.OnGameFrame();
             g_AutoRepairCommandService.OnGameFrame();
             g_AutoBuildCommandService.OnGameFrame();
+            g_AutoSuperWeaponCommandService.OnGameFrame();
             g_SelectionCommandService.OnGameFrame();
             g_AFloorCommandService.OnGameFrame();
             g_BeaconClearCommandService.OnGameFrame();
@@ -608,6 +637,7 @@ namespace ra_commands::bootstrap
         g_AutoCrushCommandService.Reset();
         g_AutoRepairCommandService.Reset();
         g_AutoBuildCommandService.Reset();
+        g_AutoSuperWeaponCommandService.Reset();
         g_ForceShieldGameAdapter.Reset();
         g_SelectionCommandService.Reset();
         g_AFloorCommandService.Reset();
