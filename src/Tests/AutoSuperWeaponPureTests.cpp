@@ -96,6 +96,10 @@ namespace
         service.OnGameFrame();
         Require(game.Sent.size() == 1,
             "a queued weapon must not be sent again while awaiting confirmation");
+        game.Frame += 300;
+        service.OnGameFrame();
+        Require(game.Sent.size() == 1,
+            "an unconfirmed queued event must not be resent after a timeout");
         Require(service.OnHotkey(Kind::RageInductor) && game.Sent.size() == 2 &&
             game.Sent.back() == Kind::RageInductor,
             "rage toggle must remain independent of iron curtain");
