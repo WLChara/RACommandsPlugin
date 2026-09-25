@@ -24,7 +24,6 @@ namespace ra_commands::auto_super_weapon
         {
             bool Enabled = false;
             bool Pending = false;
-            std::uint32_t QueuedAtFrame = 0;
             std::optional<std::uint32_t> LastAttemptFrame;
         };
 

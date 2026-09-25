@@ -5,7 +5,6 @@ namespace ra_commands::auto_super_weapon
     namespace
     {
         constexpr std::uint32_t RETRY_INTERVAL_FRAMES = 30;
-        constexpr std::uint32_t CONFIRM_TIMEOUT_FRAMES = 300;
     }
 
     AutoSuperWeaponCommandService::AutoSuperWeaponCommandService(
@@ -90,11 +89,8 @@ namespace ra_commands::auto_super_weapon
         }
         if (state.Pending)
         {
-            if (mLastFrame - state.QueuedAtFrame < CONFIRM_TIMEOUT_FRAMES)
-            {
-                return;
-            }
-            state.Pending = false;
+            // 入队不等于执行；未见就绪状态消失前不能盲目重发。
+            return;
         }
         if (state.LastAttemptFrame &&
             mLastFrame - *state.LastAttemptFrame < RETRY_INTERVAL_FRAMES)
@@ -111,7 +107,6 @@ namespace ra_commands::auto_super_weapon
         if (plan && mGame.TryFireAt(kind, plan->Center))
         {
             state.Pending = true;
-            state.QueuedAtFrame = mLastFrame;
         }
     }
 
