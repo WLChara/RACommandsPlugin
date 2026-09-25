@@ -51,10 +51,11 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <TargetMachine>MachineX86</TargetMachine>
       <AdditionalLibraryDirectories>$(MSBuildProjectDirectory)\third_party\libhat\Win32\Release\v143\static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libhat.lib;bcrypt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libhat.lib;bcrypt.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup Label="ProjectFiles">
+    <None Include="src\NetworkEvent\README.md" />
     <None Include="src\SDK\README.md" />
     <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\AbstractClass.h" />
     <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\AbstractTypeClass.h" />
@@ -407,6 +408,10 @@
     <ClCompile Include="src\Bootstrap\PluginRuntime.cpp" />
     <ClInclude Include="src\Bootstrap\PluginRuntime.h" />
     <ClCompile Include="src\ClickedMission\ClickedMissionDispatcher.cpp" />
+    <ClCompile Include="src\NetworkEvent\NetworkEvent.cpp" />
+    <ClInclude Include="src\NetworkEvent\NetworkEvent.h" />
+    <ClCompile Include="src\NetworkEvent\NativeNetworkEventAdapter.cpp" />
+    <ClInclude Include="src\NetworkEvent\NativeNetworkEventAdapter.h" />
     <ClCompile Include="src\ClickedMission\ClickedMissionIntentHandlers.cpp" />
     <ClInclude Include="src\ClickedMission\ClickedMissionIntentHandlers.h" />
     <ClInclude Include="src\ClickedMission\ClickedMissionDispatcher.h" />

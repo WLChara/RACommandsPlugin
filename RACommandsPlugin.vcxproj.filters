@@ -10,6 +10,9 @@
     <Filter Include="src\ClickedMission">
       <UniqueIdentifier>{0F3A0000-2026-4000-8000-000000000003}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\NetworkEvent">
+      <UniqueIdentifier>{C4F693A2-A1F5-47D0-918D-D4A7746D8B16}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Commands">
       <UniqueIdentifier>{0F3A0000-2026-4000-8000-000000000004}</UniqueIdentifier>
     </Filter>
@@ -195,6 +198,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <None Include="src\NetworkEvent\README.md"><Filter>src\NetworkEvent</Filter></None>
     <None Include="src\SDK\README.md">
       <Filter>src\SDK</Filter>
     </None>
@@ -1182,6 +1186,10 @@
     </ClInclude>
     <ClCompile Include="src\ClickedMission\ClickedMissionIntentHandlers.cpp"><Filter>src\ClickedMission</Filter></ClCompile>
     <ClInclude Include="src\ClickedMission\ClickedMissionIntentHandlers.h"><Filter>src\ClickedMission</Filter></ClInclude>
+    <ClCompile Include="src\NetworkEvent\NetworkEvent.cpp"><Filter>src\NetworkEvent</Filter></ClCompile>
+    <ClInclude Include="src\NetworkEvent\NetworkEvent.h"><Filter>src\NetworkEvent</Filter></ClInclude>
+    <ClCompile Include="src\NetworkEvent\NativeNetworkEventAdapter.cpp"><Filter>src\NetworkEvent</Filter></ClCompile>
+    <ClInclude Include="src\NetworkEvent\NativeNetworkEventAdapter.h"><Filter>src\NetworkEvent</Filter></ClInclude>
     <ClCompile Include="src\ClickedMission\ClickedMissionDispatcher.cpp">
       <Filter>src\ClickedMission</Filter>
     </ClCompile>

@@ -44,6 +44,7 @@
 #include "Commands/CycleSelectCommand/CycleSelectCommandRegistry.h"
 #include "Commands/UndoSelectionCommand/UndoSelectionCommandRegistry.h"
 #include "ClickedMission/ClickedMissionGameAdapter.h"
+#include "NetworkEvent/NativeNetworkEventAdapter.h"
 #include "Game/GameSymbols.h"
 #include "Game/SelectionGameAdapter.h"
 #include "Hooks/MainFrameHook.h"
@@ -89,6 +90,7 @@ namespace ra_commands::bootstrap
         std::mutex g_StateMutex;
         game::GameSymbols g_GameSymbols;
         game::ClickedMissionGameAdapter g_ClickedMissionGameAdapter;
+        game::NativeNetworkEventAdapter g_NativeNetworkEventAdapter;
         game::AutoLoadGameAdapter g_AutoLoadGameAdapter;
         game::AutoNanoCloudGameAdapter g_AutoNanoCloudGameAdapter;
         game::AutoRepairGameAdapter g_AutoRepairGameAdapter;
@@ -395,6 +397,7 @@ namespace ra_commands::bootstrap
             if (g_GameThreadId == 0)
             {
                 g_GameThreadId = threadId;
+                g_NativeNetworkEventAdapter.BindGameThread(threadId);
             }
             if (g_GameThreadId != threadId)
             {
@@ -575,6 +578,7 @@ namespace ra_commands::bootstrap
         game::DisableAFloorHooks();
         g_AFloorHooksReady = false;
         g_ClickedMissionDispatcher.Reset();
+        g_NativeNetworkEventAdapter.Reset();
         g_HotkeysReloaded = false;
         g_GameThreadId = 0;
         g_LastError.clear();

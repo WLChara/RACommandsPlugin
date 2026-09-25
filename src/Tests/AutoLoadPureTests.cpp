@@ -694,6 +694,7 @@ void RunBeaconDeletePacketTests();
 void RunBeaconRecipientProgressTests();
 void RunRangeDisplayTests();
 void RunClickedMissionIntentHandlersTests();
+void RunNetworkEventTests();
 void RunSafeModeToggleTests();
 void RunAutoNanoCloudTests();
 void RunAutoCrushPlannerTests();
@@ -736,6 +737,7 @@ int main()
         RunBeaconRecipientProgressTests();
         RunRangeDisplayTests();
         RunClickedMissionIntentHandlersTests();
+        RunNetworkEventTests();
         RunSafeModeToggleTests();
         RunAutoNanoCloudTests();
         RunAutoCrushPlannerTests();

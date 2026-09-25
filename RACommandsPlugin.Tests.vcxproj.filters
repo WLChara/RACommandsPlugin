@@ -7,6 +7,9 @@
     <Filter Include="src\ClickedMission">
       <UniqueIdentifier>{0F3A0001-2026-4000-8000-000000000002}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\NetworkEvent">
+      <UniqueIdentifier>{74A862CB-DBA6-42A5-A992-6100ED9AE249}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Commands">
       <UniqueIdentifier>{0F3A0001-2026-4000-8000-000000000003}</UniqueIdentifier>
     </Filter>
@@ -92,6 +95,7 @@
     <ClCompile Include="src\Tests\BeaconDeletePacketTests.cpp">
       <Filter>src\Tests</Filter>
     </ClCompile>
+    <ClCompile Include="src\Tests\NetworkEventTests.cpp"><Filter>src\Tests</Filter></ClCompile>
     <ClCompile Include="src\Tests\BeaconRecipientProgressTests.cpp">
       <Filter>src\Tests</Filter>
     </ClCompile>
@@ -154,6 +158,8 @@
     </ClCompile>
     <ClCompile Include="src\ClickedMission\ClickedMissionIntentHandlers.cpp"><Filter>src\ClickedMission</Filter></ClCompile>
     <ClInclude Include="src\ClickedMission\ClickedMissionIntentHandlers.h"><Filter>src\ClickedMission</Filter></ClInclude>
+    <ClCompile Include="src\NetworkEvent\NetworkEvent.cpp"><Filter>src\NetworkEvent</Filter></ClCompile>
+    <ClInclude Include="src\NetworkEvent\NetworkEvent.h"><Filter>src\NetworkEvent</Filter></ClInclude>
     <ClCompile Include="src\ClickedMission\ClickedMissionDispatcher.cpp">
       <Filter>src\ClickedMission</Filter>
     </ClCompile>

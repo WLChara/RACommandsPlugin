@@ -60,6 +60,7 @@
     <ClCompile Include="src\Tests\AFloorPureTests.cpp" />
     <ClCompile Include="src\Tests\BeaconClearPureTests.cpp" />
     <ClCompile Include="src\Tests\BeaconDeletePacketTests.cpp" />
+    <ClCompile Include="src\Tests\NetworkEventTests.cpp" />
     <ClCompile Include="src\Tests\BeaconRecipientProgressTests.cpp" />
     <ClCompile Include="src\Tests\RangeDisplayPureTests.cpp" />
     <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.cpp" />
@@ -84,6 +85,8 @@
     <ClCompile Include="src\Commands\RangeDisplayCommand\RangeDisplayCommandService.cpp" />
     <ClCompile Include="src\ClickedMission\ClickedMissionQueue.cpp" />
     <ClCompile Include="src\ClickedMission\ClickedMissionDispatcher.cpp" />
+    <ClCompile Include="src\NetworkEvent\NetworkEvent.cpp" />
+    <ClInclude Include="src\NetworkEvent\NetworkEvent.h" />
     <ClCompile Include="src\ClickedMission\ClickedMissionIntentHandlers.cpp" />
     <ClInclude Include="src\ClickedMission\ClickedMissionIntentHandlers.h" />
     <ClInclude Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudPlanner.h" />
