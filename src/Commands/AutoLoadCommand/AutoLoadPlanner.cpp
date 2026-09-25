@@ -483,6 +483,16 @@ namespace ra_commands::autoload
             return result;
         }
 
+        std::vector<Pair> PlanInfantryFallback(const Snapshot& snapshot)
+        {
+            const auto fallbackTransports = FilterTransports(
+                snapshot, snapshot.SelectedVehicles, OwnerScope::LocalOrAllied);
+            const auto fallbackPassengers = FilterCommandPassengers(
+                snapshot, snapshot.FriendlyPassengers, OwnerScope::LocalOrAllied);
+            return Assign(snapshot, fallbackPassengers, fallbackTransports,
+                PairKind::InfantryFallback);
+        }
+
         std::vector<Pair> PlanVehicleSelection(const Snapshot& snapshot)
         {
             std::vector<UnitId> transports = FilterTransports(
@@ -579,24 +589,14 @@ namespace ra_commands::autoload
                 }
             }
 
-            const auto infantryFallback = [&]()
-            {
-                const auto fallbackTransports = FilterTransports(
-                    snapshot, snapshot.SelectedVehicles, OwnerScope::LocalOrAllied);
-                const auto fallbackPassengers = FilterCommandPassengers(
-                    snapshot, snapshot.FriendlyPassengers, OwnerScope::LocalOrAllied);
-                return Assign(snapshot, fallbackPassengers, fallbackTransports,
-                    PairKind::InfantryFallback);
-            };
-
             if (transports.empty() || vehiclePassengers.empty())
             {
-                return infantryFallback();
+                return PlanInfantryFallback(snapshot);
             }
 
             auto result = Assign(snapshot, vehiclePassengers, transports,
                 PairKind::VehicleIntoVehicle);
-            return result.empty() ? infantryFallback() : result;
+            return result.empty() ? PlanInfantryFallback(snapshot) : result;
         }
     }
 
@@ -662,5 +662,51 @@ namespace ra_commands::autoload
             }
         }
         return Assign(snapshot, passengers, transports, PairKind::Command);
+    }
+
+    std::vector<Pair> PlanSafeMode(const Snapshot& snapshot)
+    {
+        const auto infantryPairs = snapshot.SelectedInfantries.empty()
+            ? PlanInfantryFallback(snapshot)
+            : Plan(snapshot);
+        if (!infantryPairs.empty())
+        {
+            const UnitId transportId = infantryPairs.front().Transport;
+            Snapshot focused = snapshot;
+            if (focused.SelectedInfantries.empty() || !focused.SelectedVehicles.empty())
+            {
+                focused.SelectedVehicles = {transportId};
+            }
+            else
+            {
+                focused.FriendlyTransports = {transportId};
+            }
+            return focused.SelectedInfantries.empty()
+                ? PlanInfantryFallback(focused) : Plan(focused);
+        }
+
+        if (snapshot.SelectedVehicles.empty())
+        {
+            return {};
+        }
+        const auto vehiclePairs = PlanVehicleSelection(snapshot);
+        UnitId transportId = 0;
+        for (const auto& pair : vehiclePairs)
+        {
+            if (pair.Kind == PairKind::VehicleIntoVehicle)
+            {
+                transportId = pair.Transport;
+                break;
+            }
+        }
+        std::vector<Pair> selected;
+        for (const auto& pair : vehiclePairs)
+        {
+            if (pair.Kind == PairKind::VehicleIntoVehicle && pair.Transport == transportId)
+            {
+                selected.push_back(pair);
+            }
+        }
+        return selected;
     }
 }

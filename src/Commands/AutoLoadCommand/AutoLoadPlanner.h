@@ -25,12 +25,14 @@ namespace ra_commands::autoload
     struct Unit
     {
         UnitId Id = 0;
+        std::uintptr_t Address = 0;
         UnitKind Kind = UnitKind::Other;
         std::string TypeName;
         bool HasOwner = false;
         bool IsLocalOrAllied = false;
         bool IsInPlayfield = false;
         bool IsInTransport = false;
+        bool IsEnteringTransport = false;
         bool IsDog = false;
         bool UsesFlyingMovement = false;
         bool HasType = false;
@@ -98,4 +100,7 @@ namespace ra_commands::autoload
      * 调用方负责在游戏线程对配对重新验证，并处理实际 ClickedMission 提交。
      */
     [[nodiscard]] std::vector<Pair> Plan(const Snapshot& snapshot);
+
+    /** 安全模式优先安排步兵，并且每次只规划装载一辆目标载具。 */
+    [[nodiscard]] std::vector<Pair> PlanSafeMode(const Snapshot& snapshot);
 }
