@@ -34,6 +34,7 @@ RACommandsPlugin/
 │   ├── Game/              游戏对象访问与目标版本 Sig 定义
 │   ├── Hooks/             游戏 Hook 安装与转发
 │   ├── Memory/            通用进程内存访问
+│   ├── NetworkEvent/      原生事件 C 层布局、建构与 OutList 适配器
 │   ├── Signature/         通用 Sig 扫描与解析
 │   ├── SDK/               按目标版本保存的外部 YRpp 快照
 │   └── Tests/             纯逻辑测试
@@ -55,6 +56,8 @@ RACommandsPlugin/
 使用常规 `LoadLibrary` 注入后，DLL 会自行安排初始化，调用方不需要调用 `RACommandsPlugin_Initialize`。初始化在 `DllMain` 返回后验证 EXE 并解析 AOB，然后安装主帧 Hook；原生命令在游戏命令表就绪的主帧注册。旧的 `RACommandsPlugin_Initialize` 导出仍可手动重试；`RACommandsPlugin_IsReady` 只表示基础解析和主帧 Hook 已就绪，不表示命令、热键或联机已经通过运行时验收。
 
 该 DLL 在安装主帧 Hook 前将自身固定到进程退出；`Shutdown` 仅停用回调并清空待发命令，不会移除原生命令、撤销 Hook 或使 `FreeLibrary` 成为安全操作。与同时 Hook `MainFrame` 的 YRHackMod 版本不支持共存，遇到已改写的入口会拒绝安装。使用前请在目标游戏环境自行验收，尤其不要将尚未验证的联机行为视为安全。
+
+`src/NetworkEvent/` 定义目标样本的 0x6F 字节原生事件布局及按事件种类解释的 union，当前提供建筑 Produce／Place 的建构和本地玩家 OutList 适配器。适配器在目标 EXE 校验通过后绑定游戏线程；返回成功只表示事件已复制进原生 OutList，不表示事件已被执行或联机送达。布局及环形队列行为通过目标样本反汇编与离线测试核对，实际游戏与联机效果仍待验收。
 
 「自动为线圈充电」默认关闭；按下热键切换开关。开启时，每座本地玩家的磁暴线圈优先保持现有有效配对，再从 32 格内选择最近的空闲 SHK／SHOCK 充能兵；每个充能兵只分配给一座线圈。已分配单位被选中时会定期取消选择。关闭时撤销尚未送出的充能任务，不会强制中止已经进入游戏队列的任务。
 
