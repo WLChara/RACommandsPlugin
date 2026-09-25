@@ -447,6 +447,8 @@
     <ClInclude Include="src\Game\NativeEventCapacity.h" />
     <ClCompile Include="src\Game\CursorCellAccess.cpp" />
     <ClInclude Include="src\Game\CursorCellAccess.h" />
+    <ClCompile Include="src\Game\SuperWeaponAccess.cpp" />
+    <ClInclude Include="src\Game\SuperWeaponAccess.h" />
     <ClCompile Include="src\Game\GameSymbols.cpp" />
     <ClInclude Include="src\Game\GameSymbols.h" />
     <ClCompile Include="src\Hooks\MainFrameHook.cpp" />
