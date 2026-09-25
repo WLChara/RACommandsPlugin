@@ -314,6 +314,8 @@ namespace ra_commands::game
         commands::ClickedMissionIntent intent;
         intent.Actor = CaptureIdentity(techno, epoch);
         intent.Producer = commands::ClickedMissionProducer::AirSpread;
+        intent.Supersession =
+            commands::ClickedMissionSupersession::ReplaceSameProducerActorMission;
         intent.Mission = static_cast<std::int32_t>(Mission::Move);
         intent.DestinationCell = commands::CellCoordinate{destination.X, destination.Y};
         intent.Epoch = epoch;

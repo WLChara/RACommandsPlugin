@@ -31,7 +31,7 @@ namespace ra_commands::game
 
     bool AutoRepairGameAdapter::IsMatchReady() const
     {
-        return IsTeslaChargeSessionReady();
+        return IsGameSessionWithBuildingsReady();
     }
 
     std::uintptr_t AutoRepairGameAdapter::GetSessionIdentity() const

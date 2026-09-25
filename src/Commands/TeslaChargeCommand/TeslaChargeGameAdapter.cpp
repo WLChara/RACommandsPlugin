@@ -1,4 +1,5 @@
 #include "Commands/TeslaChargeCommand/TeslaChargeGameAdapter.h"
+#include "Commands/TeslaChargeCommand/TeslaChargeGameRules.h"
 
 #include "Game/GameObjectAccess.h"
 
@@ -32,7 +33,7 @@ namespace ra_commands::game
 
     bool TeslaChargeGameAdapter::CaptureSnapshot(tesla_charge::Snapshot& outSnapshot) const
     {
-        if (!IsTeslaChargeSessionReady())
+        if (!IsGameSessionWithBuildingsReady())
         {
             return false;
         }

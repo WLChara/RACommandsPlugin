@@ -600,6 +600,7 @@ void RunBeaconClearTests();
 void RunBeaconDeletePacketTests();
 void RunBeaconRecipientProgressTests();
 void RunRangeDisplayTests();
+void RunClickedMissionIntentHandlersTests();
 
 int main()
 {
@@ -635,6 +636,7 @@ int main()
         RunBeaconDeletePacketTests();
         RunBeaconRecipientProgressTests();
         RunRangeDisplayTests();
+        RunClickedMissionIntentHandlersTests();
         std::cout << "RACommandsPlugin pure tests passed\n";
         return 0;
     }

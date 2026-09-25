@@ -17,7 +17,6 @@ namespace ra_commands::game
     {
         // 仅为防御损坏的游戏数组，非游戏规则上限；发现合法对局超过此值再按证据调整。
         constexpr int MAX_GAME_UNITS = 100000;
-        constexpr std::int64_t MAX_TESLA_CELL_DISTANCE_SQUARED = 32 * 32;
 
         template<typename T>
         bool IsUsableArray(const DynamicVectorClass<T*>* array)
@@ -27,13 +26,6 @@ namespace ra_commands::game
                 (array->Count == 0 || array->Items != nullptr);
         }
 
-        bool IsLocalLiveObject(TechnoClass* techno)
-        {
-            return techno && techno->Owner &&
-                techno->Owner == HouseClass::Player.get() &&
-                techno->IsAlive && techno->IsOnMap && !techno->InLimbo &&
-                techno->IsInPlayfield && !techno->IsDead();
-        }
     }
 
     bool IsGameSessionReady()
@@ -44,9 +36,27 @@ namespace ra_commands::game
             IsUsableArray(UnitClass::Array.get());
     }
 
-    bool IsTeslaChargeSessionReady()
+    bool IsGameSessionWithBuildingsReady()
     {
         return IsGameSessionReady() && IsUsableArray(BuildingClass::Array.get());
+    }
+
+    bool IsLocal(const TechnoClass* techno)
+    {
+        const auto* const player = HouseClass::Player.get();
+        return player && techno && techno->Owner == player;
+    }
+
+    bool NameEqual(const TechnoClass* techno, std::string_view registeredName)
+    {
+        if (!techno || registeredName.empty())
+        {
+            return false;
+        }
+        const auto* const type = techno->GetTechnoType();
+        const char* const id = type ? type->get_ID() : nullptr;
+        return id && std::strlen(id) == registeredName.size() &&
+            ::_strnicmp(id, registeredName.data(), registeredName.size()) == 0;
     }
 
     TechnoClass* FindLiveTechno(std::uint64_t uniqueId)
@@ -123,50 +133,6 @@ namespace ra_commands::game
         return passenger->Passengers.NumPassengers <= 0 ||
             (passengerType->Passengers > 0 &&
                 passenger->Passengers.NumPassengers >= passengerType->Passengers);
-    }
-
-    bool IsLocalTesla(TechnoClass* techno)
-    {
-        if (!IsLocalLiveObject(techno) || techno->WhatAmI() != AbstractType::Building)
-        {
-            return false;
-        }
-
-        const auto* const building = static_cast<BuildingClass*>(techno);
-        return building->Type && building->ActuallyPlacedOnMap &&
-            !building->BeingProduced &&
-            ::_stricmp(building->Type->get_ID(), "TESLA") == 0;
-    }
-
-    bool IsLocalTeslaCharger(TechnoClass* techno)
-    {
-        if (!IsLocalLiveObject(techno) || techno->WhatAmI() != AbstractType::Infantry)
-        {
-            return false;
-        }
-
-        const auto* const infantry = static_cast<InfantryClass*>(techno);
-        if (!infantry->Type || infantry->Transporter)
-        {
-            return false;
-        }
-        const char* const id = infantry->Type->get_ID();
-        return ::_stricmp(id, "SHK") == 0 || ::_stricmp(id, "SHOCK") == 0;
-    }
-
-    bool CanChargeTesla(TechnoClass* charger, TechnoClass* tesla)
-    {
-        if (!IsLocalTeslaCharger(charger) || !IsLocalTesla(tesla) ||
-            charger->Owner != tesla->Owner)
-        {
-            return false;
-        }
-
-        const auto chargerCell = charger->GetMapCoords();
-        const auto teslaCell = tesla->GetMapCoords();
-        const auto dx = static_cast<std::int64_t>(chargerCell.X) - teslaCell.X;
-        const auto dy = static_cast<std::int64_t>(chargerCell.Y) - teslaCell.Y;
-        return dx * dx + dy * dy <= MAX_TESLA_CELL_DISTANCE_SQUARED;
     }
 
     std::uint32_t GetCurrentGameFrame()

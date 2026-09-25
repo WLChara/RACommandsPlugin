@@ -51,6 +51,7 @@
     <ClCompile Include="src\Tests\AirSpreadServicePureTests.cpp" />
     <ClCompile Include="src\Tests\AutoRepairPureTests.cpp" />
     <ClCompile Include="src\Tests\MoveIntentPureTests.cpp" />
+    <ClCompile Include="src\Tests\ClickedMissionIntentHandlersTests.cpp" />
     <ClCompile Include="src\Tests\IfvKeyPressTrackerTests.cpp" />
     <ClCompile Include="src\Tests\AFloorPureTests.cpp" />
     <ClCompile Include="src\Tests\BeaconClearPureTests.cpp" />
@@ -74,6 +75,8 @@
     <ClCompile Include="src\Commands\RangeDisplayCommand\RangeDisplayCommandService.cpp" />
     <ClCompile Include="src\ClickedMission\ClickedMissionQueue.cpp" />
     <ClCompile Include="src\ClickedMission\ClickedMissionDispatcher.cpp" />
+    <ClCompile Include="src\ClickedMission\ClickedMissionIntentHandlers.cpp" />
+    <ClInclude Include="src\ClickedMission\ClickedMissionIntentHandlers.h" />
     <ClInclude Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.h" />
     <ClInclude Include="src\Commands\AutoLoadCommand\AutoLoadCommandService.h" />
     <ClInclude Include="src\Commands\AutoLoadCommand\IAutoLoadGamePort.h" />

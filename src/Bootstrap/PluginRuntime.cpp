@@ -10,6 +10,7 @@
 #include "Commands/AirSpreadCommand/AirSpreadCommandRegistry.h"
 #include "Commands/AirSpreadCommand/AirSpreadCommandService.h"
 #include "Commands/AirSpreadCommand/AirSpreadGameAdapter.h"
+#include "Commands/AirSpreadCommand/AirSpreadIntentHandler.h"
 #include "Commands/AFloorCommand/AFloorCommandRegistry.h"
 #include "Commands/AFloorCommand/AFloorCommandService.h"
 #include "Commands/AFloorCommand/AFloorGameAdapter.h"
@@ -22,6 +23,7 @@
 #include "Commands/TeslaChargeCommand/TeslaChargeCommandRegistry.h"
 #include "Commands/TeslaChargeCommand/TeslaChargeCommandService.h"
 #include "Commands/TeslaChargeCommand/TeslaChargeGameAdapter.h"
+#include "Commands/TeslaChargeCommand/TeslaChargeIntentHandler.h"
 #include "Commands/Selection/SelectionCommandService.h"
 #include "Commands/IfvModeSelectCommand/IfvModeSelectCommandRegistry.h"
 #include "Commands/MindControlSelectCommand/MindControlSelectCommandRegistry.h"
@@ -364,6 +366,19 @@ namespace ra_commands::bootstrap
             if (!game::IsSupportedHost(g_LastError) ||
                 !g_GameSymbols.Resolve(moduleBase, g_LastError))
             {
+                OutputDebugStringA(("[RACommandsPlugin] " + g_LastError + "\n").c_str());
+                return false;
+            }
+
+            // 在主帧回调启用前绑定已实现的命令处理器。
+            if (!g_ClickedMissionGameAdapter.BindIntentHandler(
+                    commands::ClickedMissionProducer::AirSpread,
+                    {&game::ValidateAirSpreadMoveIntent, &game::AttemptAirSpreadMoveIntent}) ||
+                !g_ClickedMissionGameAdapter.BindIntentHandler(
+                    commands::ClickedMissionProducer::TeslaCharge,
+                    {&game::ValidateTeslaChargeIntent, &game::AttemptTeslaChargeIntent}))
+            {
+                g_LastError = "clicked mission intent handler binding failed";
                 OutputDebugStringA(("[RACommandsPlugin] " + g_LastError + "\n").c_str());
                 return false;
             }
