@@ -1,6 +1,7 @@
 #include "NetworkEvent/NativeNetworkEventAdapter.h"
 
 #include "Game/GameObjectAccess.h"
+#include "Game/SuperWeaponAccess.h"
 
 #include <YRPPCore.h>
 #include <GeneralDefinitions.h>
@@ -66,9 +67,8 @@ namespace ra_commands::game
                 auto* const super = supers.Items[payload.SpecialWeaponIndex];
                 auto* const map = MapClass::Instance.get();
                 const CellStruct cell{payload.Location.X, payload.Location.Y};
-                return super && super->Owner == localPlayer && super->Type &&
-                    super->Granted && super->IsCharged && !super->IsOnHold &&
-                    super->CanFire() && map && map->CoordinatesLegal(cell) &&
+                return IsReadyLocalSuperWeapon(super, localPlayer) &&
+                    map && map->CoordinatesLegal(cell) &&
                     map->IsWithinUsableArea(cell, false) &&
                     map->TryGetCellAt(cell);
             }

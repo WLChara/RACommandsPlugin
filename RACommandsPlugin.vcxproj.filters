@@ -1286,6 +1286,8 @@
     <ClInclude Include="src\Game\CursorCellAccess.h">
       <Filter>src\Game</Filter>
     </ClInclude>
+    <ClCompile Include="src\Game\SuperWeaponAccess.cpp"><Filter>src\Game</Filter></ClCompile>
+    <ClInclude Include="src\Game\SuperWeaponAccess.h"><Filter>src\Game</Filter></ClInclude>
     <ClCompile Include="src\Game\GameSymbols.cpp">
       <Filter>src\Game</Filter>
     </ClCompile>
