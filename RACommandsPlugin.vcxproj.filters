@@ -28,6 +28,9 @@
     <Filter Include="src\Commands\AutoRepairCommand">
       <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B1010}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Commands\SafeModeToggleCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B10F0}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Commands\AFloorCommand">
       <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B1011}</UniqueIdentifier>
     </Filter>
@@ -1019,6 +1022,12 @@
     </ClInclude>
     <ClCompile Include="src\Commands\AirSpreadCommand\AirSpreadIntentHandler.cpp"><Filter>src\Commands\AirSpreadCommand</Filter></ClCompile>
     <ClInclude Include="src\Commands\AirSpreadCommand\AirSpreadIntentHandler.h"><Filter>src\Commands\AirSpreadCommand</Filter></ClInclude>
+    <ClCompile Include="src\Commands\SafeModeToggleCommand\SafeModeState.cpp"><Filter>src\Commands\SafeModeToggleCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\SafeModeToggleCommand\SafeModeState.h"><Filter>src\Commands\SafeModeToggleCommand</Filter></ClInclude>
+    <ClCompile Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandService.cpp"><Filter>src\Commands\SafeModeToggleCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandService.h"><Filter>src\Commands\SafeModeToggleCommand</Filter></ClInclude>
+    <ClCompile Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandRegistry.cpp"><Filter>src\Commands\SafeModeToggleCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandRegistry.h"><Filter>src\Commands\SafeModeToggleCommand</Filter></ClInclude>
     <ClCompile Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.cpp">
       <Filter>src\Commands\AutoRepairCommand</Filter>
     </ClCompile>

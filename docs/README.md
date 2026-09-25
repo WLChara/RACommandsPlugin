@@ -21,6 +21,7 @@ RACommandsPlugin/
 │   │   ├── Selection/         选区命令共用的纯规则、状态与端口
 │   │   ├── AirSpreadCommand/  空军分散规划、服务与游戏适配
 │   │   ├── AutoRepairCommand/ 自动修理服务与游戏适配
+│   │   ├── SafeModeToggleCommand/ 安全模式的全局状态与切换命令
 │   │   ├── AFloorCommand/     A 地板模式状态、适配与命令
 │   │   ├── BeaconClearCommand/ 全场信标值型队列与原生协议适配
 │   │   ├── RangeDisplayCommand/ 选中单位射程显示状态与命令
