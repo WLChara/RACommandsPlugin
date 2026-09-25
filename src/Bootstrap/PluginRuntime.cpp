@@ -1,6 +1,9 @@
 #include "Bootstrap/PluginRuntime.h"
 
 #include "Commands/AutoLoadCommand/AutoLoadCommandService.h"
+#include "Commands/SafeModeToggleCommand/SafeModeState.h"
+#include "Commands/SafeModeToggleCommand/SafeModeToggleCommandRegistry.h"
+#include "Commands/SafeModeToggleCommand/SafeModeToggleCommandService.h"
 #include "ClickedMission/ClickedMissionDispatcher.h"
 #include "Commands/AutoLoadCommand/AutoLoadCommandRegistry.h"
 #include "Commands/AutoLoadCommand/AutoLoadGameAdapter.h"
@@ -86,6 +89,8 @@ namespace ra_commands::bootstrap
         game::BeaconClearGameAdapter g_BeaconClearGameAdapter;
         game::RangeDisplayGameAdapter g_RangeDisplayGameAdapter;
         commands::ClickedMissionDispatcher g_ClickedMissionDispatcher(g_ClickedMissionGameAdapter);
+        safe_mode::SafeModeToggleCommandService g_SafeModeToggleCommandService(
+            safe_mode::g_IsSafeModeEnabled);
         game::AirSpreadGameAdapter g_AirSpreadGameAdapter(g_ClickedMissionDispatcher);
         autoload::AutoLoadCommandService g_AutoLoadCommandService(
             g_AutoLoadGameAdapter, g_ClickedMissionDispatcher);
@@ -112,6 +117,16 @@ namespace ra_commands::bootstrap
             if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
             {
                 g_AutoLoadCommandService.OnHotkey();
+            }
+        }
+
+        void OnSafeModeToggleHotkey()
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
+            {
+                (void)g_SafeModeToggleCommandService.OnHotkey(
+                    g_ClickedMissionDispatcher.IsSessionActive());
             }
         }
 
@@ -256,7 +271,8 @@ namespace ra_commands::bootstrap
         }
 
         // 所有原生命令共享主帧注册时机与一次热键重读。
-        std::array<CommandEntry, 14> g_Commands{{
+        std::array<CommandEntry, 15> g_Commands{{
+            {&RegisterConfiguredCommand<&game::TryRegisterSafeModeToggleCommand, &OnSafeModeToggleHotkey>, &game::DisableSafeModeToggleCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterAutoLoadCommand, &OnAutoLoadHotkey>, &game::DisableAutoLoadCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterTeslaChargeCommand, &OnTeslaChargeHotkey>, &game::DisableTeslaChargeCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterAutoRepairCommand, &OnAutoRepairHotkey>, &game::DisableAutoRepairCommand},
@@ -303,6 +319,8 @@ namespace ra_commands::bootstrap
             }
 
             g_ClickedMissionDispatcher.OnGameFrame();
+            g_SafeModeToggleCommandService.OnGameFrame(
+                g_ClickedMissionDispatcher.IsSessionActive(), g_ClickedMissionDispatcher.Epoch());
             g_TeslaChargeCommandService.OnGameFrame();
             g_AutoRepairCommandService.OnGameFrame();
             g_SelectionCommandService.OnGameFrame();
@@ -439,6 +457,7 @@ namespace ra_commands::bootstrap
             command.State = CommandState::WaitingForGame;
         }
         g_TeslaChargeCommandService.Reset();
+        g_SafeModeToggleCommandService.Reset();
         g_AutoRepairCommandService.Reset();
         g_SelectionCommandService.Reset();
         g_AFloorCommandService.Reset();

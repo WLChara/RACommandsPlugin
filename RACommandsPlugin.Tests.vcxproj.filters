@@ -28,6 +28,9 @@
     <Filter Include="src\Commands\AutoRepairCommand">
       <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B2003}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Commands\SafeModeToggleCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B20F0}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Commands\AFloorCommand">
       <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B2005}</UniqueIdentifier>
     </Filter>
@@ -63,6 +66,7 @@
     <ClCompile Include="src\Tests\AutoRepairPureTests.cpp">
       <Filter>src\Tests</Filter>
     </ClCompile>
+    <ClCompile Include="src\Tests\SafeModeTogglePureTests.cpp"><Filter>src\Tests</Filter></ClCompile>
     <ClCompile Include="src\Tests\MoveIntentPureTests.cpp">
       <Filter>src\Tests</Filter>
     </ClCompile>
@@ -112,6 +116,8 @@
     <ClCompile Include="src\Commands\IfvModeSelectCommand\IfvKeyPressTracker.cpp">
       <Filter>src\Commands\IfvModeSelectCommand</Filter>
     </ClCompile>
+    <ClCompile Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandService.cpp"><Filter>src\Commands\SafeModeToggleCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandService.h"><Filter>src\Commands\SafeModeToggleCommand</Filter></ClInclude>
     <ClCompile Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.cpp">
       <Filter>src\Commands\AutoRepairCommand</Filter>
     </ClCompile>

@@ -336,6 +336,12 @@
     <ClCompile Include="src\Commands\AirSpreadCommand\AirSpreadIntentHandler.cpp" />
     <ClInclude Include="src\Commands\AirSpreadCommand\AirSpreadIntentHandler.h" />
     <ClInclude Include="src\Commands\AirSpreadCommand\AirSpreadCommandRegistry.h" />
+    <ClCompile Include="src\Commands\SafeModeToggleCommand\SafeModeState.cpp" />
+    <ClInclude Include="src\Commands\SafeModeToggleCommand\SafeModeState.h" />
+    <ClCompile Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandService.cpp" />
+    <ClInclude Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandService.h" />
+    <ClCompile Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandRegistry.cpp" />
+    <ClInclude Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandRegistry.h" />
     <ClCompile Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.cpp" />
     <ClInclude Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.h" />
     <ClInclude Include="src\Commands\AutoRepairCommand\IAutoRepairGamePort.h" />
