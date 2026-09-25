@@ -12,12 +12,12 @@
 #include "Commands/AutoCrush/AutoCrushIntentHandler.h"
 #include "Commands/AutoCrushAddCommand/AutoCrushAddCommandRegistry.h"
 #include "Commands/AutoCrushRemoveCommand/AutoCrushRemoveCommandRegistry.h"
-#include "Commands/SafeModeToggleCommand/SafeModeState.h"
-#include "Commands/SafeModeToggleCommand/SafeModeToggleCommandRegistry.h"
-#include "Commands/SafeModeToggleCommand/SafeModeToggleCommandService.h"
 #include "ClickedMission/ClickedMissionDispatcher.h"
 #include "Commands/AutoLoadCommand/AutoLoadCommandRegistry.h"
 #include "Commands/AutoLoadCommand/AutoLoadGameAdapter.h"
+#include "Commands/SafeModeToggleCommand/SafeModeState.h"
+#include "Commands/SafeModeToggleCommand/SafeModeToggleCommandRegistry.h"
+#include "Commands/SafeModeToggleCommand/SafeModeToggleCommandService.h"
 #include "Commands/AutoRepairCommand/AutoRepairCommandRegistry.h"
 #include "Commands/AutoRepairCommand/AutoRepairCommandService.h"
 #include "Commands/AutoRepairCommand/AutoRepairGameAdapter.h"
@@ -106,11 +106,11 @@ namespace ra_commands::bootstrap
         commands::ClickedMissionDispatcher g_ClickedMissionDispatcher(g_ClickedMissionGameAdapter);
         auto_nano_cloud::AutoNanoCloudCommandService g_AutoNanoCloudCommandService(
             g_AutoNanoCloudGameAdapter, g_ClickedMissionDispatcher);
-        safe_mode::SafeModeToggleCommandService g_SafeModeToggleCommandService(
-            safe_mode::g_IsSafeModeEnabled);
         game::AirSpreadGameAdapter g_AirSpreadGameAdapter(g_ClickedMissionDispatcher);
         game::AutoCrushGameAdapter g_AutoCrushGameAdapter(g_ClickedMissionDispatcher);
         auto_crush::AutoCrushCommandService g_AutoCrushCommandService(g_AutoCrushGameAdapter);
+        safe_mode::SafeModeToggleCommandService g_SafeModeToggleCommandService(
+            safe_mode::g_IsSafeModeEnabled);
         autoload::AutoLoadCommandService g_AutoLoadCommandService(
             g_AutoLoadGameAdapter, g_ClickedMissionDispatcher,
             safe_mode::g_IsSafeModeEnabled);
@@ -385,7 +385,7 @@ namespace ra_commands::bootstrap
         }
 
         // 所有原生命令共享主帧注册时机与一次热键重读。
-        std::array<CommandEntry, 20> g_Commands{{
+        auto g_Commands = std::to_array<CommandEntry>({
             {&RegisterConfiguredCommand<&game::TryRegisterSafeModeToggleCommand, &OnSafeModeToggleHotkey>, &game::DisableSafeModeToggleCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterAutoLoadCommand, &OnAutoLoadHotkey>, &game::DisableAutoLoadCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterAutoNanoCloudCommand, &OnAutoNanoCloudHotkey>, &game::DisableAutoNanoCloudCommand},
@@ -406,7 +406,7 @@ namespace ra_commands::bootstrap
             {&RegisterConfiguredCommand<&RegisterAFloorWhenHookReady, &OnAFloorHotkey>, &game::DisableAFloorCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterBeaconClearCommand, &OnBeaconClearHotkey>, &game::DisableBeaconClearCommand},
             {&RegisterConfiguredCommand<&RegisterRangeWhenHookReady, &OnRangeDisplayHotkey>, &game::DisableRangeDisplayCommand}
-        }};
+        });
 
         void OnGameFrame()
         {
@@ -510,7 +510,7 @@ namespace ra_commands::bootstrap
                 return false;
             }
 
-            // 在主帧回调启用前绑定已实现的命令处理器。
+            // 处理器必须在主帧回调和原生命令启动前全部绑定。
             if (!g_ClickedMissionGameAdapter.BindIntentHandler(
                     commands::ClickedMissionProducer::AutoCrush,
                     {&game::ValidateAutoCrushIntent, &game::AttemptAutoCrushIntent}) ||
