@@ -365,6 +365,14 @@
     <ClInclude Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandService.h" />
     <ClCompile Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandRegistry.cpp" />
     <ClInclude Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandRegistry.h" />
+    <ClCompile Include="src\Commands\AutoBuild\AutoBuildCommandService.cpp" />
+    <ClInclude Include="src\Commands\AutoBuild\AutoBuildCommandService.h" />
+    <ClInclude Include="src\Commands\AutoBuild\IAutoBuildGamePort.h" />
+    <ClInclude Include="src\Commands\AutoBuild\AutoBuildKeyPressTracker.h" />
+    <ClCompile Include="src\Commands\AutoBuild\AutoBuildGameAdapter.cpp" />
+    <ClInclude Include="src\Commands\AutoBuild\AutoBuildGameAdapter.h" />
+    <ClCompile Include="src\Commands\AutoBuild\AutoBuildCommandRegistry.cpp" />
+    <ClInclude Include="src\Commands\AutoBuild\AutoBuildCommandRegistry.h" />
     <ClCompile Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.cpp" />
     <ClInclude Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.h" />
     <ClInclude Include="src\Commands\AutoRepairCommand\IAutoRepairGamePort.h" />

@@ -1,6 +1,9 @@
 #include "Bootstrap/PluginRuntime.h"
 
 #include "Commands/AutoLoadCommand/AutoLoadCommandService.h"
+#include "Commands/AutoBuild/AutoBuildCommandRegistry.h"
+#include "Commands/AutoBuild/AutoBuildCommandService.h"
+#include "Commands/AutoBuild/AutoBuildGameAdapter.h"
 #include "Commands/AutoNanoCloudCommand/AutoNanoCloudCommandRegistry.h"
 #include "Commands/AutoNanoCloudCommand/AutoNanoCloudCommandService.h"
 #include "Commands/AutoNanoCloudCommand/AutoNanoCloudGameAdapter.h"
@@ -91,6 +94,7 @@ namespace ra_commands::bootstrap
         game::GameSymbols g_GameSymbols;
         game::ClickedMissionGameAdapter g_ClickedMissionGameAdapter;
         game::NativeNetworkEventAdapter g_NativeNetworkEventAdapter;
+        game::AutoBuildGameAdapter g_AutoBuildGameAdapter(g_NativeNetworkEventAdapter);
         game::AutoLoadGameAdapter g_AutoLoadGameAdapter;
         game::AutoNanoCloudGameAdapter g_AutoNanoCloudGameAdapter;
         game::AutoRepairGameAdapter g_AutoRepairGameAdapter;
@@ -112,6 +116,7 @@ namespace ra_commands::bootstrap
             safe_mode::g_IsSafeModeEnabled);
         auto_repair::AutoRepairCommandService g_AutoRepairCommandService(
             g_AutoRepairGameAdapter, safe_mode::g_IsSafeModeEnabled);
+        auto_build::AutoBuildCommandService g_AutoBuildCommandService(g_AutoBuildGameAdapter);
         air_spread::AirSpreadCommandService g_AirSpreadCommandService(g_AirSpreadGameAdapter);
         tesla_charge::TeslaChargeCommandService g_TeslaChargeCommandService(
             g_TeslaChargeGameAdapter, g_ClickedMissionDispatcher);
@@ -214,6 +219,24 @@ namespace ra_commands::bootstrap
             if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
             {
                 g_AutoRepairCommandService.OnHotkey();
+            }
+        }
+
+        void OnMainAutoBuildHotkey()
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
+            {
+                (void)g_AutoBuildCommandService.OnHotkey(auto_build::BuildSlot::Main);
+            }
+        }
+
+        void OnDefenseAutoBuildHotkey()
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
+            {
+                (void)g_AutoBuildCommandService.OnHotkey(auto_build::BuildSlot::Defense);
             }
         }
 
@@ -362,7 +385,7 @@ namespace ra_commands::bootstrap
         }
 
         // 所有原生命令共享主帧注册时机与一次热键重读。
-        std::array<CommandEntry, 18> g_Commands{{
+        std::array<CommandEntry, 20> g_Commands{{
             {&RegisterConfiguredCommand<&game::TryRegisterSafeModeToggleCommand, &OnSafeModeToggleHotkey>, &game::DisableSafeModeToggleCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterAutoLoadCommand, &OnAutoLoadHotkey>, &game::DisableAutoLoadCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterAutoNanoCloudCommand, &OnAutoNanoCloudHotkey>, &game::DisableAutoNanoCloudCommand},
@@ -370,6 +393,8 @@ namespace ra_commands::bootstrap
             {&RegisterConfiguredCommand<&RegisterAutoCrushRemoveWhenHookReady, &OnAutoCrushRemoveHotkey>, &game::DisableAutoCrushRemoveCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterTeslaChargeCommand, &OnTeslaChargeHotkey>, &game::DisableTeslaChargeCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterAutoRepairCommand, &OnAutoRepairHotkey>, &game::DisableAutoRepairCommand},
+            {&RegisterConfiguredCommand<&game::TryRegisterMainAutoBuildCommand, &OnMainAutoBuildHotkey>, &game::DisableMainAutoBuildCommand},
+            {&RegisterConfiguredCommand<&game::TryRegisterDefenseAutoBuildCommand, &OnDefenseAutoBuildHotkey>, &game::DisableDefenseAutoBuildCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterAirSpreadCommand, &OnAirSpreadHotkey>, &game::DisableAirSpreadCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterMindControlSelectCommand, &OnMindControlSelectHotkey>, &game::DisableMindControlSelectCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterUnitKindSelectCommand, &OnUnitKindSelectHotkey>, &game::DisableUnitKindSelectCommand},
@@ -419,6 +444,7 @@ namespace ra_commands::bootstrap
                 g_ClickedMissionDispatcher.IsSessionActive(), g_ClickedMissionDispatcher.Epoch());
             g_TeslaChargeCommandService.OnGameFrame();
             g_AutoRepairCommandService.OnGameFrame();
+            g_AutoBuildCommandService.OnGameFrame();
             g_SelectionCommandService.OnGameFrame();
             g_AFloorCommandService.OnGameFrame();
             g_BeaconClearCommandService.OnGameFrame();
@@ -568,6 +594,7 @@ namespace ra_commands::bootstrap
         g_AutoNanoCloudCommandService.Reset();
         g_AutoCrushCommandService.Reset();
         g_AutoRepairCommandService.Reset();
+        g_AutoBuildCommandService.Reset();
         g_SelectionCommandService.Reset();
         g_AFloorCommandService.Reset();
         g_BeaconClearCommandService.Reset();
