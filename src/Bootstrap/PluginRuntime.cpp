@@ -95,7 +95,8 @@ namespace ra_commands::bootstrap
         autoload::AutoLoadCommandService g_AutoLoadCommandService(
             g_AutoLoadGameAdapter, g_ClickedMissionDispatcher,
             safe_mode::g_IsSafeModeEnabled);
-        auto_repair::AutoRepairCommandService g_AutoRepairCommandService(g_AutoRepairGameAdapter);
+        auto_repair::AutoRepairCommandService g_AutoRepairCommandService(
+            g_AutoRepairGameAdapter, safe_mode::g_IsSafeModeEnabled);
         air_spread::AirSpreadCommandService g_AirSpreadCommandService(g_AirSpreadGameAdapter);
         tesla_charge::TeslaChargeCommandService g_TeslaChargeCommandService(
             g_TeslaChargeGameAdapter, g_ClickedMissionDispatcher);
@@ -132,10 +133,14 @@ namespace ra_commands::bootstrap
                     g_ClickedMissionDispatcher.IsSessionActive());
                 const bool isEnabled = safe_mode::g_IsSafeModeEnabled.load(
                     std::memory_order_acquire);
-                if (!wasEnabled && isEnabled)
+                if (wasEnabled != isEnabled)
                 {
-                    g_ClickedMissionDispatcher.CancelByProducer(
-                        commands::ClickedMissionProducer::AutoLoad);
+                    g_AutoRepairCommandService.OnSafeModeChanged();
+                    if (isEnabled)
+                    {
+                        g_ClickedMissionDispatcher.CancelByProducer(
+                            commands::ClickedMissionProducer::AutoLoad);
+                    }
                 }
             }
         }

@@ -23,6 +23,8 @@ namespace ra_commands::auto_repair
         bool IsDamaged = false;
         bool IsBeingRepaired = false;
         bool CanBeRepaired = false;
+        int Health = 0;
+        bool IsInViewport = false;
     };
 
     struct Snapshot
@@ -40,10 +42,12 @@ namespace ra_commands::auto_repair
         [[nodiscard]] virtual bool IsMatchReady() const = 0;
         [[nodiscard]] virtual std::uintptr_t GetSessionIdentity() const = 0;
         [[nodiscard]] virtual std::uint32_t GetCurrentFrame() const = 0;
-        [[nodiscard]] virtual bool CaptureSnapshot(Snapshot& outSnapshot) const = 0;
+        [[nodiscard]] virtual std::uint64_t GetCurrentTimeMs() const = 0;
+        [[nodiscard]] virtual bool CaptureSnapshot(Snapshot& outSnapshot,
+            bool captureViewport) const = 0;
         [[nodiscard]] virtual std::uint32_t GetNativeFreeSlots() const = 0;
 
         /** 返回 true 表示已调用 Repair()；游戏是否实际入队由原生逻辑决定。 */
-        [[nodiscard]] virtual bool TryRepair(BuildingId id) const = 0;
+        [[nodiscard]] virtual bool TryRepair(BuildingId id, bool requireViewport) const = 0;
     };
 }

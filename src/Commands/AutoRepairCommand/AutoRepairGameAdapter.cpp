@@ -6,6 +6,8 @@
 #include <YRPPCore.h>
 #include <BuildingClass.h>
 #include <HouseClass.h>
+#include <TacticalClass.h>
+#include <Windows.h>
 
 #include <utility>
 
@@ -27,6 +29,13 @@ namespace ra_commands::game
             return type && building->Health > 0 && type->Strength > 0 &&
                 building->Health < type->Strength;
         }
+
+        bool IsInViewport(const BuildingClass* building)
+        {
+            auto* const tactical = TacticalClass::Instance.get();
+            Point2D position{};
+            return tactical && tactical->CoordsToClient(building->GetCoords(), &position);
+        }
     }
 
     bool AutoRepairGameAdapter::IsMatchReady() const
@@ -44,7 +53,13 @@ namespace ra_commands::game
         return GetCurrentGameFrame();
     }
 
-    bool AutoRepairGameAdapter::CaptureSnapshot(auto_repair::Snapshot& outSnapshot) const
+    std::uint64_t AutoRepairGameAdapter::GetCurrentTimeMs() const
+    {
+        return GetTickCount64();
+    }
+
+    bool AutoRepairGameAdapter::CaptureSnapshot(auto_repair::Snapshot& outSnapshot,
+        bool captureViewport) const
     {
         if (!IsMatchReady())
         {
@@ -71,7 +86,10 @@ namespace ra_commands::game
                 isDamaged,
                 building->IsBeingRepaired,
                 owner == snapshot.LocalOwner && isDamaged &&
-                    !building->IsBeingRepaired && building->CanBeRepaired()
+                    !building->IsBeingRepaired && building->CanBeRepaired(),
+                building->Health,
+                captureViewport && owner == snapshot.LocalOwner && isDamaged &&
+                    IsInViewport(building)
             });
         }
 
@@ -84,7 +102,7 @@ namespace ra_commands::game
         return GetNativeEventFreeSlots();
     }
 
-    bool AutoRepairGameAdapter::TryRepair(auto_repair::BuildingId id) const
+    bool AutoRepairGameAdapter::TryRepair(auto_repair::BuildingId id, bool requireViewport) const
     {
         if (!IsMatchReady() || id.Address == 0 || id.UniqueId == 0)
         {
@@ -101,6 +119,7 @@ namespace ra_commands::game
         if (!IsLiveBuilding(building) || building->Owner != HouseClass::Player.get() ||
             !IsDamaged(building) || building->IsBeingRepaired ||
             !building->CanBeRepaired() ||
+            (requireViewport && !IsInViewport(building)) ||
             GetNativeEventFreeSlots() < auto_repair::MIN_NATIVE_FREE_SLOTS)
         {
             return false;
