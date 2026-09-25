@@ -700,6 +700,7 @@ void RunAutoCrushServiceTests();
 void RunClickedMissionIntentHandlersTests();
 void RunNetworkEventTests();
 void RunAutoBuildPureTests();
+void RunAutoSuperWeaponPureTests();
 
 int main()
 {
@@ -744,6 +745,7 @@ int main()
         RunClickedMissionIntentHandlersTests();
         RunNetworkEventTests();
         RunAutoBuildPureTests();
+        RunAutoSuperWeaponPureTests();
         std::cout << "RACommandsPlugin pure tests passed\n";
         return 0;
     }
