@@ -44,6 +44,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Tests\AutoLoadPureTests.cpp" />
+    <ClCompile Include="src\Tests\AutoNanoCloudPureTests.cpp" />
     <ClCompile Include="src\Tests\AutoCrushPlannerTests.cpp" />
     <ClCompile Include="src\Tests\AutoCrushServiceTests.cpp" />
     <ClCompile Include="src\Tests\TeslaChargePureTests.cpp" />
@@ -62,6 +63,8 @@
     <ClCompile Include="src\Tests\BeaconRecipientProgressTests.cpp" />
     <ClCompile Include="src\Tests\RangeDisplayPureTests.cpp" />
     <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.cpp" />
+    <ClCompile Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudPlanner.cpp" />
+    <ClCompile Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudCommandService.cpp" />
     <ClCompile Include="src\Commands\AutoCrush\AutoCrushPlanner.cpp" />
     <ClCompile Include="src\Commands\AutoCrush\AutoCrushCommandService.cpp" />
     <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadCommandService.cpp" />
@@ -83,6 +86,9 @@
     <ClCompile Include="src\ClickedMission\ClickedMissionDispatcher.cpp" />
     <ClCompile Include="src\ClickedMission\ClickedMissionIntentHandlers.cpp" />
     <ClInclude Include="src\ClickedMission\ClickedMissionIntentHandlers.h" />
+    <ClInclude Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudPlanner.h" />
+    <ClInclude Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudCommandService.h" />
+    <ClInclude Include="src\Commands\AutoNanoCloudCommand\IAutoNanoCloudGamePort.h" />
     <ClInclude Include="src\Commands\AutoCrush\AutoCrushPlanner.h" />
     <ClInclude Include="src\Commands\AutoCrush\AutoCrushCommandService.h" />
     <ClInclude Include="src\Commands\AutoCrush\IAutoCrushGamePort.h" />
