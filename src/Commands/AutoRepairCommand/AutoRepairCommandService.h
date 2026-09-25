@@ -3,6 +3,7 @@
 #include "Commands/AutoRepairCommand/IAutoRepairGamePort.h"
 
 #include <cstdint>
+#include <atomic>
 #include <functional>
 #include <unordered_map>
 
@@ -12,10 +13,12 @@ namespace ra_commands::auto_repair
     class AutoRepairCommandService final
     {
     public:
-        explicit AutoRepairCommandService(IAutoRepairGamePort& game);
+        AutoRepairCommandService(IAutoRepairGamePort& game,
+            const std::atomic<bool>& isSafeModeEnabled);
 
         void OnHotkey();
         void OnGameFrame();
+        void OnSafeModeChanged();
         void Reset();
         [[nodiscard]] bool IsEnabled() const noexcept;
 
@@ -30,9 +33,18 @@ namespace ra_commands::auto_repair
         };
 
         [[nodiscard]] bool SyncSession();
+        void TrackDamage(const Snapshot& snapshot, std::uint64_t nowMs);
+
+        struct DamageState
+        {
+            int LastHealth = 0;
+            std::uint64_t ReadyAtMs = 0;
+        };
 
         IAutoRepairGamePort& mGame;
+        const std::atomic<bool>& mIsSafeModeEnabled;
         std::unordered_map<BuildingId, std::uint32_t, BuildingIdHash> mLastAttemptFrames;
+        std::unordered_map<BuildingId, DamageState, BuildingIdHash> mDamageStates;
         std::uintptr_t mSessionIdentity = 0;
         std::uint32_t mLastObservedFrame = 0;
         bool mHasSession = false;

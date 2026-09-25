@@ -1,6 +1,8 @@
 #include "Commands/AutoRepairCommand/AutoRepairCommandService.h"
 
+#include <algorithm>
 #include <cstdint>
+#include <atomic>
 #include <stdexcept>
 #include <vector>
 
@@ -27,6 +29,7 @@ namespace
         bool Ready = true;
         std::uintptr_t Session = 1;
         std::uint32_t Frame = 100;
+        std::uint64_t NowMs = 1'000;
         mutable std::uint32_t FreeSlots = 13;
         Snapshot Buildings = {1, {{Id(10), 1, true, false, true}}};
         mutable std::vector<BuildingId> Attempts;
@@ -34,14 +37,24 @@ namespace
         bool IsMatchReady() const override { return Ready; }
         std::uintptr_t GetSessionIdentity() const override { return Session; }
         std::uint32_t GetCurrentFrame() const override { return Frame; }
-        bool CaptureSnapshot(Snapshot& outSnapshot) const override
+        std::uint64_t GetCurrentTimeMs() const override { return NowMs; }
+        bool CaptureSnapshot(Snapshot& outSnapshot, bool) const override
         {
             outSnapshot = Buildings;
             return true;
         }
         std::uint32_t GetNativeFreeSlots() const override { return FreeSlots; }
-        bool TryRepair(BuildingId id) const override
+        bool TryRepair(BuildingId id, bool requireViewport) const override
         {
+            if (requireViewport)
+            {
+                const auto it = std::find_if(Buildings.Buildings.begin(), Buildings.Buildings.end(),
+                    [id](const BuildingSnapshot& building) { return building.Id == id; });
+                if (it == Buildings.Buildings.end() || !it->IsInViewport)
+                {
+                    return false;
+                }
+            }
             Attempts.push_back(id);
             --FreeSlots;
             return true;
@@ -58,7 +71,8 @@ namespace
             {Id(13), 1, true, true, true},
             {Id(14), 1, true, false, false}
         };
-        AutoRepairCommandService service(game);
+        std::atomic<bool> isSafeModeEnabled{false};
+        AutoRepairCommandService service(game, isSafeModeEnabled);
         service.OnGameFrame();
         Require(game.Attempts.empty(), "repair must be disabled initially");
 
@@ -79,7 +93,8 @@ namespace
     void TestRetryAndBackpressure()
     {
         FakeGame game;
-        AutoRepairCommandService service(game);
+        std::atomic<bool> isSafeModeEnabled{false};
+        AutoRepairCommandService service(game, isSafeModeEnabled);
         service.OnHotkey();
 
         game.FreeSlots = 12;
@@ -103,7 +118,8 @@ namespace
     {
         FakeGame game;
         game.Buildings.Buildings.push_back({Id(11), 1, true, false, true});
-        AutoRepairCommandService service(game);
+        std::atomic<bool> isSafeModeEnabled{false};
+        AutoRepairCommandService service(game, isSafeModeEnabled);
         service.OnHotkey();
         service.OnGameFrame();
         Require(game.Attempts == std::vector<BuildingId>{Id(10)},
@@ -119,7 +135,8 @@ namespace
     void TestReusedUniqueIdHasDistinctThrottleKey()
     {
         FakeGame game;
-        AutoRepairCommandService service(game);
+        std::atomic<bool> isSafeModeEnabled{false};
+        AutoRepairCommandService service(game, isSafeModeEnabled);
         service.OnHotkey();
         service.OnGameFrame();
 
@@ -135,7 +152,8 @@ namespace
     void TestSessionReset()
     {
         FakeGame game;
-        AutoRepairCommandService service(game);
+        std::atomic<bool> isSafeModeEnabled{false};
+        AutoRepairCommandService service(game, isSafeModeEnabled);
         service.OnHotkey();
         service.OnGameFrame();
 
@@ -164,6 +182,78 @@ namespace
         service.OnGameFrame();
         Require(!service.IsEnabled(), "leaving the match must disable repair");
     }
+
+    void TestSafeModeDelayViewportAndOnePerFrame()
+    {
+        FakeGame game;
+        game.Buildings.Buildings = {
+            {Id(10), 1, true, false, true, 70, true},
+            {Id(11), 1, true, false, true, 60, true},
+            {Id(12), 1, true, false, true, 50, false}
+        };
+        std::atomic<bool> isSafeModeEnabled{true};
+        AutoRepairCommandService service(game, isSafeModeEnabled);
+        service.OnHotkey();
+        service.OnGameFrame();
+        Require(game.Attempts.empty(), "safe repair must wait after damage is observed");
+
+        game.NowMs = 1'999;
+        ++game.Frame;
+        service.OnGameFrame();
+        Require(game.Attempts.empty(), "safe repair must wait at least 1000 ms");
+
+        game.NowMs = 5'001;
+        ++game.Frame;
+        service.OnGameFrame();
+        Require(game.Attempts == std::vector<BuildingId>{Id(10)},
+            "safe repair must start at most one visible building per scan");
+
+        game.FreeSlots = 13;
+        ++game.Frame;
+        service.OnGameFrame();
+        Require(game.Attempts == std::vector<BuildingId>({Id(10), Id(11)}),
+            "next scan may start another visible building");
+
+        game.FreeSlots = 13;
+        game.Frame += 31;
+        service.OnGameFrame();
+        Require(std::find(game.Attempts.begin(), game.Attempts.end(), Id(12)) ==
+            game.Attempts.end(), "off-screen building must not be repaired");
+    }
+
+    void TestSafeModeResetsDelayAfterNewDamage()
+    {
+        FakeGame game;
+        game.Buildings.Buildings = {{Id(10), 1, true, false, true, 70, true}};
+        std::atomic<bool> isSafeModeEnabled{true};
+        AutoRepairCommandService service(game, isSafeModeEnabled);
+        service.OnHotkey();
+        service.OnGameFrame();
+
+        game.NowMs = 1'800;
+        game.Buildings.Buildings[0].Health = 60;
+        ++game.Frame;
+        service.OnGameFrame();
+        game.NowMs = 2'799;
+        ++game.Frame;
+        service.OnGameFrame();
+        Require(game.Attempts.empty(), "new damage must restart the safe repair delay");
+
+        game.NowMs = 5'801;
+        ++game.Frame;
+        service.OnGameFrame();
+        Require(game.Attempts == std::vector<BuildingId>{Id(10)},
+            "repair must become eligible within four seconds of the latest damage");
+
+        isSafeModeEnabled.store(false);
+        service.OnSafeModeChanged();
+        game.Buildings.Buildings[0].IsInViewport = false;
+        game.FreeSlots = 13;
+        game.Frame += 31;
+        service.OnGameFrame();
+        Require(game.Attempts.size() == 2,
+            "normal mode must retain repair behavior outside the viewport");
+    }
 }
 
 void RunAutoRepairTests()
@@ -173,6 +263,8 @@ void RunAutoRepairTests()
     TestCapacityAcrossBuildings();
     TestReusedUniqueIdHasDistinctThrottleKey();
     TestSessionReset();
+    TestSafeModeDelayViewportAndOnePerFrame();
+    TestSafeModeResetsDelayAfterNewDamage();
 }
 
 #ifdef RA_COMMANDS_AUTO_REPAIR_STANDALONE_TEST

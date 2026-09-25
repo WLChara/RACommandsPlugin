@@ -10,8 +10,10 @@ namespace ra_commands::game
         [[nodiscard]] bool IsMatchReady() const override;
         [[nodiscard]] std::uintptr_t GetSessionIdentity() const override;
         [[nodiscard]] std::uint32_t GetCurrentFrame() const override;
-        [[nodiscard]] bool CaptureSnapshot(auto_repair::Snapshot& outSnapshot) const override;
+        [[nodiscard]] std::uint64_t GetCurrentTimeMs() const override;
+        [[nodiscard]] bool CaptureSnapshot(auto_repair::Snapshot& outSnapshot,
+            bool captureViewport) const override;
         [[nodiscard]] std::uint32_t GetNativeFreeSlots() const override;
-        [[nodiscard]] bool TryRepair(auto_repair::BuildingId id) const override;
+        [[nodiscard]] bool TryRepair(auto_repair::BuildingId id, bool requireViewport) const override;
     };
 }
