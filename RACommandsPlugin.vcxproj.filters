@@ -16,6 +16,15 @@
     <Filter Include="src\Commands\AutoLoadCommand">
       <UniqueIdentifier>{0F3A0000-2026-4000-8000-000000000005}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Commands\AutoCrush">
+      <UniqueIdentifier>{996A2DD6-BBF7-498A-9348-1000CF111001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Commands\AutoCrushAddCommand">
+      <UniqueIdentifier>{996A2DD6-BBF7-498A-9348-1000CF111002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Commands\AutoCrushRemoveCommand">
+      <UniqueIdentifier>{996A2DD6-BBF7-498A-9348-1000CF111003}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Commands\TeslaChargeCommand">
       <UniqueIdentifier>{FB904567-C084-4A75-8B6A-8EEAF7074621}</UniqueIdentifier>
     </Filter>
@@ -900,6 +909,19 @@
     <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\YRPPCore.h">
       <Filter>src\SDK\YRpp\mo-7cd005d2</Filter>
     </ClInclude>
+    <ClCompile Include="src\Commands\AutoCrush\AutoCrushPlanner.cpp"><Filter>src\Commands\AutoCrush</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoCrush\AutoCrushPlanner.h"><Filter>src\Commands\AutoCrush</Filter></ClInclude>
+    <ClCompile Include="src\Commands\AutoCrush\AutoCrushCommandService.cpp"><Filter>src\Commands\AutoCrush</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoCrush\AutoCrushCommandService.h"><Filter>src\Commands\AutoCrush</Filter></ClInclude>
+    <ClInclude Include="src\Commands\AutoCrush\IAutoCrushGamePort.h"><Filter>src\Commands\AutoCrush</Filter></ClInclude>
+    <ClCompile Include="src\Commands\AutoCrush\AutoCrushGameAdapter.cpp"><Filter>src\Commands\AutoCrush</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoCrush\AutoCrushGameAdapter.h"><Filter>src\Commands\AutoCrush</Filter></ClInclude>
+    <ClCompile Include="src\Commands\AutoCrush\AutoCrushIntentHandler.cpp"><Filter>src\Commands\AutoCrush</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoCrush\AutoCrushIntentHandler.h"><Filter>src\Commands\AutoCrush</Filter></ClInclude>
+    <ClCompile Include="src\Commands\AutoCrushAddCommand\AutoCrushAddCommandRegistry.cpp"><Filter>src\Commands\AutoCrushAddCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoCrushAddCommand\AutoCrushAddCommandRegistry.h"><Filter>src\Commands\AutoCrushAddCommand</Filter></ClInclude>
+    <ClCompile Include="src\Commands\AutoCrushRemoveCommand\AutoCrushRemoveCommandRegistry.cpp"><Filter>src\Commands\AutoCrushRemoveCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoCrushRemoveCommand\AutoCrushRemoveCommandRegistry.h"><Filter>src\Commands\AutoCrushRemoveCommand</Filter></ClInclude>
     <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.cpp">
       <Filter>src\Commands\AutoLoadCommand</Filter>
     </ClCompile>

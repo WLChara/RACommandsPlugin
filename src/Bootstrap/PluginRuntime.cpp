@@ -1,6 +1,11 @@
 #include "Bootstrap/PluginRuntime.h"
 
 #include "Commands/AutoLoadCommand/AutoLoadCommandService.h"
+#include "Commands/AutoCrush/AutoCrushCommandService.h"
+#include "Commands/AutoCrush/AutoCrushGameAdapter.h"
+#include "Commands/AutoCrush/AutoCrushIntentHandler.h"
+#include "Commands/AutoCrushAddCommand/AutoCrushAddCommandRegistry.h"
+#include "Commands/AutoCrushRemoveCommand/AutoCrushRemoveCommandRegistry.h"
 #include "Commands/SafeModeToggleCommand/SafeModeState.h"
 #include "Commands/SafeModeToggleCommand/SafeModeToggleCommandRegistry.h"
 #include "Commands/SafeModeToggleCommand/SafeModeToggleCommandService.h"
@@ -92,6 +97,8 @@ namespace ra_commands::bootstrap
         safe_mode::SafeModeToggleCommandService g_SafeModeToggleCommandService(
             safe_mode::g_IsSafeModeEnabled);
         game::AirSpreadGameAdapter g_AirSpreadGameAdapter(g_ClickedMissionDispatcher);
+        game::AutoCrushGameAdapter g_AutoCrushGameAdapter(g_ClickedMissionDispatcher);
+        auto_crush::AutoCrushCommandService g_AutoCrushCommandService(g_AutoCrushGameAdapter);
         autoload::AutoLoadCommandService g_AutoLoadCommandService(
             g_AutoLoadGameAdapter, g_ClickedMissionDispatcher,
             safe_mode::g_IsSafeModeEnabled);
@@ -119,6 +126,36 @@ namespace ra_commands::bootstrap
             if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
             {
                 g_AutoLoadCommandService.OnHotkey();
+            }
+        }
+
+        void OnAutoCrushAddHotkey()
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_AFloorHooksReady &&
+                g_GameThreadId == GetCurrentThreadId())
+            {
+                g_AutoCrushCommandService.OnAddHotkey();
+            }
+        }
+
+        void OnAutoCrushRemoveHotkey()
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_AFloorHooksReady &&
+                g_GameThreadId == GetCurrentThreadId())
+            {
+                g_AutoCrushCommandService.OnRemoveHotkey();
+            }
+        }
+
+        void OnManualVehicleOrder(std::uint64_t actorId)
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_AFloorHooksReady &&
+                g_GameThreadId == GetCurrentThreadId())
+            {
+                g_AutoCrushCommandService.OnManualOrder(actorId);
             }
         }
 
@@ -233,6 +270,28 @@ namespace ra_commands::bootstrap
             return game::TryRegisterAFloorCommand(symbols, callback, outError);
         }
 
+        game::CommandRegistrationResult RegisterAutoCrushAddWhenHookReady(
+            const game::GameSymbols& symbols, void(*callback)(), std::string& outError)
+        {
+            if (!g_AFloorHooksReady)
+            {
+                outError = "manual-order observation hook is unavailable";
+                return game::CommandRegistrationResult::Failed;
+            }
+            return game::TryRegisterAutoCrushAddCommand(symbols, callback, outError);
+        }
+
+        game::CommandRegistrationResult RegisterAutoCrushRemoveWhenHookReady(
+            const game::GameSymbols& symbols, void(*callback)(), std::string& outError)
+        {
+            if (!g_AFloorHooksReady)
+            {
+                outError = "manual-order observation hook is unavailable";
+                return game::CommandRegistrationResult::Failed;
+            }
+            return game::TryRegisterAutoCrushRemoveCommand(symbols, callback, outError);
+        }
+
         void DispatchSelectionHotkey(void (selection::SelectionCommandService::*action)())
         {
             std::lock_guard lock(g_StateMutex);
@@ -286,9 +345,11 @@ namespace ra_commands::bootstrap
         }
 
         // 所有原生命令共享主帧注册时机与一次热键重读。
-        std::array<CommandEntry, 15> g_Commands{{
+        std::array<CommandEntry, 17> g_Commands{{
             {&RegisterConfiguredCommand<&game::TryRegisterSafeModeToggleCommand, &OnSafeModeToggleHotkey>, &game::DisableSafeModeToggleCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterAutoLoadCommand, &OnAutoLoadHotkey>, &game::DisableAutoLoadCommand},
+            {&RegisterConfiguredCommand<&RegisterAutoCrushAddWhenHookReady, &OnAutoCrushAddHotkey>, &game::DisableAutoCrushAddCommand},
+            {&RegisterConfiguredCommand<&RegisterAutoCrushRemoveWhenHookReady, &OnAutoCrushRemoveHotkey>, &game::DisableAutoCrushRemoveCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterTeslaChargeCommand, &OnTeslaChargeHotkey>, &game::DisableTeslaChargeCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterAutoRepairCommand, &OnAutoRepairHotkey>, &game::DisableAutoRepairCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterAirSpreadCommand, &OnAirSpreadHotkey>, &game::DisableAirSpreadCommand},
@@ -334,6 +395,7 @@ namespace ra_commands::bootstrap
             }
 
             g_ClickedMissionDispatcher.OnGameFrame();
+            g_AutoCrushCommandService.OnGameFrame();
             g_SafeModeToggleCommandService.OnGameFrame(
                 g_ClickedMissionDispatcher.IsSessionActive(), g_ClickedMissionDispatcher.Epoch());
             g_TeslaChargeCommandService.OnGameFrame();
@@ -405,6 +467,9 @@ namespace ra_commands::bootstrap
 
             // 在主帧回调启用前绑定已实现的命令处理器。
             if (!g_ClickedMissionGameAdapter.BindIntentHandler(
+                    commands::ClickedMissionProducer::AutoCrush,
+                    {&game::ValidateAutoCrushIntent, &game::AttemptAutoCrushIntent}) ||
+                !g_ClickedMissionGameAdapter.BindIntentHandler(
                     commands::ClickedMissionProducer::AirSpread,
                     {&game::ValidateAirSpreadMoveIntent, &game::AttemptAirSpreadMoveIntent}) ||
                 !g_ClickedMissionGameAdapter.BindIntentHandler(
@@ -427,6 +492,10 @@ namespace ra_commands::bootstrap
             if (!g_AFloorHooksReady)
             {
                 OutputDebugStringA(("[RACommandsPlugin] " + hookError + "\n").c_str());
+            }
+            else
+            {
+                game::SetManualVehicleOrderObserver(&OnManualVehicleOrder);
             }
             g_RangeDisplayHookReady = game::InstallRangeDisplayHook(
                 &IsRangeDisplayModeEnabled, hookError);
@@ -474,6 +543,7 @@ namespace ra_commands::bootstrap
         g_TeslaChargeCommandService.Reset();
         g_SafeModeToggleCommandService.Reset();
         g_AutoLoadCommandService.Reset();
+        g_AutoCrushCommandService.Reset();
         g_AutoRepairCommandService.Reset();
         g_SelectionCommandService.Reset();
         g_AFloorCommandService.Reset();

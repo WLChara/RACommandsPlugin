@@ -44,6 +44,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Tests\AutoLoadPureTests.cpp" />
+    <ClCompile Include="src\Tests\AutoCrushPlannerTests.cpp" />
+    <ClCompile Include="src\Tests\AutoCrushServiceTests.cpp" />
     <ClCompile Include="src\Tests\TeslaChargePureTests.cpp" />
     <ClCompile Include="src\Tests\SelectionPureTests.cpp" />
     <ClCompile Include="src\Tests\SelectionServicePureTests.cpp" />
@@ -60,6 +62,8 @@
     <ClCompile Include="src\Tests\BeaconRecipientProgressTests.cpp" />
     <ClCompile Include="src\Tests\RangeDisplayPureTests.cpp" />
     <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.cpp" />
+    <ClCompile Include="src\Commands\AutoCrush\AutoCrushPlanner.cpp" />
+    <ClCompile Include="src\Commands\AutoCrush\AutoCrushCommandService.cpp" />
     <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadCommandService.cpp" />
     <ClCompile Include="src\Commands\TeslaChargeCommand\TeslaChargePlanner.cpp" />
     <ClCompile Include="src\Commands\TeslaChargeCommand\TeslaChargeCommandService.cpp" />
@@ -79,6 +83,9 @@
     <ClCompile Include="src\ClickedMission\ClickedMissionDispatcher.cpp" />
     <ClCompile Include="src\ClickedMission\ClickedMissionIntentHandlers.cpp" />
     <ClInclude Include="src\ClickedMission\ClickedMissionIntentHandlers.h" />
+    <ClInclude Include="src\Commands\AutoCrush\AutoCrushPlanner.h" />
+    <ClInclude Include="src\Commands\AutoCrush\AutoCrushCommandService.h" />
+    <ClInclude Include="src\Commands\AutoCrush\IAutoCrushGamePort.h" />
     <ClInclude Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.h" />
     <ClInclude Include="src\Commands\AutoLoadCommand\AutoLoadCommandService.h" />
     <ClInclude Include="src\Commands\AutoLoadCommand\IAutoLoadGamePort.h" />

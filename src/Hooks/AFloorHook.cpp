@@ -41,12 +41,14 @@ namespace ra_commands::game
         {
             ObjectClass* OriginalTarget = nullptr;
             CellClass* GroundCell = nullptr;
+            bool IsManualOrder = false;
         };
 
         thread_local const ClickContext* g_ActiveClick = nullptr;
         std::atomic<LeftMouseUpFunction> g_OriginalLeftMouseUp{nullptr};
         std::atomic<ClickedMissionFunction> g_OriginalClickedMission{nullptr};
         std::atomic<AFloorModeQuery> g_ModeQuery{nullptr};
+        std::atomic<ManualVehicleOrderObserver> g_ManualOrderObserver{nullptr};
         std::atomic<DWORD> g_AllowedGameThreadId{0};
         bool g_AreHooksInstalled = false;
         bool g_InstallationFailed = false;
@@ -87,32 +89,38 @@ namespace ra_commands::game
                 return;
             }
 
-            const auto isEnabled = g_ModeQuery.load(std::memory_order_acquire);
+            const bool isManualOrder = action == Action::Move ||
+                action == Action::Attack || action == Action::AttackMoveNav ||
+                action == Action::AttackMoveTar;
             const auto allowedThread = g_AllowedGameThreadId.load(std::memory_order_acquire);
+            if (!isManualOrder || !allowedThread ||
+                allowedThread != GetCurrentThreadId() ||
+                !IsGameSessionReady() || !display)
+            {
+                original(display, coords, cell, target, action, argument);
+                return;
+            }
+
+            ClickContext context{nullptr, nullptr, isManualOrder};
+            const auto isEnabled = g_ModeQuery.load(std::memory_order_acquire);
             auto* const input = InputManagerClass::Instance.get();
             auto* const map = MapClass::Instance.get();
-            if (!allowedThread || allowedThread != GetCurrentThreadId() ||
-                !isEnabled || !isEnabled() || !IsGameSessionReady() ||
-                !display || display->PlanningMode || !target ||
-                action != Action::Attack || !input ||
-                !input->IsForceFireKeyPressed() ||
-                input->IsForceSelectKeyPressed() || !map ||
-                !map->CoordinatesLegal(cell) ||
-                !map->IsWithinUsableArea(cell, false))
+            if (isEnabled && isEnabled() && !display->PlanningMode &&
+                target && action == Action::Attack && input &&
+                input->IsForceFireKeyPressed() &&
+                !input->IsForceSelectKeyPressed() && map &&
+                map->CoordinatesLegal(cell) &&
+                map->IsWithinUsableArea(cell, false))
             {
-                original(display, coords, cell, target, action, argument);
-                return;
+                auto* const groundCell = map->TryGetCellAt(cell);
+                if (groundCell && groundCell->MapCoords == cell)
+                {
+                    context.OriginalTarget = target;
+                    context.GroundCell = groundCell;
+                }
             }
 
-            auto* const groundCell = map->TryGetCellAt(cell);
-            if (!groundCell || groundCell->MapCoords != cell)
-            {
-                original(display, coords, cell, target, action, argument);
-                return;
-            }
-
-            // 只在此次本地左键处理的同步调用栈内传递原始点击格。
-            const ClickContext context{target, groundCell};
+            // 本地手动命令与 A 地板目标替换均局限于此次左键调用栈。
             const ClickScope scope(context);
             original(display, coords, cell, target, action, argument);
         }
@@ -129,7 +137,30 @@ namespace ra_commands::game
 
             const auto* const context = g_ActiveClick;
             const auto isEnabled = g_ModeQuery.load(std::memory_order_acquire);
-            if (context && isEnabled && isEnabled() &&
+            if (context && context->IsManualOrder && actor &&
+                actor->WhatAmI() == AbstractType::Unit && actor->UniqueID != 0 &&
+                actor->Owner == HouseClass::Player.get() &&
+                (mission == Mission::Move || mission == Mission::Attack ||
+                 mission == Mission::AttackMove))
+            {
+                const auto observer = g_ManualOrderObserver.load(std::memory_order_acquire);
+                if (observer)
+                {
+                    static_assert(sizeof(void*) == sizeof(std::uint32_t));
+                    const auto id =
+                        (static_cast<std::uint64_t>(reinterpret_cast<std::uintptr_t>(actor)) << 32) |
+                        actor->UniqueID;
+                    try
+                    {
+                        observer(id);
+                    }
+                    catch (...)
+                    {
+                        OutputDebugStringA("[RACommandsPlugin] manual order observer failed\n");
+                    }
+                }
+            }
+            if (context && context->GroundCell && isEnabled && isEnabled() &&
                 mission == Mission::Attack && actor &&
                 actor->Owner == HouseClass::Player.get() &&
                 target == static_cast<AbstractClass*>(context->OriginalTarget))
@@ -213,7 +244,13 @@ namespace ra_commands::game
     void DisableAFloorHooks() noexcept
     {
         g_ModeQuery.store(nullptr, std::memory_order_release);
+        g_ManualOrderObserver.store(nullptr, std::memory_order_release);
         g_AllowedGameThreadId.store(0, std::memory_order_release);
+    }
+
+    void SetManualVehicleOrderObserver(ManualVehicleOrderObserver observer) noexcept
+    {
+        g_ManualOrderObserver.store(observer, std::memory_order_release);
     }
 
     void SetAFloorGameThread(DWORD threadId) noexcept
