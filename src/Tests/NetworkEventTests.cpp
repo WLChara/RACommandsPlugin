@@ -21,13 +21,15 @@ void RunNetworkEventTests()
 
     const auto produce = BuildProduceEvent(3, 42, false);
     const auto place = BuildPlaceEvent(3, 42, true, -12, 77);
+    const auto specialPlace = BuildSpecialPlaceEvent(3, 5, -12, 77);
     Require(produce.has_value() && place.has_value(),
         "valid construction events must be built");
     Require(!BuildProduceEvent(3, -1, false).has_value() &&
         !BuildPlaceEvent(3, -1, false, 0, 0).has_value(),
         "negative building type indices must be rejected");
     Require(produce->Kind == 0x0E && produce->HouseIndex == 3 &&
-        place->Kind == 0x0B && place->HouseIndex == 3,
+        place->Kind == 0x0B && place->HouseIndex == 3 &&
+        specialPlace.Kind == 0x12 && specialPlace.HouseIndex == 3,
         "event kind and local house must occupy native header bytes");
 
     ProductionPayload productionPayload{};
@@ -47,6 +49,16 @@ void RunNetworkEventTests()
         place->Data.Raw[12] == 0xF4 && place->Data.Raw[13] == 0xFF &&
         place->Data.Raw[14] == 77 && place->Data.Raw[15] == 0,
         "construction payload byte positions must match the target EXE");
+    SpecialPlacePayload specialPayload{};
+    std::memcpy(&specialPayload, specialPlace.Data.Raw, sizeof(specialPayload));
+    Require(specialPayload.SpecialWeaponIndex == 5 &&
+        specialPayload.Location.X == -12 && specialPayload.Location.Y == 77 &&
+        specialPlace.Data.Raw[0] == 5 &&
+        specialPlace.Data.Raw[4] == 0xF4 &&
+        specialPlace.Data.Raw[5] == 0xFF &&
+        specialPlace.Data.Raw[6] == 77 &&
+        specialPlace.Data.Raw[7] == 0,
+        "special-place payload must contain the house super slot and cell");
     for (std::size_t index = sizeof(PlacePayload); index < sizeof(place->Data.Raw); ++index)
     {
         Require(place->Data.Raw[index] == 0,

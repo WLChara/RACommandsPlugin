@@ -14,7 +14,8 @@ namespace ra_commands::network_event
     enum class NetworkEventKind : std::uint8_t
     {
         Place = 0x0B,
-        Produce = 0x0E
+        Produce = 0x0E,
+        SpecialPlace = 0x12
     };
 
 #pragma pack(push, 1)
@@ -128,6 +129,9 @@ namespace ra_commands::network_event
         std::uint8_t houseIndex, std::int32_t typeIndex, bool isNaval);
     [[nodiscard]] std::optional<NetworkEvent> BuildPlaceEvent(
         std::uint8_t houseIndex, std::int32_t typeIndex, bool isNaval,
+        std::int16_t cellX, std::int16_t cellY);
+    [[nodiscard]] NetworkEvent BuildSpecialPlaceEvent(
+        std::uint8_t houseIndex, std::uint32_t houseSuperIndex,
         std::int16_t cellX, std::int16_t cellY);
 
     struct NativeOutListView

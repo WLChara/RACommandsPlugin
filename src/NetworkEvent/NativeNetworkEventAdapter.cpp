@@ -9,6 +9,7 @@
 #include <MapClass.h>
 #include <NetworkEvents.h>
 #include <Networking.h>
+#include <SuperClass.h>
 #include <Unsorted.h>
 
 #include <Windows.h>
@@ -25,6 +26,7 @@ namespace ra_commands::game
         using network_event::NetworkEventKind;
         using network_event::ProductionPayload;
         using network_event::PlacePayload;
+        using network_event::SpecialPlacePayload;
 
         // SHA-256 7cd005d2... 样本的 QueueClickedMissionEvent (0x646E90)
         // 使用这些 OutList 地址；仅在目标版本门禁通过后绑定游戏线程。
@@ -43,10 +45,33 @@ namespace ra_commands::game
             static_cast<std::uint8_t>(NetworkEventKind::Produce));
         static_assert(static_cast<std::uint8_t>(NetworkEvents::Place) ==
             static_cast<std::uint8_t>(NetworkEventKind::Place));
+        static_assert(static_cast<std::uint8_t>(NetworkEvents::SpecialPlace) ==
+            static_cast<std::uint8_t>(NetworkEventKind::SpecialPlace));
 
-        bool IsSupportedLocalEvent(const network_event::NetworkEvent& event)
+        bool IsSupportedLocalEvent(const network_event::NetworkEvent& event,
+            const HouseClass* localPlayer)
         {
             const auto kind = static_cast<NetworkEventKind>(event.Kind);
+            if (kind == NetworkEventKind::SpecialPlace)
+            {
+                SpecialPlacePayload payload{};
+                std::memcpy(&payload, event.Data.Raw, sizeof(payload));
+                const auto& supers = localPlayer->Supers;
+                if (!supers.IsInitialized || supers.Count < 0 ||
+                    supers.Count > supers.Capacity || !supers.Items ||
+                    payload.SpecialWeaponIndex >= static_cast<std::uint32_t>(supers.Count))
+                {
+                    return false;
+                }
+                auto* const super = supers.Items[payload.SpecialWeaponIndex];
+                auto* const map = MapClass::Instance.get();
+                const CellStruct cell{payload.Location.X, payload.Location.Y};
+                return super && super->Owner == localPlayer && super->Type &&
+                    super->Granted && super->IsCharged && !super->IsOnHold &&
+                    super->CanFire() && map && map->CoordinatesLegal(cell) &&
+                    map->IsWithinUsableArea(cell, false) &&
+                    map->TryGetCellAt(cell);
+            }
             if (kind != NetworkEventKind::Produce && kind != NetworkEventKind::Place)
             {
                 return false;
@@ -102,7 +127,7 @@ namespace ra_commands::game
             !IsGameSessionReady() || !localPlayer ||
             localPlayer->ArrayIndex < 0 || localPlayer->ArrayIndex > 255 ||
             event.HouseIndex != localPlayer->ArrayIndex ||
-            !IsSupportedLocalEvent(event))
+            !IsSupportedLocalEvent(event, localPlayer))
         {
             return false;
         }
