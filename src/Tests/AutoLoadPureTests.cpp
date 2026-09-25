@@ -695,6 +695,8 @@ void RunBeaconRecipientProgressTests();
 void RunRangeDisplayTests();
 void RunClickedMissionIntentHandlersTests();
 void RunSafeModeToggleTests();
+void RunAutoCrushPlannerTests();
+void RunAutoCrushServiceTests();
 
 int main()
 {
@@ -734,6 +736,8 @@ int main()
         RunRangeDisplayTests();
         RunClickedMissionIntentHandlersTests();
         RunSafeModeToggleTests();
+        RunAutoCrushPlannerTests();
+        RunAutoCrushServiceTests();
         std::cout << "RACommandsPlugin pure tests passed\n";
         return 0;
     }
