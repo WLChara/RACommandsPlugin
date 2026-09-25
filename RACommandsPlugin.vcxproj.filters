@@ -1017,6 +1017,8 @@
     <ClInclude Include="src\Commands\AirSpreadCommand\AirSpreadCommandRegistry.h">
       <Filter>src\Commands\AirSpreadCommand</Filter>
     </ClInclude>
+    <ClCompile Include="src\Commands\AirSpreadCommand\AirSpreadIntentHandler.cpp"><Filter>src\Commands\AirSpreadCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AirSpreadCommand\AirSpreadIntentHandler.h"><Filter>src\Commands\AirSpreadCommand</Filter></ClInclude>
     <ClCompile Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.cpp">
       <Filter>src\Commands\AutoRepairCommand</Filter>
     </ClCompile>
@@ -1125,12 +1127,18 @@
     <ClInclude Include="src\Commands\TeslaChargeCommand\TeslaChargeGameAdapter.h">
       <Filter>src\Commands\TeslaChargeCommand</Filter>
     </ClInclude>
+    <ClCompile Include="src\Commands\TeslaChargeCommand\TeslaChargeGameRules.cpp"><Filter>src\Commands\TeslaChargeCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\TeslaChargeCommand\TeslaChargeGameRules.h"><Filter>src\Commands\TeslaChargeCommand</Filter></ClInclude>
+    <ClCompile Include="src\Commands\TeslaChargeCommand\TeslaChargeIntentHandler.cpp"><Filter>src\Commands\TeslaChargeCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\TeslaChargeCommand\TeslaChargeIntentHandler.h"><Filter>src\Commands\TeslaChargeCommand</Filter></ClInclude>
     <ClCompile Include="src\Bootstrap\PluginRuntime.cpp">
       <Filter>src\Bootstrap</Filter>
     </ClCompile>
     <ClInclude Include="src\Bootstrap\PluginRuntime.h">
       <Filter>src\Bootstrap</Filter>
     </ClInclude>
+    <ClCompile Include="src\ClickedMission\ClickedMissionIntentHandlers.cpp"><Filter>src\ClickedMission</Filter></ClCompile>
+    <ClInclude Include="src\ClickedMission\ClickedMissionIntentHandlers.h"><Filter>src\ClickedMission</Filter></ClInclude>
     <ClCompile Include="src\ClickedMission\ClickedMissionDispatcher.cpp">
       <Filter>src\ClickedMission</Filter>
     </ClCompile>

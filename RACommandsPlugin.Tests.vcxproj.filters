@@ -66,6 +66,7 @@
     <ClCompile Include="src\Tests\MoveIntentPureTests.cpp">
       <Filter>src\Tests</Filter>
     </ClCompile>
+    <ClCompile Include="src\Tests\ClickedMissionIntentHandlersTests.cpp"><Filter>src\Tests</Filter></ClCompile>
     <ClCompile Include="src\Tests\IfvKeyPressTrackerTests.cpp">
       <Filter>src\Tests</Filter>
     </ClCompile>
@@ -132,6 +133,8 @@
     <ClCompile Include="src\ClickedMission\ClickedMissionQueue.cpp">
       <Filter>src\ClickedMission</Filter>
     </ClCompile>
+    <ClCompile Include="src\ClickedMission\ClickedMissionIntentHandlers.cpp"><Filter>src\ClickedMission</Filter></ClCompile>
+    <ClInclude Include="src\ClickedMission\ClickedMissionIntentHandlers.h"><Filter>src\ClickedMission</Filter></ClInclude>
     <ClCompile Include="src\ClickedMission\ClickedMissionDispatcher.cpp">
       <Filter>src\ClickedMission</Filter>
     </ClCompile>
