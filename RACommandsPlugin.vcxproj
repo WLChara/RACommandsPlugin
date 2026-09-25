@@ -374,6 +374,10 @@
     <ClInclude Include="src\Commands\AutoBuild\AutoBuildGameAdapter.h" />
     <ClCompile Include="src\Commands\AutoBuild\AutoBuildCommandRegistry.cpp" />
     <ClInclude Include="src\Commands\AutoBuild\AutoBuildCommandRegistry.h" />
+    <ClCompile Include="src\Commands\ForceShieldCommand\ForceShieldCommandRegistry.cpp" />
+    <ClInclude Include="src\Commands\ForceShieldCommand\ForceShieldCommandRegistry.h" />
+    <ClCompile Include="src\Commands\ForceShieldCommand\ForceShieldGameAdapter.cpp" />
+    <ClInclude Include="src\Commands\ForceShieldCommand\ForceShieldGameAdapter.h" />
     <ClInclude Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.h" />
     <ClInclude Include="src\Commands\AutoRepairCommand\IAutoRepairGamePort.h" />
     <ClCompile Include="src\Commands\AutoRepairCommand\AutoRepairGameAdapter.cpp" />

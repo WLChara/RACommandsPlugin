@@ -4,6 +4,8 @@
 #include "Commands/AutoBuild/AutoBuildCommandRegistry.h"
 #include "Commands/AutoBuild/AutoBuildCommandService.h"
 #include "Commands/AutoBuild/AutoBuildGameAdapter.h"
+#include "Commands/ForceShieldCommand/ForceShieldCommandRegistry.h"
+#include "Commands/ForceShieldCommand/ForceShieldGameAdapter.h"
 #include "Commands/AutoNanoCloudCommand/AutoNanoCloudCommandRegistry.h"
 #include "Commands/AutoNanoCloudCommand/AutoNanoCloudCommandService.h"
 #include "Commands/AutoNanoCloudCommand/AutoNanoCloudGameAdapter.h"
@@ -95,6 +97,7 @@ namespace ra_commands::bootstrap
         game::ClickedMissionGameAdapter g_ClickedMissionGameAdapter;
         game::NativeNetworkEventAdapter g_NativeNetworkEventAdapter;
         game::AutoBuildGameAdapter g_AutoBuildGameAdapter(g_NativeNetworkEventAdapter);
+        game::ForceShieldGameAdapter g_ForceShieldGameAdapter(g_NativeNetworkEventAdapter);
         game::AutoLoadGameAdapter g_AutoLoadGameAdapter;
         game::AutoNanoCloudGameAdapter g_AutoNanoCloudGameAdapter;
         game::AutoRepairGameAdapter g_AutoRepairGameAdapter;
@@ -237,6 +240,15 @@ namespace ra_commands::bootstrap
             if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
             {
                 (void)g_AutoBuildCommandService.OnHotkey(auto_build::BuildSlot::Defense);
+            }
+        }
+
+        void OnForceShieldHotkey()
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
+            {
+                (void)g_ForceShieldGameAdapter.TryFireAtCursor();
             }
         }
 
@@ -395,6 +407,7 @@ namespace ra_commands::bootstrap
             {&RegisterConfiguredCommand<&game::TryRegisterAutoRepairCommand, &OnAutoRepairHotkey>, &game::DisableAutoRepairCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterMainAutoBuildCommand, &OnMainAutoBuildHotkey>, &game::DisableMainAutoBuildCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterDefenseAutoBuildCommand, &OnDefenseAutoBuildHotkey>, &game::DisableDefenseAutoBuildCommand},
+            {&RegisterConfiguredCommand<&game::TryRegisterForceShieldCommand, &OnForceShieldHotkey>, &game::DisableForceShieldCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterAirSpreadCommand, &OnAirSpreadHotkey>, &game::DisableAirSpreadCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterMindControlSelectCommand, &OnMindControlSelectHotkey>, &game::DisableMindControlSelectCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterUnitKindSelectCommand, &OnUnitKindSelectHotkey>, &game::DisableUnitKindSelectCommand},
@@ -595,6 +608,7 @@ namespace ra_commands::bootstrap
         g_AutoCrushCommandService.Reset();
         g_AutoRepairCommandService.Reset();
         g_AutoBuildCommandService.Reset();
+        g_ForceShieldGameAdapter.Reset();
         g_SelectionCommandService.Reset();
         g_AFloorCommandService.Reset();
         g_BeaconClearCommandService.Reset();
