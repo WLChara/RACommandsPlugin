@@ -52,6 +52,9 @@
     <Filter Include="src\Commands\ForceShieldCommand">
       <UniqueIdentifier>{7455027A-5D30-41E2-9D74-36C34146A3F2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Commands\AutoSuperWeapon">
+      <UniqueIdentifier>{FA4379D9-DF16-4938-A9BB-14EF41FD8CB2}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Commands\AFloorCommand">
       <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B1011}</UniqueIdentifier>
     </Filter>
@@ -1081,6 +1084,15 @@
     <ClInclude Include="src\Commands\ForceShieldCommand\ForceShieldCommandRegistry.h"><Filter>src\Commands\ForceShieldCommand</Filter></ClInclude>
     <ClCompile Include="src\Commands\ForceShieldCommand\ForceShieldGameAdapter.cpp"><Filter>src\Commands\ForceShieldCommand</Filter></ClCompile>
     <ClInclude Include="src\Commands\ForceShieldCommand\ForceShieldGameAdapter.h"><Filter>src\Commands\ForceShieldCommand</Filter></ClInclude>
+    <ClCompile Include="src\Commands\AutoSuperWeapon\AutoSuperWeaponPlanner.cpp"><Filter>src\Commands\AutoSuperWeapon</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoSuperWeapon\AutoSuperWeaponPlanner.h"><Filter>src\Commands\AutoSuperWeapon</Filter></ClInclude>
+    <ClCompile Include="src\Commands\AutoSuperWeapon\AutoSuperWeaponCommandService.cpp"><Filter>src\Commands\AutoSuperWeapon</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoSuperWeapon\AutoSuperWeaponCommandService.h"><Filter>src\Commands\AutoSuperWeapon</Filter></ClInclude>
+    <ClInclude Include="src\Commands\AutoSuperWeapon\IAutoSuperWeaponGamePort.h"><Filter>src\Commands\AutoSuperWeapon</Filter></ClInclude>
+    <ClCompile Include="src\Commands\AutoSuperWeapon\AutoSuperWeaponGameAdapter.cpp"><Filter>src\Commands\AutoSuperWeapon</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoSuperWeapon\AutoSuperWeaponGameAdapter.h"><Filter>src\Commands\AutoSuperWeapon</Filter></ClInclude>
+    <ClCompile Include="src\Commands\AutoSuperWeapon\AutoSuperWeaponCommandRegistry.cpp"><Filter>src\Commands\AutoSuperWeapon</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoSuperWeapon\AutoSuperWeaponCommandRegistry.h"><Filter>src\Commands\AutoSuperWeapon</Filter></ClInclude>
     <ClInclude Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.h">
       <Filter>src\Commands\AutoRepairCommand</Filter>
     </ClInclude>
