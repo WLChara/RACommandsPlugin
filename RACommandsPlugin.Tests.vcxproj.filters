@@ -43,6 +43,9 @@
     <Filter Include="src\Commands\AutoBuild">
       <UniqueIdentifier>{C73B482D-A25A-4AE1-B289-A8837388A617}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Commands\AutoSuperWeapon">
+      <UniqueIdentifier>{F536A2D8-17C3-4383-AB1B-7B71A507FDB7}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Commands\AFloorCommand">
       <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B2005}</UniqueIdentifier>
     </Filter>
@@ -82,6 +85,7 @@
       <Filter>src\Tests</Filter>
     </ClCompile>
     <ClCompile Include="src\Tests\AutoBuildPureTests.cpp"><Filter>src\Tests</Filter></ClCompile>
+    <ClCompile Include="src\Tests\AutoSuperWeaponPureTests.cpp"><Filter>src\Tests</Filter></ClCompile>
     <ClCompile Include="src\Tests\SafeModeTogglePureTests.cpp">
       <Filter>src\Tests</Filter>
     </ClCompile>
@@ -146,6 +150,11 @@
     <ClInclude Include="src\Commands\AutoBuild\AutoBuildCommandService.h"><Filter>src\Commands\AutoBuild</Filter></ClInclude>
     <ClInclude Include="src\Commands\AutoBuild\IAutoBuildGamePort.h"><Filter>src\Commands\AutoBuild</Filter></ClInclude>
     <ClInclude Include="src\Commands\AutoBuild\AutoBuildKeyPressTracker.h"><Filter>src\Commands\AutoBuild</Filter></ClInclude>
+    <ClCompile Include="src\Commands\AutoSuperWeapon\AutoSuperWeaponPlanner.cpp"><Filter>src\Commands\AutoSuperWeapon</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoSuperWeapon\AutoSuperWeaponPlanner.h"><Filter>src\Commands\AutoSuperWeapon</Filter></ClInclude>
+    <ClCompile Include="src\Commands\AutoSuperWeapon\AutoSuperWeaponCommandService.cpp"><Filter>src\Commands\AutoSuperWeapon</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoSuperWeapon\AutoSuperWeaponCommandService.h"><Filter>src\Commands\AutoSuperWeapon</Filter></ClInclude>
+    <ClInclude Include="src\Commands\AutoSuperWeapon\IAutoSuperWeaponGamePort.h"><Filter>src\Commands\AutoSuperWeapon</Filter></ClInclude>
     <ClCompile Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandService.cpp">
       <Filter>src\Commands\SafeModeToggleCommand</Filter>
     </ClCompile>
