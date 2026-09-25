@@ -22,6 +22,9 @@
     <Filter Include="src\Commands\AutoCrush">
       <UniqueIdentifier>{996A2DD6-BBF7-498A-9348-1000CF112001}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Commands\SafeModeToggleCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B20F0}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Commands\TeslaChargeCommand">
       <UniqueIdentifier>{BAA7D9BA-C351-4676-9F2D-30310C5A9A03}</UniqueIdentifier>
     </Filter>
@@ -34,14 +37,11 @@
     <Filter Include="src\Commands\IfvModeSelectCommand">
       <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B2004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\Commands\AutoBuild">
-      <UniqueIdentifier>{C73B482D-A25A-4AE1-B289-A8837388A617}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\Commands\AutoRepairCommand">
       <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B2003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\Commands\SafeModeToggleCommand">
-      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B20F0}</UniqueIdentifier>
+    <Filter Include="src\Commands\AutoBuild">
+      <UniqueIdentifier>{C73B482D-A25A-4AE1-B289-A8837388A617}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Commands\AFloorCommand">
       <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B2005}</UniqueIdentifier>
@@ -82,7 +82,9 @@
       <Filter>src\Tests</Filter>
     </ClCompile>
     <ClCompile Include="src\Tests\AutoBuildPureTests.cpp"><Filter>src\Tests</Filter></ClCompile>
-    <ClCompile Include="src\Tests\SafeModeTogglePureTests.cpp"><Filter>src\Tests</Filter></ClCompile>
+    <ClCompile Include="src\Tests\SafeModeTogglePureTests.cpp">
+      <Filter>src\Tests</Filter>
+    </ClCompile>
     <ClCompile Include="src\Tests\MoveIntentPureTests.cpp">
       <Filter>src\Tests</Filter>
     </ClCompile>
@@ -137,14 +139,15 @@
     <ClCompile Include="src\Commands\IfvModeSelectCommand\IfvKeyPressTracker.cpp">
       <Filter>src\Commands\IfvModeSelectCommand</Filter>
     </ClCompile>
-    <ClCompile Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandService.cpp"><Filter>src\Commands\SafeModeToggleCommand</Filter></ClCompile>
-    <ClInclude Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandService.h"><Filter>src\Commands\SafeModeToggleCommand</Filter></ClInclude>
+    <ClCompile Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.cpp">
+      <Filter>src\Commands\AutoRepairCommand</Filter>
+    </ClCompile>
     <ClCompile Include="src\Commands\AutoBuild\AutoBuildCommandService.cpp"><Filter>src\Commands\AutoBuild</Filter></ClCompile>
     <ClInclude Include="src\Commands\AutoBuild\AutoBuildCommandService.h"><Filter>src\Commands\AutoBuild</Filter></ClInclude>
     <ClInclude Include="src\Commands\AutoBuild\IAutoBuildGamePort.h"><Filter>src\Commands\AutoBuild</Filter></ClInclude>
     <ClInclude Include="src\Commands\AutoBuild\AutoBuildKeyPressTracker.h"><Filter>src\Commands\AutoBuild</Filter></ClInclude>
-    <ClCompile Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.cpp">
-      <Filter>src\Commands\AutoRepairCommand</Filter>
+    <ClCompile Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandService.cpp">
+      <Filter>src\Commands\SafeModeToggleCommand</Filter>
     </ClCompile>
     <ClCompile Include="src\Commands\AFloorCommand\AFloorCommandService.cpp">
       <Filter>src\Commands\AFloorCommand</Filter>
@@ -165,12 +168,11 @@
       <Filter>src\ClickedMission</Filter>
     </ClCompile>
     <ClCompile Include="src\ClickedMission\ClickedMissionIntentHandlers.cpp"><Filter>src\ClickedMission</Filter></ClCompile>
-    <ClInclude Include="src\ClickedMission\ClickedMissionIntentHandlers.h"><Filter>src\ClickedMission</Filter></ClInclude>
-    <ClCompile Include="src\NetworkEvent\NetworkEvent.cpp"><Filter>src\NetworkEvent</Filter></ClCompile>
-    <ClInclude Include="src\NetworkEvent\NetworkEvent.h"><Filter>src\NetworkEvent</Filter></ClInclude>
     <ClCompile Include="src\ClickedMission\ClickedMissionDispatcher.cpp">
       <Filter>src\ClickedMission</Filter>
     </ClCompile>
+    <ClCompile Include="src\NetworkEvent\NetworkEvent.cpp"><Filter>src\NetworkEvent</Filter></ClCompile>
+    <ClInclude Include="src\NetworkEvent\NetworkEvent.h"><Filter>src\NetworkEvent</Filter></ClInclude>
     <ClInclude Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.h">
       <Filter>src\Commands\AutoLoadCommand</Filter>
     </ClInclude>
@@ -249,11 +251,15 @@
     <ClInclude Include="src\ClickedMission\ClickedMissionQueue.h">
       <Filter>src\ClickedMission</Filter>
     </ClInclude>
+    <ClInclude Include="src\ClickedMission\ClickedMissionIntentHandlers.h"><Filter>src\ClickedMission</Filter></ClInclude>
     <ClInclude Include="src\ClickedMission\ClickedMissionDispatcher.h">
       <Filter>src\ClickedMission</Filter>
     </ClInclude>
     <ClInclude Include="src\ClickedMission\IClickedMissionGamePort.h">
       <Filter>src\ClickedMission</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandService.h">
+      <Filter>src\Commands\SafeModeToggleCommand</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

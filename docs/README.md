@@ -22,14 +22,14 @@ RACommandsPlugin/
 │   │   ├── AirSpreadCommand/  空军分散规划、服务与游戏适配
 │   │   ├── AutoRepairCommand/ 自动修理服务与游戏适配
 │   │   ├── AutoBuild/        主建造栏与防御栏的独立自动续建命令
+│   │   ├── AFloorCommand/     A 地板模式状态、适配与命令
+│   │   ├── BeaconClearCommand/ 全场信标值型队列与原生协议适配
+│   │   ├── RangeDisplayCommand/ 选中单位射程显示状态与命令
+│   │   ├── SafeModeToggleCommand/ 安全模式的全局状态与切换命令
 │   │   ├── AutoNanoCloudCommand/ 焚风猎杀者制造纳米云的规则、服务与游戏适配
 │   │   ├── AutoCrush/        自动碾压的规划器、状态机与游戏适配
 │   │   ├── AutoCrushAddCommand/    加入自动碾压的原生命令
 │   │   ├── AutoCrushRemoveCommand/ 退出自动碾压的原生命令
-│   │   ├── SafeModeToggleCommand/ 安全模式的全局状态与切换命令
-│   │   ├── AFloorCommand/     A 地板模式状态、适配与命令
-│   │   ├── BeaconClearCommand/ 全场信标值型队列与原生协议适配
-│   │   ├── RangeDisplayCommand/ 选中单位射程显示状态与命令
 │   │   └── *SelectCommand/    各选区原生命令自己的注册目录
 │   ├── ClickedMission/    共用的游戏任务调度链路
 │   ├── Game/              游戏对象访问与目标版本 Sig 定义

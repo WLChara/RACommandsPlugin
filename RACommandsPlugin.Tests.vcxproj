@@ -86,18 +86,17 @@
     <ClCompile Include="src\Commands\BeaconClearCommand\BeaconRecipientProgress.cpp" />
     <ClCompile Include="src\Commands\RangeDisplayCommand\RangeDisplayCommandService.cpp" />
     <ClCompile Include="src\ClickedMission\ClickedMissionQueue.cpp" />
+    <ClCompile Include="src\ClickedMission\ClickedMissionIntentHandlers.cpp" />
     <ClCompile Include="src\ClickedMission\ClickedMissionDispatcher.cpp" />
     <ClCompile Include="src\NetworkEvent\NetworkEvent.cpp" />
     <ClInclude Include="src\NetworkEvent\NetworkEvent.h" />
-    <ClCompile Include="src\ClickedMission\ClickedMissionIntentHandlers.cpp" />
-    <ClInclude Include="src\ClickedMission\ClickedMissionIntentHandlers.h" />
+    <ClInclude Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.h" />
     <ClInclude Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudPlanner.h" />
     <ClInclude Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudCommandService.h" />
     <ClInclude Include="src\Commands\AutoNanoCloudCommand\IAutoNanoCloudGamePort.h" />
     <ClInclude Include="src\Commands\AutoCrush\AutoCrushPlanner.h" />
     <ClInclude Include="src\Commands\AutoCrush\AutoCrushCommandService.h" />
     <ClInclude Include="src\Commands\AutoCrush\IAutoCrushGamePort.h" />
-    <ClInclude Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.h" />
     <ClInclude Include="src\Commands\AutoLoadCommand\AutoLoadCommandService.h" />
     <ClInclude Include="src\Commands\AutoLoadCommand\IAutoLoadGamePort.h" />
     <ClInclude Include="src\Commands\TeslaChargeCommand\TeslaChargePlanner.h" />
@@ -125,6 +124,7 @@
     <ClInclude Include="src\Commands\RangeDisplayCommand\RangeDisplayCommandService.h" />
     <ClInclude Include="src\Commands\RangeDisplayCommand\IRangeDisplayGamePort.h" />
     <ClInclude Include="src\ClickedMission\ClickedMissionQueue.h" />
+    <ClInclude Include="src\ClickedMission\ClickedMissionIntentHandlers.h" />
     <ClInclude Include="src\ClickedMission\ClickedMissionDispatcher.h" />
     <ClInclude Include="src\ClickedMission\IClickedMissionGamePort.h" />
   </ItemGroup>

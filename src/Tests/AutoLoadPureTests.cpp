@@ -693,13 +693,13 @@ void RunBeaconClearTests();
 void RunBeaconDeletePacketTests();
 void RunBeaconRecipientProgressTests();
 void RunRangeDisplayTests();
-void RunClickedMissionIntentHandlersTests();
-void RunNetworkEventTests();
-void RunAutoBuildPureTests();
 void RunSafeModeToggleTests();
 void RunAutoNanoCloudTests();
 void RunAutoCrushPlannerTests();
 void RunAutoCrushServiceTests();
+void RunClickedMissionIntentHandlersTests();
+void RunNetworkEventTests();
+void RunAutoBuildPureTests();
 
 int main()
 {
@@ -707,8 +707,8 @@ int main()
     {
         TestMixedSelection();
         TestInfantryOnly();
-        TestSafeModeFillsOneTransportAndPrefersInfantry();
         TestVehicleModeAndFallback();
+        TestSafeModeFillsOneTransportAndPrefersInfantry();
         TestSeveralTransportCapableVehicles();
         TestMultipleVehicleTransports();
         TestAmbivalentVehiclePrefersCarrying();
@@ -737,13 +737,13 @@ int main()
         RunBeaconDeletePacketTests();
         RunBeaconRecipientProgressTests();
         RunRangeDisplayTests();
-        RunClickedMissionIntentHandlersTests();
-        RunNetworkEventTests();
-        RunAutoBuildPureTests();
         RunSafeModeToggleTests();
         RunAutoNanoCloudTests();
         RunAutoCrushPlannerTests();
         RunAutoCrushServiceTests();
+        RunClickedMissionIntentHandlersTests();
+        RunNetworkEventTests();
+        RunAutoBuildPureTests();
         std::cout << "RACommandsPlugin pure tests passed\n";
         return 0;
     }

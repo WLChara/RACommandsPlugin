@@ -31,6 +31,9 @@
     <Filter Include="src\Commands\AutoCrushRemoveCommand">
       <UniqueIdentifier>{996A2DD6-BBF7-498A-9348-1000CF111003}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Commands\SafeModeToggleCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B10F0}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Commands\TeslaChargeCommand">
       <UniqueIdentifier>{FB904567-C084-4A75-8B6A-8EEAF7074621}</UniqueIdentifier>
     </Filter>
@@ -40,14 +43,11 @@
     <Filter Include="src\Commands\AirSpreadCommand">
       <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B1002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\Commands\AutoBuild">
-      <UniqueIdentifier>{923A0DF5-BB53-4569-8255-486576404B17}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\Commands\AutoRepairCommand">
       <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B1010}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\Commands\SafeModeToggleCommand">
-      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B10F0}</UniqueIdentifier>
+    <Filter Include="src\Commands\AutoBuild">
+      <UniqueIdentifier>{923A0DF5-BB53-4569-8255-486576404B17}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Commands\AFloorCommand">
       <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B1011}</UniqueIdentifier>
@@ -919,6 +919,9 @@
     <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\YRPPCore.h">
       <Filter>src\SDK\YRpp\mo-7cd005d2</Filter>
     </ClInclude>
+    <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.cpp">
+      <Filter>src\Commands\AutoLoadCommand</Filter>
+    </ClCompile>
     <ClCompile Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudPlanner.cpp"><Filter>src\Commands\AutoNanoCloudCommand</Filter></ClCompile>
     <ClInclude Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudPlanner.h"><Filter>src\Commands\AutoNanoCloudCommand</Filter></ClInclude>
     <ClCompile Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudCommandService.cpp"><Filter>src\Commands\AutoNanoCloudCommand</Filter></ClCompile>
@@ -941,9 +944,6 @@
     <ClInclude Include="src\Commands\AutoCrushAddCommand\AutoCrushAddCommandRegistry.h"><Filter>src\Commands\AutoCrushAddCommand</Filter></ClInclude>
     <ClCompile Include="src\Commands\AutoCrushRemoveCommand\AutoCrushRemoveCommandRegistry.cpp"><Filter>src\Commands\AutoCrushRemoveCommand</Filter></ClCompile>
     <ClInclude Include="src\Commands\AutoCrushRemoveCommand\AutoCrushRemoveCommandRegistry.h"><Filter>src\Commands\AutoCrushRemoveCommand</Filter></ClInclude>
-    <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.cpp">
-      <Filter>src\Commands\AutoLoadCommand</Filter>
-    </ClCompile>
     <ClInclude Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.h">
       <Filter>src\Commands\AutoLoadCommand</Filter>
     </ClInclude>
@@ -1055,20 +1055,17 @@
     <ClInclude Include="src\Commands\AirSpreadCommand\AirSpreadGameAdapter.h">
       <Filter>src\Commands\AirSpreadCommand</Filter>
     </ClInclude>
+    <ClCompile Include="src\Commands\AirSpreadCommand\AirSpreadIntentHandler.cpp"><Filter>src\Commands\AirSpreadCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AirSpreadCommand\AirSpreadIntentHandler.h"><Filter>src\Commands\AirSpreadCommand</Filter></ClInclude>
     <ClCompile Include="src\Commands\AirSpreadCommand\AirSpreadCommandRegistry.cpp">
       <Filter>src\Commands\AirSpreadCommand</Filter>
     </ClCompile>
     <ClInclude Include="src\Commands\AirSpreadCommand\AirSpreadCommandRegistry.h">
       <Filter>src\Commands\AirSpreadCommand</Filter>
     </ClInclude>
-    <ClCompile Include="src\Commands\AirSpreadCommand\AirSpreadIntentHandler.cpp"><Filter>src\Commands\AirSpreadCommand</Filter></ClCompile>
-    <ClInclude Include="src\Commands\AirSpreadCommand\AirSpreadIntentHandler.h"><Filter>src\Commands\AirSpreadCommand</Filter></ClInclude>
-    <ClCompile Include="src\Commands\SafeModeToggleCommand\SafeModeState.cpp"><Filter>src\Commands\SafeModeToggleCommand</Filter></ClCompile>
-    <ClInclude Include="src\Commands\SafeModeToggleCommand\SafeModeState.h"><Filter>src\Commands\SafeModeToggleCommand</Filter></ClInclude>
-    <ClCompile Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandService.cpp"><Filter>src\Commands\SafeModeToggleCommand</Filter></ClCompile>
-    <ClInclude Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandService.h"><Filter>src\Commands\SafeModeToggleCommand</Filter></ClInclude>
-    <ClCompile Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandRegistry.cpp"><Filter>src\Commands\SafeModeToggleCommand</Filter></ClCompile>
-    <ClInclude Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandRegistry.h"><Filter>src\Commands\SafeModeToggleCommand</Filter></ClInclude>
+    <ClCompile Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.cpp">
+      <Filter>src\Commands\AutoRepairCommand</Filter>
+    </ClCompile>
     <ClCompile Include="src\Commands\AutoBuild\AutoBuildCommandService.cpp"><Filter>src\Commands\AutoBuild</Filter></ClCompile>
     <ClInclude Include="src\Commands\AutoBuild\AutoBuildCommandService.h"><Filter>src\Commands\AutoBuild</Filter></ClInclude>
     <ClInclude Include="src\Commands\AutoBuild\IAutoBuildGamePort.h"><Filter>src\Commands\AutoBuild</Filter></ClInclude>
@@ -1077,9 +1074,6 @@
     <ClInclude Include="src\Commands\AutoBuild\AutoBuildGameAdapter.h"><Filter>src\Commands\AutoBuild</Filter></ClInclude>
     <ClCompile Include="src\Commands\AutoBuild\AutoBuildCommandRegistry.cpp"><Filter>src\Commands\AutoBuild</Filter></ClCompile>
     <ClInclude Include="src\Commands\AutoBuild\AutoBuildCommandRegistry.h"><Filter>src\Commands\AutoBuild</Filter></ClInclude>
-    <ClCompile Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.cpp">
-      <Filter>src\Commands\AutoRepairCommand</Filter>
-    </ClCompile>
     <ClInclude Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.h">
       <Filter>src\Commands\AutoRepairCommand</Filter>
     </ClInclude>
@@ -1195,15 +1189,15 @@
     <ClInclude Include="src\Bootstrap\PluginRuntime.h">
       <Filter>src\Bootstrap</Filter>
     </ClInclude>
-    <ClCompile Include="src\ClickedMission\ClickedMissionIntentHandlers.cpp"><Filter>src\ClickedMission</Filter></ClCompile>
-    <ClInclude Include="src\ClickedMission\ClickedMissionIntentHandlers.h"><Filter>src\ClickedMission</Filter></ClInclude>
+    <ClCompile Include="src\ClickedMission\ClickedMissionDispatcher.cpp">
+      <Filter>src\ClickedMission</Filter>
+    </ClCompile>
     <ClCompile Include="src\NetworkEvent\NetworkEvent.cpp"><Filter>src\NetworkEvent</Filter></ClCompile>
     <ClInclude Include="src\NetworkEvent\NetworkEvent.h"><Filter>src\NetworkEvent</Filter></ClInclude>
     <ClCompile Include="src\NetworkEvent\NativeNetworkEventAdapter.cpp"><Filter>src\NetworkEvent</Filter></ClCompile>
     <ClInclude Include="src\NetworkEvent\NativeNetworkEventAdapter.h"><Filter>src\NetworkEvent</Filter></ClInclude>
-    <ClCompile Include="src\ClickedMission\ClickedMissionDispatcher.cpp">
-      <Filter>src\ClickedMission</Filter>
-    </ClCompile>
+    <ClCompile Include="src\ClickedMission\ClickedMissionIntentHandlers.cpp"><Filter>src\ClickedMission</Filter></ClCompile>
+    <ClInclude Include="src\ClickedMission\ClickedMissionIntentHandlers.h"><Filter>src\ClickedMission</Filter></ClInclude>
     <ClInclude Include="src\ClickedMission\ClickedMissionDispatcher.h">
       <Filter>src\ClickedMission</Filter>
     </ClInclude>
@@ -1221,6 +1215,24 @@
     </ClCompile>
     <ClInclude Include="src\Commands\AutoLoadCommand\AutoLoadCommandRegistry.h">
       <Filter>src\Commands\AutoLoadCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\SafeModeToggleCommand\SafeModeState.cpp">
+      <Filter>src\Commands\SafeModeToggleCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\SafeModeToggleCommand\SafeModeState.h">
+      <Filter>src\Commands\SafeModeToggleCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandService.cpp">
+      <Filter>src\Commands\SafeModeToggleCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandService.h">
+      <Filter>src\Commands\SafeModeToggleCommand</Filter>
+    </ClInclude>
+    <ClCompile Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandRegistry.cpp">
+      <Filter>src\Commands\SafeModeToggleCommand</Filter>
+    </ClCompile>
+    <ClInclude Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandRegistry.h">
+      <Filter>src\Commands\SafeModeToggleCommand</Filter>
     </ClInclude>
     <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadGameAdapter.cpp">
       <Filter>src\Commands\AutoLoadCommand</Filter>
