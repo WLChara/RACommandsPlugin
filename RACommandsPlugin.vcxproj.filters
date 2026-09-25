@@ -49,6 +49,9 @@
     <Filter Include="src\Commands\AutoBuild">
       <UniqueIdentifier>{923A0DF5-BB53-4569-8255-486576404B17}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Commands\ForceShieldCommand">
+      <UniqueIdentifier>{7455027A-5D30-41E2-9D74-36C34146A3F2}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Commands\AFloorCommand">
       <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B1011}</UniqueIdentifier>
     </Filter>
@@ -1074,6 +1077,10 @@
     <ClInclude Include="src\Commands\AutoBuild\AutoBuildGameAdapter.h"><Filter>src\Commands\AutoBuild</Filter></ClInclude>
     <ClCompile Include="src\Commands\AutoBuild\AutoBuildCommandRegistry.cpp"><Filter>src\Commands\AutoBuild</Filter></ClCompile>
     <ClInclude Include="src\Commands\AutoBuild\AutoBuildCommandRegistry.h"><Filter>src\Commands\AutoBuild</Filter></ClInclude>
+    <ClCompile Include="src\Commands\ForceShieldCommand\ForceShieldCommandRegistry.cpp"><Filter>src\Commands\ForceShieldCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\ForceShieldCommand\ForceShieldCommandRegistry.h"><Filter>src\Commands\ForceShieldCommand</Filter></ClInclude>
+    <ClCompile Include="src\Commands\ForceShieldCommand\ForceShieldGameAdapter.cpp"><Filter>src\Commands\ForceShieldCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\ForceShieldCommand\ForceShieldGameAdapter.h"><Filter>src\Commands\ForceShieldCommand</Filter></ClInclude>
     <ClInclude Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.h">
       <Filter>src\Commands\AutoRepairCommand</Filter>
     </ClInclude>
