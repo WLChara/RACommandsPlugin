@@ -43,6 +43,18 @@ namespace ra_commands::network_event
         return event;
     }
 
+    NetworkEvent BuildSpecialPlaceEvent(
+        std::uint8_t houseIndex, std::uint32_t houseSuperIndex,
+        std::int16_t cellX, std::int16_t cellY)
+    {
+        NetworkEvent event{};
+        event.Kind = static_cast<std::uint8_t>(NetworkEventKind::SpecialPlace);
+        event.HouseIndex = houseIndex;
+        const SpecialPlacePayload payload{houseSuperIndex, {cellX, cellY}};
+        std::memcpy(event.Data.Raw, &payload, sizeof(payload));
+        return event;
+    }
+
     bool TryAppendNativeEvent(NativeOutListView outList,
         const NetworkEvent& event, std::uint32_t frame,
         std::uint32_t nowMs) noexcept

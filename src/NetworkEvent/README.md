@@ -24,6 +24,8 @@
 
 `Produce` 对建筑使用 `BuildingType`（7）。`Place` 的处理函数接受 `Building`（6）或 `BuildingType`（7）；当前建构器采用原有建筑放置调用使用的 `Building`（6）。两类事件的处理函数都依据建筑类型的 `BuildCat` 选择主建造栏或防御栏，`BuildCat::Combat`（5）指向防御栏。
 
+`SpecialPlace` 的索引是发起玩家 `HouseClass::Supers` 中的位置，不是全局超武类型索引；建构器按此布局写入索引与目标格。
+
 ## 入队边界
 
-目标样本的 `Networking::QueueClickedMissionEvent`（`0x646E90`）展示原生 OutList 写入：容量为 128，事件数组起始于 `0xA802D4`，每项复制 111 字节，时间戳数组起始于 `0xA83A54`，写入索引位于 `0xA802D0`，待发数量位于 `0xA802C8`。适配器沿用这一路径的已验证布局，并只允许本地玩家的 Produce／Place。返回成功表示已复制到 OutList；事件是否在游戏模拟中被接受以及联机是否一致，仍需实机验收。
+目标样本的 `Networking::QueueClickedMissionEvent`（`0x646E90`）展示原生 OutList 写入：容量为 128，事件数组起始于 `0xA802D4`，每项复制 111 字节，时间戳数组起始于 `0xA83A54`，写入索引位于 `0xA802D0`，待发数量位于 `0xA802C8`。适配器沿用这一路径的已验证布局，并只允许本地玩家的 Produce／Place／SpecialPlace。对 SpecialPlace 会重新检查本地玩家的超武槽、就绪状态和目标地图格。返回成功表示已复制到 OutList；事件是否在游戏模拟中被接受以及联机是否一致，仍需实机验收。
