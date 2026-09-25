@@ -14,6 +14,7 @@ namespace ra_commands::game
     {
     public:
         [[nodiscard]] bool CaptureSnapshot(autoload::Snapshot& outSnapshot) const override;
+        [[nodiscard]] std::uint64_t GetCurrentTimeMs() const override;
         [[nodiscard]] bool MakeEnterIntent(
             autoload::UnitId passengerId,
             autoload::UnitId transportId,

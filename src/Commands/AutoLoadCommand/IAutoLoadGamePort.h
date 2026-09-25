@@ -18,6 +18,7 @@ namespace ra_commands::autoload
 
         /** 对局未就绪时返回 false，且保持 outSnapshot 不变。 */
         [[nodiscard]] virtual bool CaptureSnapshot(Snapshot& outSnapshot) const = 0;
+        [[nodiscard]] virtual std::uint64_t GetCurrentTimeMs() const = 0;
 
         /** 为当前游戏对象捕获身份；目标失效时返回 false，且保持 outIntent 不变。 */
         [[nodiscard]] virtual bool MakeEnterIntent(

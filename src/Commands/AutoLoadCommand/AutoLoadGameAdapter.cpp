@@ -7,6 +7,7 @@
 #include <UnitClass.h>
 #include <HouseClass.h>
 #include <WeaponTypeClass.h>
+#include <Windows.h>
 
 #include <cstdint>
 #include <string>
@@ -34,12 +35,15 @@ namespace ra_commands::game
         {
             autoload::Unit unit;
             unit.Id = techno->UniqueID;
+            unit.Address = reinterpret_cast<std::uintptr_t>(techno);
             unit.Kind = GetUnitKind(techno);
             unit.HasOwner = techno->Owner != nullptr;
             unit.IsLocalOrAllied = techno->Owner && local &&
                 (techno->Owner == local || techno->Owner->IsAlliedWith(local));
             unit.IsInPlayfield = techno->IsInPlayfield;
             unit.IsInTransport = techno->Transporter != nullptr;
+            unit.IsEnteringTransport = techno->CurrentMission == Mission::Enter ||
+                techno->QueuedMission == Mission::Enter;
             unit.PassengerCount = techno->Passengers.NumPassengers;
 
             if (auto* const type = techno->GetTechnoType())
@@ -140,6 +144,11 @@ namespace ra_commands::game
         return true;
     }
 
+    std::uint64_t AutoLoadGameAdapter::GetCurrentTimeMs() const
+    {
+        return GetTickCount64();
+    }
+
     bool AutoLoadGameAdapter::MakeEnterIntent(
         autoload::UnitId passengerId,
         autoload::UnitId transportId,
@@ -157,6 +166,7 @@ namespace ra_commands::game
         intent.Actor = CaptureIdentity(passenger, epoch);
         intent.Mission = static_cast<std::int32_t>(Mission::Enter);
         intent.TargetCell = CaptureIdentity(transport, epoch);
+        intent.Producer = commands::ClickedMissionProducer::AutoLoad;
         intent.Epoch = epoch;
         intent.CreatedFrame = GetCurrentGameFrame();
         intent.FrameSendRate = GetGameFrameSendRate();

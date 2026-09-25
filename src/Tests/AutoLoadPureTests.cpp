@@ -3,8 +3,10 @@
 #include "ClickedMission/ClickedMissionQueue.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cstdint>
 #include <iostream>
+#include <optional>
 #include <stdexcept>
 #include <vector>
 
@@ -118,6 +120,37 @@ namespace
         Require(flyingFallback.size() == 1 && flyingFallback[0].Passenger == 3 &&
             flyingFallback[0].Kind == autoload::PairKind::InfantryFallback,
             "flying vehicle passengers must not suppress infantry fallback");
+    }
+
+    void TestSafeModeFillsOneTransportAndPrefersInfantry()
+    {
+        autoload::Snapshot snapshot;
+        snapshot.Units = {
+            Infantry(1), Infantry(2), Infantry(3),
+            Vehicle(10, 2, 2.0), Vehicle(11, 2, 2.0)
+        };
+        snapshot.SelectedInfantries = {1, 2, 3};
+        snapshot.SelectedVehicles = {10, 11};
+        const auto pairs = autoload::PlanSafeMode(snapshot);
+        Require(pairs.size() == 2 && pairs[0].Transport == pairs[1].Transport &&
+            pairs[0].Passenger != pairs[1].Passenger,
+            "safe mode must fill one transport with multiple infantry");
+
+        auto vehiclePassenger = Vehicle(12, 0, 0.0);
+        snapshot.Units = {Vehicle(10, 2, 2.0), vehiclePassenger, Infantry(3)};
+        snapshot.SelectedInfantries.clear();
+        snapshot.SelectedVehicles = {10, 12};
+        snapshot.FriendlyPassengers = {3};
+        const auto infantryFirst = autoload::PlanSafeMode(snapshot);
+        Require(infantryFirst.size() == 1 && infantryFirst[0].Passenger == 3 &&
+            infantryFirst[0].Kind == autoload::PairKind::InfantryFallback,
+            "safe mode must prefer infantry even with vehicle-only selection");
+
+        snapshot.FriendlyPassengers.clear();
+        const auto vehicleFallback = autoload::PlanSafeMode(snapshot);
+        Require(vehicleFallback.size() == 1 && vehicleFallback[0].Passenger == 12 &&
+            vehicleFallback[0].Kind == autoload::PairKind::VehicleIntoVehicle,
+            "safe mode must allow vehicle loading when no infantry pair exists");
     }
 
     void TestSeveralTransportCapableVehicles()
@@ -453,17 +486,25 @@ namespace
     public:
         bool MatchReady = true;
         bool VehicleOnly = false;
+        std::optional<autoload::Snapshot> CustomSnapshot;
         std::uintptr_t Session = 1;
         std::uint32_t Frame = 100;
+        std::uint64_t NowMs = 1'000;
         mutable std::uint32_t NativeFree = 12;
         mutable int Attempts = 0;
         mutable int Deselects = 0;
         mutable std::vector<std::uint32_t> AttemptedActors;
+        mutable std::vector<autoload::UnitId> MadeTargets;
 
         bool IsMatchReady() const override { return MatchReady; }
         std::uintptr_t GetSessionIdentity() const override { return Session; }
         bool CaptureSnapshot(autoload::Snapshot& outSnapshot) const override
         {
+            if (CustomSnapshot)
+            {
+                outSnapshot = *CustomSnapshot;
+                return true;
+            }
             if (VehicleOnly)
             {
                 auto primary = Vehicle(1, 2, 2.0);
@@ -478,15 +519,18 @@ namespace
             outSnapshot.SelectedVehicles = { 2 };
             return true;
         }
+        std::uint64_t GetCurrentTimeMs() const override { return NowMs; }
         bool MakeEnterIntent(autoload::UnitId passengerId, autoload::UnitId transportId,
             std::uint32_t epoch,
             commands::ClickedMissionIntent& outIntent) const override
         {
+            MadeTargets.push_back(transportId);
             outIntent = EnterIntent(Frame, 7);
             outIntent.Actor.UniqueId = static_cast<std::uint32_t>(passengerId);
             outIntent.TargetCell->UniqueId = static_cast<std::uint32_t>(transportId);
             outIntent.Actor.Epoch = epoch;
             outIntent.TargetCell->Epoch = epoch;
+            outIntent.Producer = commands::ClickedMissionProducer::AutoLoad;
             outIntent.Epoch = epoch;
             return true;
         }
@@ -515,7 +559,8 @@ namespace
     {
         FakeGame game;
         commands::ClickedMissionDispatcher dispatcher(game);
-        autoload::AutoLoadCommandService service(game, dispatcher);
+        std::atomic<bool> isSafeModeEnabled{false};
+        autoload::AutoLoadCommandService service(game, dispatcher, isSafeModeEnabled);
         dispatcher.OnGameFrame();
         service.OnHotkey();
         Require(game.Deselects == 2, "accepted intent should deselect the used pair");
@@ -544,7 +589,8 @@ namespace
         game.VehicleOnly = true;
         game.NativeFree = 13;
         commands::ClickedMissionDispatcher dispatcher(game);
-        autoload::AutoLoadCommandService service(game, dispatcher);
+        std::atomic<bool> isSafeModeEnabled{false};
+        autoload::AutoLoadCommandService service(game, dispatcher, isSafeModeEnabled);
         dispatcher.OnGameFrame();
         service.OnHotkey();
         Require(game.Deselects == 2,
@@ -554,6 +600,53 @@ namespace
         dispatcher.OnGameFrame();
         Require(game.AttemptedActors.size() == 1 && game.AttemptedActors[0] == 2,
             "vehicle loading should submit the secondary vehicle as the Enter actor");
+    }
+
+    void TestSafeModeReservationsAcrossHotkeys()
+    {
+        FakeGame game;
+        autoload::Snapshot snapshot;
+        snapshot.Units = {
+            Infantry(1), Infantry(2), Infantry(3), Infantry(4),
+            Vehicle(10, 2, 2.0), Vehicle(11, 2, 2.0)
+        };
+        snapshot.SelectedInfantries = {1, 2, 3, 4};
+        snapshot.SelectedVehicles = {10, 11};
+        game.CustomSnapshot = snapshot;
+        std::atomic<bool> isSafeModeEnabled{true};
+        commands::ClickedMissionDispatcher dispatcher(game);
+        autoload::AutoLoadCommandService service(game, dispatcher, isSafeModeEnabled);
+        dispatcher.OnGameFrame();
+
+        service.OnHotkey();
+        Require(game.MadeTargets == std::vector<autoload::UnitId>({10, 10}) &&
+            dispatcher.Counters().Enqueued == 2,
+            "one safe hotkey must submit enough passengers for only one transport");
+
+        service.OnHotkey();
+        Require(game.MadeTargets == std::vector<autoload::UnitId>({10, 10, 11, 11}) &&
+            dispatcher.Counters().Enqueued == 4,
+            "next safe hotkey must skip in-flight passengers and transport");
+
+        service.OnHotkey();
+        Require(dispatcher.Counters().Enqueued == 4,
+            "reserved transports must stay unavailable while loading is pending");
+
+        game.NowMs += 5'001;
+        service.OnHotkey();
+        Require(game.MadeTargets.size() == 4,
+            "pending native intents must keep their units reserved despite elapsed time");
+
+        game.NativeFree = 13;
+        for (int index = 0; index < 4; ++index)
+        {
+            ++game.Frame;
+            dispatcher.OnGameFrame();
+            game.NativeFree = 13;
+        }
+        service.OnHotkey();
+        Require(game.MadeTargets.size() > 4,
+            "stalled reservations must expire after pending intents leave the queue");
     }
 
     void TestSharedDispatcherOrderAndCapacity()
@@ -609,6 +702,7 @@ int main()
     {
         TestMixedSelection();
         TestInfantryOnly();
+        TestSafeModeFillsOneTransportAndPrefersInfantry();
         TestVehicleModeAndFallback();
         TestSeveralTransportCapableVehicles();
         TestMultipleVehicleTransports();
@@ -623,6 +717,7 @@ int main()
         TestCapacityAndEpoch();
         TestServiceBackpressureAndSessionReset();
         TestVehicleServiceDispatch();
+        TestSafeModeReservationsAcrossHotkeys();
         TestSharedDispatcherOrderAndCapacity();
         RunTeslaChargeTests();
         RunSelectionTests();
