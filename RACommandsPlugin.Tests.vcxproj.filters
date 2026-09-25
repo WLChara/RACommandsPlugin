@@ -34,6 +34,9 @@
     <Filter Include="src\Commands\IfvModeSelectCommand">
       <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B2004}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Commands\AutoBuild">
+      <UniqueIdentifier>{C73B482D-A25A-4AE1-B289-A8837388A617}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Commands\AutoRepairCommand">
       <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B2003}</UniqueIdentifier>
     </Filter>
@@ -78,6 +81,7 @@
     <ClCompile Include="src\Tests\AutoRepairPureTests.cpp">
       <Filter>src\Tests</Filter>
     </ClCompile>
+    <ClCompile Include="src\Tests\AutoBuildPureTests.cpp"><Filter>src\Tests</Filter></ClCompile>
     <ClCompile Include="src\Tests\SafeModeTogglePureTests.cpp"><Filter>src\Tests</Filter></ClCompile>
     <ClCompile Include="src\Tests\MoveIntentPureTests.cpp">
       <Filter>src\Tests</Filter>
@@ -135,6 +139,10 @@
     </ClCompile>
     <ClCompile Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandService.cpp"><Filter>src\Commands\SafeModeToggleCommand</Filter></ClCompile>
     <ClInclude Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandService.h"><Filter>src\Commands\SafeModeToggleCommand</Filter></ClInclude>
+    <ClCompile Include="src\Commands\AutoBuild\AutoBuildCommandService.cpp"><Filter>src\Commands\AutoBuild</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoBuild\AutoBuildCommandService.h"><Filter>src\Commands\AutoBuild</Filter></ClInclude>
+    <ClInclude Include="src\Commands\AutoBuild\IAutoBuildGamePort.h"><Filter>src\Commands\AutoBuild</Filter></ClInclude>
+    <ClInclude Include="src\Commands\AutoBuild\AutoBuildKeyPressTracker.h"><Filter>src\Commands\AutoBuild</Filter></ClInclude>
     <ClCompile Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.cpp">
       <Filter>src\Commands\AutoRepairCommand</Filter>
     </ClCompile>

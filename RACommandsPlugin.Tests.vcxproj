@@ -53,6 +53,7 @@
     <ClCompile Include="src\Tests\AirSpreadPureTests.cpp" />
     <ClCompile Include="src\Tests\AirSpreadServicePureTests.cpp" />
     <ClCompile Include="src\Tests\AutoRepairPureTests.cpp" />
+    <ClCompile Include="src\Tests\AutoBuildPureTests.cpp" />
     <ClCompile Include="src\Tests\SafeModeTogglePureTests.cpp" />
     <ClCompile Include="src\Tests\MoveIntentPureTests.cpp" />
     <ClCompile Include="src\Tests\ClickedMissionIntentHandlersTests.cpp" />
@@ -77,6 +78,7 @@
     <ClCompile Include="src\Commands\AirSpreadCommand\AirSpreadCommandService.cpp" />
     <ClCompile Include="src\Commands\IfvModeSelectCommand\IfvKeyPressTracker.cpp" />
     <ClCompile Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.cpp" />
+    <ClCompile Include="src\Commands\AutoBuild\AutoBuildCommandService.cpp" />
     <ClCompile Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandService.cpp" />
     <ClCompile Include="src\Commands\AFloorCommand\AFloorCommandService.cpp" />
     <ClCompile Include="src\Commands\BeaconClearCommand\BeaconClearCommandService.cpp" />
@@ -110,6 +112,9 @@
     <ClInclude Include="src\Commands\IfvModeSelectCommand\IfvKeyPressTracker.h" />
     <ClInclude Include="src\Commands\AutoRepairCommand\AutoRepairCommandService.h" />
     <ClInclude Include="src\Commands\AutoRepairCommand\IAutoRepairGamePort.h" />
+    <ClInclude Include="src\Commands\AutoBuild\AutoBuildCommandService.h" />
+    <ClInclude Include="src\Commands\AutoBuild\IAutoBuildGamePort.h" />
+    <ClInclude Include="src\Commands\AutoBuild\AutoBuildKeyPressTracker.h" />
     <ClInclude Include="src\Commands\SafeModeToggleCommand\SafeModeToggleCommandService.h" />
     <ClInclude Include="src\Commands\AFloorCommand\AFloorCommandService.h" />
     <ClInclude Include="src\Commands\AFloorCommand\IAFloorGamePort.h" />
