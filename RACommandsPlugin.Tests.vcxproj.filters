@@ -13,6 +13,9 @@
     <Filter Include="src\Commands\AutoLoadCommand">
       <UniqueIdentifier>{0F3A0001-2026-4000-8000-000000000004}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Commands\AutoNanoCloudCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B20F1}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Commands\AutoCrush">
       <UniqueIdentifier>{996A2DD6-BBF7-498A-9348-1000CF112001}</UniqueIdentifier>
     </Filter>
@@ -51,6 +54,7 @@
     <ClCompile Include="src\Tests\AutoLoadPureTests.cpp">
       <Filter>src\Tests</Filter>
     </ClCompile>
+    <ClCompile Include="src\Tests\AutoNanoCloudPureTests.cpp"><Filter>src\Tests</Filter></ClCompile>
     <ClCompile Include="src\Tests\AutoCrushPlannerTests.cpp"><Filter>src\Tests</Filter></ClCompile>
     <ClCompile Include="src\Tests\AutoCrushServiceTests.cpp"><Filter>src\Tests</Filter></ClCompile>
     <ClCompile Include="src\Tests\TeslaChargePureTests.cpp">
@@ -97,6 +101,8 @@
     <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.cpp">
       <Filter>src\Commands\AutoLoadCommand</Filter>
     </ClCompile>
+    <ClCompile Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudPlanner.cpp"><Filter>src\Commands\AutoNanoCloudCommand</Filter></ClCompile>
+    <ClCompile Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudCommandService.cpp"><Filter>src\Commands\AutoNanoCloudCommand</Filter></ClCompile>
     <ClCompile Include="src\Commands\AutoCrush\AutoCrushPlanner.cpp"><Filter>src\Commands\AutoCrush</Filter></ClCompile>
     <ClCompile Include="src\Commands\AutoCrush\AutoCrushCommandService.cpp"><Filter>src\Commands\AutoCrush</Filter></ClCompile>
     <ClCompile Include="src\Commands\AutoLoadCommand\AutoLoadCommandService.cpp">
@@ -154,6 +160,9 @@
     <ClInclude Include="src\Commands\AutoLoadCommand\AutoLoadPlanner.h">
       <Filter>src\Commands\AutoLoadCommand</Filter>
     </ClInclude>
+    <ClInclude Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudPlanner.h"><Filter>src\Commands\AutoNanoCloudCommand</Filter></ClInclude>
+    <ClInclude Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudCommandService.h"><Filter>src\Commands\AutoNanoCloudCommand</Filter></ClInclude>
+    <ClInclude Include="src\Commands\AutoNanoCloudCommand\IAutoNanoCloudGamePort.h"><Filter>src\Commands\AutoNanoCloudCommand</Filter></ClInclude>
     <ClInclude Include="src\Commands\AutoCrush\AutoCrushPlanner.h"><Filter>src\Commands\AutoCrush</Filter></ClInclude>
     <ClInclude Include="src\Commands\AutoCrush\AutoCrushCommandService.h"><Filter>src\Commands\AutoCrush</Filter></ClInclude>
     <ClInclude Include="src\Commands\AutoCrush\IAutoCrushGamePort.h"><Filter>src\Commands\AutoCrush</Filter></ClInclude>

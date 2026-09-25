@@ -294,6 +294,15 @@
     <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\YRMathVector.h" />
     <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\YRPP.h" />
     <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\YRPPCore.h" />
+    <ClCompile Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudPlanner.cpp" />
+    <ClInclude Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudPlanner.h" />
+    <ClCompile Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudCommandService.cpp" />
+    <ClInclude Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudCommandService.h" />
+    <ClInclude Include="src\Commands\AutoNanoCloudCommand\IAutoNanoCloudGamePort.h" />
+    <ClCompile Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudGameAdapter.cpp" />
+    <ClInclude Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudGameAdapter.h" />
+    <ClCompile Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudCommandRegistry.cpp" />
+    <ClInclude Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudCommandRegistry.h" />
     <ClCompile Include="src\Commands\AutoCrush\AutoCrushPlanner.cpp" />
     <ClInclude Include="src\Commands\AutoCrush\AutoCrushPlanner.h" />
     <ClCompile Include="src\Commands\AutoCrush\AutoCrushCommandService.cpp" />

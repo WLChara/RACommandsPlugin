@@ -1,6 +1,9 @@
 #include "Bootstrap/PluginRuntime.h"
 
 #include "Commands/AutoLoadCommand/AutoLoadCommandService.h"
+#include "Commands/AutoNanoCloudCommand/AutoNanoCloudCommandRegistry.h"
+#include "Commands/AutoNanoCloudCommand/AutoNanoCloudCommandService.h"
+#include "Commands/AutoNanoCloudCommand/AutoNanoCloudGameAdapter.h"
 #include "Commands/AutoCrush/AutoCrushCommandService.h"
 #include "Commands/AutoCrush/AutoCrushGameAdapter.h"
 #include "Commands/AutoCrush/AutoCrushIntentHandler.h"
@@ -87,6 +90,7 @@ namespace ra_commands::bootstrap
         game::GameSymbols g_GameSymbols;
         game::ClickedMissionGameAdapter g_ClickedMissionGameAdapter;
         game::AutoLoadGameAdapter g_AutoLoadGameAdapter;
+        game::AutoNanoCloudGameAdapter g_AutoNanoCloudGameAdapter;
         game::AutoRepairGameAdapter g_AutoRepairGameAdapter;
         game::TeslaChargeGameAdapter g_TeslaChargeGameAdapter;
         game::SelectionGameAdapter g_SelectionGameAdapter;
@@ -94,6 +98,8 @@ namespace ra_commands::bootstrap
         game::BeaconClearGameAdapter g_BeaconClearGameAdapter;
         game::RangeDisplayGameAdapter g_RangeDisplayGameAdapter;
         commands::ClickedMissionDispatcher g_ClickedMissionDispatcher(g_ClickedMissionGameAdapter);
+        auto_nano_cloud::AutoNanoCloudCommandService g_AutoNanoCloudCommandService(
+            g_AutoNanoCloudGameAdapter, g_ClickedMissionDispatcher);
         safe_mode::SafeModeToggleCommandService g_SafeModeToggleCommandService(
             safe_mode::g_IsSafeModeEnabled);
         game::AirSpreadGameAdapter g_AirSpreadGameAdapter(g_ClickedMissionDispatcher);
@@ -126,6 +132,15 @@ namespace ra_commands::bootstrap
             if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
             {
                 g_AutoLoadCommandService.OnHotkey();
+            }
+        }
+
+        void OnAutoNanoCloudHotkey()
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
+            {
+                g_AutoNanoCloudCommandService.OnHotkey();
             }
         }
 
@@ -345,9 +360,10 @@ namespace ra_commands::bootstrap
         }
 
         // 所有原生命令共享主帧注册时机与一次热键重读。
-        std::array<CommandEntry, 17> g_Commands{{
+        std::array<CommandEntry, 18> g_Commands{{
             {&RegisterConfiguredCommand<&game::TryRegisterSafeModeToggleCommand, &OnSafeModeToggleHotkey>, &game::DisableSafeModeToggleCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterAutoLoadCommand, &OnAutoLoadHotkey>, &game::DisableAutoLoadCommand},
+            {&RegisterConfiguredCommand<&game::TryRegisterAutoNanoCloudCommand, &OnAutoNanoCloudHotkey>, &game::DisableAutoNanoCloudCommand},
             {&RegisterConfiguredCommand<&RegisterAutoCrushAddWhenHookReady, &OnAutoCrushAddHotkey>, &game::DisableAutoCrushAddCommand},
             {&RegisterConfiguredCommand<&RegisterAutoCrushRemoveWhenHookReady, &OnAutoCrushRemoveHotkey>, &game::DisableAutoCrushRemoveCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterTeslaChargeCommand, &OnTeslaChargeHotkey>, &game::DisableTeslaChargeCommand},
@@ -474,7 +490,10 @@ namespace ra_commands::bootstrap
                     {&game::ValidateAirSpreadMoveIntent, &game::AttemptAirSpreadMoveIntent}) ||
                 !g_ClickedMissionGameAdapter.BindIntentHandler(
                     commands::ClickedMissionProducer::TeslaCharge,
-                    {&game::ValidateTeslaChargeIntent, &game::AttemptTeslaChargeIntent}))
+                    {&game::ValidateTeslaChargeIntent, &game::AttemptTeslaChargeIntent}) ||
+                !g_ClickedMissionGameAdapter.BindIntentHandler(
+                    commands::ClickedMissionProducer::AutoNanoCloud,
+                    {&game::ValidateAutoNanoCloudIntent, &game::AttemptAutoNanoCloudIntent}))
             {
                 g_LastError = "clicked mission intent handler binding failed";
                 OutputDebugStringA(("[RACommandsPlugin] " + g_LastError + "\n").c_str());
@@ -543,6 +562,7 @@ namespace ra_commands::bootstrap
         g_TeslaChargeCommandService.Reset();
         g_SafeModeToggleCommandService.Reset();
         g_AutoLoadCommandService.Reset();
+        g_AutoNanoCloudCommandService.Reset();
         g_AutoCrushCommandService.Reset();
         g_AutoRepairCommandService.Reset();
         g_SelectionCommandService.Reset();

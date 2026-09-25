@@ -16,6 +16,9 @@
     <Filter Include="src\Commands\AutoLoadCommand">
       <UniqueIdentifier>{0F3A0000-2026-4000-8000-000000000005}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Commands\AutoNanoCloudCommand">
+      <UniqueIdentifier>{A90B2C3D-E123-4D56-8ABC-32E7627B10F1}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Commands\AutoCrush">
       <UniqueIdentifier>{996A2DD6-BBF7-498A-9348-1000CF111001}</UniqueIdentifier>
     </Filter>
@@ -909,6 +912,15 @@
     <ClInclude Include="src\SDK\YRpp\mo-7cd005d2\YRPPCore.h">
       <Filter>src\SDK\YRpp\mo-7cd005d2</Filter>
     </ClInclude>
+    <ClCompile Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudPlanner.cpp"><Filter>src\Commands\AutoNanoCloudCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudPlanner.h"><Filter>src\Commands\AutoNanoCloudCommand</Filter></ClInclude>
+    <ClCompile Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudCommandService.cpp"><Filter>src\Commands\AutoNanoCloudCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudCommandService.h"><Filter>src\Commands\AutoNanoCloudCommand</Filter></ClInclude>
+    <ClInclude Include="src\Commands\AutoNanoCloudCommand\IAutoNanoCloudGamePort.h"><Filter>src\Commands\AutoNanoCloudCommand</Filter></ClInclude>
+    <ClCompile Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudGameAdapter.cpp"><Filter>src\Commands\AutoNanoCloudCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudGameAdapter.h"><Filter>src\Commands\AutoNanoCloudCommand</Filter></ClInclude>
+    <ClCompile Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudCommandRegistry.cpp"><Filter>src\Commands\AutoNanoCloudCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoNanoCloudCommand\AutoNanoCloudCommandRegistry.h"><Filter>src\Commands\AutoNanoCloudCommand</Filter></ClInclude>
     <ClCompile Include="src\Commands\AutoCrush\AutoCrushPlanner.cpp"><Filter>src\Commands\AutoCrush</Filter></ClCompile>
     <ClInclude Include="src\Commands\AutoCrush\AutoCrushPlanner.h"><Filter>src\Commands\AutoCrush</Filter></ClInclude>
     <ClCompile Include="src\Commands\AutoCrush\AutoCrushCommandService.cpp"><Filter>src\Commands\AutoCrush</Filter></ClCompile>
