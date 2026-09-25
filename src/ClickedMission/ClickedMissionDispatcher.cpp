@@ -60,6 +60,18 @@ namespace ra_commands::commands
         return mQueue.CancelByProducer(producer);
     }
 
+    std::size_t ClickedMissionDispatcher::CancelByProducerAndActor(
+        ClickedMissionProducer producer, const ClickedMissionIdentity& actor)
+    {
+        return mQueue.CancelByProducerAndActor(producer, actor);
+    }
+
+    bool ClickedMissionDispatcher::HasPendingActor(ClickedMissionProducer producer,
+        std::uintptr_t address, std::uint32_t uniqueId) const noexcept
+    {
+        return mQueue.HasPendingActor(producer, address, uniqueId);
+    }
+
     void ClickedMissionDispatcher::Reset()
     {
         mQueue.Reset(++mEpoch);

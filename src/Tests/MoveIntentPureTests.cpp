@@ -23,6 +23,7 @@ namespace
         intent.Mission = 2; // Mission::Move; pure tests do not depend on the game SDK.
         intent.DestinationCell = CellCoordinate{ x, y };
         intent.Producer = ClickedMissionProducer::AirSpread;
+        intent.Supersession = ClickedMissionSupersession::ReplaceSameProducerActorMission;
         intent.Epoch = 7;
         intent.CreatedFrame = frame;
         intent.FrameSendRate = 7;
@@ -119,6 +120,53 @@ namespace
         Require(result.Attempted == 1 && issued == *updated.DestinationCell,
             "only the most recent destination may reach native queue");
     }
+
+    void TestAutoCrushMoveReplacementAndActorCancellation()
+    {
+        ClickedMissionQueue queue(4, 7);
+        auto first = MoveIntent(10, 20);
+        first.Producer = ClickedMissionProducer::AutoCrush;
+        auto latest = first;
+        latest.DestinationCell = CellCoordinate{11, 21};
+        auto otherActor = first;
+        otherActor.Actor.UniqueId = 2;
+        auto airSpread = first;
+        airSpread.Producer = ClickedMissionProducer::AirSpread;
+
+        Require(queue.Enqueue(first) == ClickedMissionEnqueueResult::Enqueued &&
+            queue.Enqueue(otherActor) == ClickedMissionEnqueueResult::Enqueued &&
+            queue.Enqueue(airSpread) == ClickedMissionEnqueueResult::Enqueued &&
+            queue.Enqueue(latest) == ClickedMissionEnqueueResult::Replaced,
+            "auto-crush should replace only its own previous move for one actor");
+        Require(queue.Size() == 3 &&
+            queue.CancelByProducerAndActor(ClickedMissionProducer::AutoCrush,
+                latest.Actor) == 1 && queue.Size() == 2,
+            "unmark should cancel only the chosen crusher's pending move");
+
+        std::vector<ClickedMissionIntent> issued;
+        queue.Drain(101, [] { return 13u; },
+            [](const auto&) { return true; },
+            [&](const ClickedMissionIntent& intent) { issued.push_back(intent); });
+        Require(issued.size() == 2 &&
+            issued[0].Actor.UniqueId == 2 &&
+            issued[0].Producer == ClickedMissionProducer::AutoCrush &&
+            issued[1].Producer == ClickedMissionProducer::AirSpread,
+            "actor cancellation must preserve other actors and producers");
+    }
+
+    void TestReplacementIsOptIn()
+    {
+        ClickedMissionQueue queue(3, 7);
+        auto first = MoveIntent(10, 20);
+        first.Producer = ClickedMissionProducer::Unspecified;
+        first.Supersession = ClickedMissionSupersession::None;
+        auto second = first;
+        second.DestinationCell = CellCoordinate{11, 20};
+        Require(queue.Enqueue(first) == ClickedMissionEnqueueResult::Enqueued &&
+            queue.Enqueue(second) == ClickedMissionEnqueueResult::Enqueued &&
+            queue.Size() == 2 && queue.Counters().Superseded == 0,
+            "producer without replacement policy must retain both intents");
+    }
 }
 
 void RunMoveIntentTests()
@@ -127,4 +175,6 @@ void RunMoveIntentTests()
     TestMoveDeadlineAndCapacity();
     TestCancelOnlyAirSpread();
     TestLatestAirSpreadDestinationSupersedesPendingMove();
+    TestAutoCrushMoveReplacementAndActorCancellation();
+    TestReplacementIsOptIn();
 }

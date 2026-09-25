@@ -40,14 +40,15 @@ namespace ra_commands::commands
             }
         }
 
-        if (intent.Producer == ClickedMissionProducer::AirSpread &&
+        if (intent.Supersession ==
+                ClickedMissionSupersession::ReplaceSameProducerActorMission &&
             intent.DestinationCell)
         {
             const auto before = mPending.size();
             mPending.erase(std::remove_if(mPending.begin(), mPending.end(),
                 [&intent](const ClickedMissionIntent& pending)
                 {
-                    return pending.Producer == ClickedMissionProducer::AirSpread &&
+                    return pending.Producer == intent.Producer &&
                         pending.DestinationCell && pending.Actor == intent.Actor &&
                         pending.Mission == intent.Mission;
                 }), mPending.end());
@@ -128,6 +129,31 @@ namespace ra_commands::commands
         return cancelled;
     }
 
+    std::size_t ClickedMissionQueue::CancelByProducerAndActor(
+        ClickedMissionProducer producer, const ClickedMissionIdentity& actor)
+    {
+        const auto before = mPending.size();
+        mPending.erase(std::remove_if(mPending.begin(), mPending.end(),
+            [producer, &actor](const ClickedMissionIntent& intent)
+            {
+                return intent.Producer == producer && intent.Actor == actor;
+            }), mPending.end());
+        const auto cancelled = before - mPending.size();
+        mCounters.Cancelled += cancelled;
+        return cancelled;
+    }
+
+    bool ClickedMissionQueue::HasPendingActor(ClickedMissionProducer producer,
+        std::uintptr_t address, std::uint32_t uniqueId) const noexcept
+    {
+        return std::any_of(mPending.begin(), mPending.end(),
+            [producer, address, uniqueId](const ClickedMissionIntent& intent)
+            {
+                return intent.Producer == producer && intent.Actor.Address == address &&
+                    intent.Actor.UniqueId == uniqueId;
+            });
+    }
+
     void ClickedMissionQueue::Reset(std::uint32_t epoch)
     {
         mCounters.ClearedByReset += mPending.size();
@@ -170,6 +196,7 @@ namespace ra_commands::commands
         const ClickedMissionIntent& right) noexcept
     {
         return left.Epoch == right.Epoch && left.Producer == right.Producer &&
+               left.Supersession == right.Supersession &&
                left.Actor == right.Actor && left.Mission == right.Mission &&
                left.Target == right.Target &&
                left.TargetCell == right.TargetCell && left.Nearest == right.Nearest &&

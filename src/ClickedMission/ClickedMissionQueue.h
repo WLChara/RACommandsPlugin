@@ -31,6 +31,16 @@ namespace ra_commands::commands
         Unspecified,
         TeslaCharge,
         AirSpread,
+        AutoLoad,
+        AutoCrush,
+        AutoNanoCloud,
+        Count,
+    };
+
+    enum class ClickedMissionSupersession
+    {
+        None,
+        ReplaceSameProducerActorMission,
     };
 
     struct ClickedMissionIntent
@@ -42,6 +52,7 @@ namespace ra_commands::commands
         std::optional<ClickedMissionIdentity> Nearest;
         std::optional<CellCoordinate> DestinationCell;
         ClickedMissionProducer Producer = ClickedMissionProducer::Unspecified;
+        ClickedMissionSupersession Supersession = ClickedMissionSupersession::None;
         std::uint32_t Epoch = 0;
         std::uint32_t CreatedFrame = 0;
         std::int32_t FrameSendRate = 30;
@@ -94,7 +105,7 @@ namespace ra_commands::commands
 
         explicit ClickedMissionQueue(std::size_t maximumPending, std::uint32_t epoch = 0);
 
-        // 重复意图不延长期限；同一 actor 的新 AirSpread Move 替换旧目标。
+        // 重复意图不延长期限；同一 actor 的新移动目标替换本功能的旧目标。
         ClickedMissionEnqueueResult Enqueue(const ClickedMissionIntent& intent);
 
         /**
@@ -108,6 +119,10 @@ namespace ra_commands::commands
             const IssueIntent& issue);
 
         std::size_t CancelByProducer(ClickedMissionProducer producer);
+        std::size_t CancelByProducerAndActor(ClickedMissionProducer producer,
+            const ClickedMissionIdentity& actor);
+        [[nodiscard]] bool HasPendingActor(ClickedMissionProducer producer,
+            std::uintptr_t address, std::uint32_t uniqueId) const noexcept;
 
         // 对局代次变化时清除待发意图，避免旧对象身份在新对局被复用。
         void Reset(std::uint32_t epoch);
