@@ -19,6 +19,10 @@ namespace ra_commands::commands
         void OnGameFrame();
         ClickedMissionEnqueueResult Submit(const ClickedMissionIntent& intent);
         std::size_t CancelByProducer(ClickedMissionProducer producer);
+        std::size_t CancelByProducerAndActor(ClickedMissionProducer producer,
+            const ClickedMissionIdentity& actor);
+        [[nodiscard]] bool HasPendingActor(ClickedMissionProducer producer,
+            std::uintptr_t address, std::uint32_t uniqueId) const noexcept;
         void Reset();
 
         [[nodiscard]] bool IsSessionActive() const noexcept;
