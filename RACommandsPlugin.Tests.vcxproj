@@ -134,5 +134,22 @@
     <ClInclude Include="src\ClickedMission\ClickedMissionDispatcher.h" />
     <ClInclude Include="src\ClickedMission\IClickedMissionGamePort.h" />
   </ItemGroup>
+  <ItemGroup Label="AutoFormation">
+    <ClCompile Include="src\Commands\AutoFormationCommand\AutoFormationPlanner.cpp" />
+    <ClCompile Include="src\Commands\AutoFormationCommand\AutoFormationCommandService.cpp" />
+    <ClCompile Include="src\Game\PluginOrderScope.cpp" />
+    <ClCompile Include="src\Tests\AutoFormationPlannerTests.cpp" />
+    <ClCompile Include="src\Tests\AutoFormationServiceTests.cpp" />
+    <ClCompile Include="src\Tests\PluginOrderScopeTests.cpp" />
+    <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationPlanner.h" />
+    <ClInclude Include="src\Commands\AutoFormationCommand\IAutoFormationGamePort.h" />
+    <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationCommandService.h" />
+    <ClInclude Include="src\Game\PluginOrderScope.h" />
+  </ItemGroup>
+  <ItemGroup Label="AutoFormationAdapterRegression">
+    <ClInclude Include="src\Commands\AutoFormationCommand\NativeCellOccupancy.h" />
+    <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationMoveState.h" />
+    <ClCompile Include="src\Tests\AutoFormationGameAdapterRulesTests.cpp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

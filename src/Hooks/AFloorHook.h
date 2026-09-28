@@ -16,6 +16,12 @@ namespace ra_commands::game
     void SetAFloorGameThread(DWORD threadId) noexcept;
     /** 仅观察本地左键调用栈中真正发出的 Move/Attack 类任务。 */
     void SetManualVehicleOrderObserver(ManualVehicleOrderObserver observer) noexcept;
+    /**
+     * 列队取消入口：观察本地载具的外部 ClickedMission 和 ClickedEvent（含 Stop）。
+     * 先安装既有双 Hook；插件自身下令通过 PluginOrderScope 排除，实例回调存活到进程退出。
+     */
+    [[nodiscard]] bool InstallFormationOrderHook(
+        ManualVehicleOrderObserver observer, std::string& outError);
     /** 关闭功能回调但保留已安装的游戏 Hook，DLL 不得在进程结束前卸载。 */
     void DisableAFloorHooks() noexcept;
 }

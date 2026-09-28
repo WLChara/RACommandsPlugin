@@ -597,6 +597,29 @@
     <ClInclude Include="third_party\nlohmann\thirdparty\hedley\hedley_undef.hpp" />
     <ClInclude Include="third_party\nlohmann\thirdparty\hedley\hedley.hpp" />
   </ItemGroup>
+  <ItemGroup Label="AutoFormation">
+    <ClCompile Include="src\Commands\AutoFormationCommand\AutoFormationPlanner.cpp" />
+    <ClCompile Include="src\Commands\AutoFormationCommand\AutoFormationCommandService.cpp" />
+    <ClCompile Include="src\Commands\AutoFormationCommand\AutoFormationGameAdapter.cpp" />
+    <ClCompile Include="src\Commands\AutoFormationCommand\AutoFormationIntentHandler.cpp" />
+    <ClCompile Include="src\Commands\AutoFormationCommand\AutoFormationCommandRegistry.cpp" />
+    <ClCompile Include="src\Game\PluginOrderScope.cpp" />
+    <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationPlanner.h" />
+    <ClInclude Include="src\Commands\AutoFormationCommand\IAutoFormationGamePort.h" />
+    <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationCommandService.h" />
+    <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationGameAdapter.h" />
+    <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationIntentHandler.h" />
+    <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationCommandRegistry.h" />
+    <ClInclude Include="src\Game\PluginOrderScope.h" />
+  </ItemGroup>
+  <ItemGroup Label="AutoFormationAdapterRegression">
+    <ClInclude Include="src\Commands\AutoFormationCommand\NativeCellOccupancy.h" />
+    <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationMoveState.h" />
+  </ItemGroup>
+  <ItemGroup Label="AutoFormationDiagnostics">
+    <ClCompile Include="src\Commands\AutoFormationCommand\AutoFormationDiagnostics.cpp" />
+    <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationDiagnostics.h" />
+  </ItemGroup>
   <!-- 已列出的文件供 VS 文件夹视图使用；新增源文件仍可在手动加入项目之前参与编译。 -->
   <ItemGroup Label="NewSourceFallback">
     <ClCompile Include="src\**\*.cpp" Exclude="src\Tests\**\*.cpp;src\SDK\**\*.cpp;@(ClCompile)" />
