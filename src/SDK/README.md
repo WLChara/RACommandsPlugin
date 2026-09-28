@@ -6,4 +6,3 @@
 
 YRpp 含有固定游戏地址与 ABI 假设。明确承担游戏 ABI 职责的适配器与 `Commands/NativeCommandRegistry` 可引用本快照；纯规划器、ClickedMission 队列、Signature 和 Memory 不引用它。当前只有 Win32 编译验证，尚未做真实游戏运行时验收。普通功能改动不要继续修改 SDK 快照；现有 AOB/Memory 解析机制继续保留。将 YRpp 的固定地址逐步改为 AOB 是后续独立工作，本次不执行。
 
-来源目录未提供独立的 LICENSE 文件；对外分发 SDK 快照前需核实其授权要求。
