@@ -271,4 +271,25 @@
       <Filter>src\Commands\SafeModeToggleCommand</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <Filter Include="src\Commands\AutoFormationCommand"><UniqueIdentifier>{A4809598-0BFB-427E-882C-60397BD273EE}</UniqueIdentifier></Filter>
+    <Filter Include="src\Game"><UniqueIdentifier>{4D944B6D-AE1B-4D14-9616-918A45BC1824}</UniqueIdentifier></Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Commands\AutoFormationCommand\AutoFormationPlanner.cpp"><Filter>src\Commands\AutoFormationCommand</Filter></ClCompile>
+    <ClCompile Include="src\Commands\AutoFormationCommand\AutoFormationCommandService.cpp"><Filter>src\Commands\AutoFormationCommand</Filter></ClCompile>
+    <ClCompile Include="src\Game\PluginOrderScope.cpp"><Filter>src\Game</Filter></ClCompile>
+    <ClCompile Include="src\Tests\AutoFormationPlannerTests.cpp"><Filter>src\Tests</Filter></ClCompile>
+    <ClCompile Include="src\Tests\AutoFormationServiceTests.cpp"><Filter>src\Tests</Filter></ClCompile>
+    <ClCompile Include="src\Tests\PluginOrderScopeTests.cpp"><Filter>src\Tests</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationPlanner.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
+    <ClInclude Include="src\Commands\AutoFormationCommand\IAutoFormationGamePort.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
+    <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationCommandService.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
+    <ClInclude Include="src\Game\PluginOrderScope.h"><Filter>src\Game</Filter></ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Commands\AutoFormationCommand\NativeCellOccupancy.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
+    <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationMoveState.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
+    <ClCompile Include="src\Tests\AutoFormationGameAdapterRulesTests.cpp"><Filter>src\Tests</Filter></ClCompile>
+  </ItemGroup>
 </Project>

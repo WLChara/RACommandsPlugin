@@ -1715,4 +1715,30 @@
       <Filter>third_party\nlohmann\thirdparty\hedley</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <Filter Include="src\Commands\AutoFormationCommand"><UniqueIdentifier>{AF0818F5-06F2-440D-8C0A-2E0AC21BA169}</UniqueIdentifier></Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Commands\AutoFormationCommand\AutoFormationPlanner.cpp"><Filter>src\Commands\AutoFormationCommand</Filter></ClCompile>
+    <ClCompile Include="src\Commands\AutoFormationCommand\AutoFormationCommandService.cpp"><Filter>src\Commands\AutoFormationCommand</Filter></ClCompile>
+    <ClCompile Include="src\Commands\AutoFormationCommand\AutoFormationGameAdapter.cpp"><Filter>src\Commands\AutoFormationCommand</Filter></ClCompile>
+    <ClCompile Include="src\Commands\AutoFormationCommand\AutoFormationIntentHandler.cpp"><Filter>src\Commands\AutoFormationCommand</Filter></ClCompile>
+    <ClCompile Include="src\Commands\AutoFormationCommand\AutoFormationCommandRegistry.cpp"><Filter>src\Commands\AutoFormationCommand</Filter></ClCompile>
+    <ClCompile Include="src\Game\PluginOrderScope.cpp"><Filter>src\Game</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationPlanner.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
+    <ClInclude Include="src\Commands\AutoFormationCommand\IAutoFormationGamePort.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
+    <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationCommandService.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
+    <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationGameAdapter.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
+    <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationIntentHandler.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
+    <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationCommandRegistry.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
+    <ClInclude Include="src\Game\PluginOrderScope.h"><Filter>src\Game</Filter></ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Commands\AutoFormationCommand\NativeCellOccupancy.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
+    <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationMoveState.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Commands\AutoFormationCommand\AutoFormationDiagnostics.cpp"><Filter>src\Commands\AutoFormationCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationDiagnostics.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
+  </ItemGroup>
 </Project>

@@ -30,6 +30,11 @@
 #include "Commands/AirSpreadCommand/AirSpreadCommandService.h"
 #include "Commands/AirSpreadCommand/AirSpreadGameAdapter.h"
 #include "Commands/AirSpreadCommand/AirSpreadIntentHandler.h"
+#include "Commands/AutoFormationCommand/AutoFormationCommandRegistry.h"
+#include "Commands/AutoFormationCommand/AutoFormationCommandService.h"
+#include "Commands/AutoFormationCommand/AutoFormationGameAdapter.h"
+#include "Commands/AutoFormationCommand/AutoFormationIntentHandler.h"
+#include "Commands/AutoFormationCommand/AutoFormationDiagnostics.h"
 #include "Commands/AFloorCommand/AFloorCommandRegistry.h"
 #include "Commands/AFloorCommand/AFloorCommandService.h"
 #include "Commands/AFloorCommand/AFloorGameAdapter.h"
@@ -54,7 +59,9 @@
 #include "ClickedMission/ClickedMissionGameAdapter.h"
 #include "NetworkEvent/NativeNetworkEventAdapter.h"
 #include "Game/GameSymbols.h"
+#include "Game/GameObjectAccess.h"
 #include "Game/SelectionGameAdapter.h"
+#include "Game/SelectionAccess.h"
 #include "Hooks/MainFrameHook.h"
 #include "Hooks/AFloorHook.h"
 #include "Hooks/RangeDisplayHook.h"
@@ -114,6 +121,8 @@ namespace ra_commands::bootstrap
         auto_nano_cloud::AutoNanoCloudCommandService g_AutoNanoCloudCommandService(
             g_AutoNanoCloudGameAdapter, g_ClickedMissionDispatcher);
         game::AirSpreadGameAdapter g_AirSpreadGameAdapter(g_ClickedMissionDispatcher);
+        game::AutoFormationGameAdapter g_AutoFormationGameAdapter(g_ClickedMissionDispatcher);
+        auto_formation::AutoFormationCommandService g_AutoFormationCommandService(g_AutoFormationGameAdapter);
         game::AutoCrushGameAdapter g_AutoCrushGameAdapter(g_ClickedMissionDispatcher);
         auto_crush::AutoCrushCommandService g_AutoCrushCommandService(g_AutoCrushGameAdapter);
         safe_mode::SafeModeToggleCommandService g_SafeModeToggleCommandService(
@@ -139,7 +148,23 @@ namespace ra_commands::bootstrap
         bool g_HotkeysReloaded = false;
         bool g_AFloorHooksReady = false;
         bool g_RangeDisplayHookReady = false;
+        bool g_FormationOrderHookReady = false;
+        bool g_FormationTraceWasActive = false;
+        std::uint32_t g_LastFormationTraceFrame = 0;
         DWORD g_GameThreadId = 0;
+
+        void CancelSelectedFormationActors()
+        {
+            if (!g_AutoFormationCommandService.IsActive())
+            {
+                return;
+            }
+            // 插件热键不会进入人工原生观察器，故在新的载具任务用例入口主动让出控制。
+            for (const auto actor : game::CaptureSelectedUnitIds())
+            {
+                g_AutoFormationCommandService.OnManualOrder(actor);
+            }
+        }
 
         void OnAutoLoadHotkey()
         {
@@ -147,6 +172,7 @@ namespace ra_commands::bootstrap
             std::lock_guard lock(g_StateMutex);
             if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
             {
+                CancelSelectedFormationActors();
                 g_AutoLoadCommandService.OnHotkey();
             }
         }
@@ -166,6 +192,7 @@ namespace ra_commands::bootstrap
             if (g_IsInitialized && g_AFloorHooksReady &&
                 g_GameThreadId == GetCurrentThreadId())
             {
+                CancelSelectedFormationActors();
                 g_AutoCrushCommandService.OnAddHotkey();
             }
         }
@@ -246,6 +273,78 @@ namespace ra_commands::bootstrap
             if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
             {
                 (void)g_AutoBuildCommandService.OnHotkey(auto_build::BuildSlot::Defense);
+            }
+        }
+
+        void OnFormationVehicleOrder(std::uint64_t actorId)
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_FormationOrderHookReady &&
+                g_GameThreadId == GetCurrentThreadId())
+            {
+                g_AutoFormationCommandService.OnManualOrder(actorId);
+            }
+        }
+
+        void TraceFormationProgress(std::uint32_t frame)
+        {
+            const auto progress = g_AutoFormationCommandService.Progress();
+            // 只复用服务的值快照；60 帧一条，避免为诊断增加原生对象扫描和文件写入。
+            if ((progress.mActive && (!g_FormationTraceWasActive ||
+                    frame < g_LastFormationTraceFrame || frame - g_LastFormationTraceFrame >= 60)) ||
+                (!progress.mActive && g_FormationTraceWasActive))
+            {
+                game::TraceAutoFormation("frame=" + std::to_string(frame) +
+                    ", active=" + std::to_string(progress.mActive) +
+                    ", total=" + std::to_string(progress.mTotalActors) +
+                    ", arrived=" + std::to_string(progress.mArrived) +
+                    ", queued=" + std::to_string(progress.mQueued) +
+                    ", moving=" + std::to_string(progress.mMoving) +
+                    ", waiting=" + std::to_string(progress.mWaiting) +
+                    ", removed=" + std::to_string(progress.mRemoved) +
+                    ", accepted=" + std::to_string(progress.mSubmitted) +
+                    ", rejected=" + std::to_string(progress.mRejectedSubmissions) +
+                    ", timedOut=" + std::to_string(progress.mTimedOut));
+                g_LastFormationTraceFrame = frame;
+            }
+            g_FormationTraceWasActive = progress.mActive;
+        }
+
+        void OnAutoFormationHotkey()
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (!g_IsInitialized || !g_FormationOrderHookReady ||
+                g_GameThreadId != GetCurrentThreadId())
+            {
+                game::TraceAutoFormation("hotkey rejected by runtime/thread gate");
+                return;
+            }
+            const auto plan = g_AutoFormationCommandService.OnHotkey();
+            game::TraceAutoFormation("build=" __DATE__ " " __TIME__ "; hotkey: assigned=" +
+                std::to_string(plan.mAssignments.size()) + ", unassigned=" +
+                std::to_string(plan.mUnassignedActors.size()) + ", active=" +
+                std::to_string(g_AutoFormationCommandService.IsActive()) +
+                ", center=" + std::to_string(plan.mCenter.mX) + "," +
+                std::to_string(plan.mCenter.mY));
+            std::string targets = "fixed targets:";
+            for (const auto& assignment : plan.mAssignments)
+            {
+                targets += " " + std::to_string(static_cast<std::uint32_t>(assignment.mActor)) +
+                    "->(" + std::to_string(assignment.mDestination.mX) + "," +
+                    std::to_string(assignment.mDestination.mY) + "," +
+                    std::to_string(assignment.mDestination.mOnBridge) + ")";
+            }
+            game::TraceAutoFormation(targets);
+            g_FormationTraceWasActive = g_AutoFormationCommandService.IsActive();
+            g_LastFormationTraceFrame = game::GetCurrentGameFrame();
+            for (const auto& assignment : plan.mAssignments)
+            {
+                // 列队是玩家主动的新移动任务；持续碾压不得继续给这些载具重下 Move。
+                g_AutoCrushCommandService.OnManualOrder(assignment.mActor);
+            }
+            if (plan.mBudgetExceeded || !plan.mUnassignedActors.empty())
+            {
+                OutputDebugStringA("[RACommandsPlugin] formation plan incomplete or over budget\n");
             }
         }
 
@@ -359,6 +458,17 @@ namespace ra_commands::bootstrap
             return game::TryRegisterAutoCrushAddCommand(symbols, callback, outError);
         }
 
+        game::CommandRegistrationResult RegisterAutoFormationWhenHookReady(
+            const game::GameSymbols& symbols, void(*callback)(), std::string& outError)
+        {
+            if (!g_FormationOrderHookReady)
+            {
+                outError = "formation order cancellation hook is unavailable";
+                return game::CommandRegistrationResult::Failed;
+            }
+            return game::TryRegisterAutoFormationCommand(symbols, callback, outError);
+        }
+
         game::CommandRegistrationResult RegisterAutoCrushRemoveWhenHookReady(
             const game::GameSymbols& symbols, void(*callback)(), std::string& outError)
         {
@@ -437,6 +547,7 @@ namespace ra_commands::bootstrap
             {&RegisterConfiguredCommand<&game::TryRegisterAutoIronCurtainCommand, &OnAutoIronCurtainHotkey>, &game::DisableAutoIronCurtainCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterAutoRageInductorCommand, &OnAutoRageInductorHotkey>, &game::DisableAutoRageInductorCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterAirSpreadCommand, &OnAirSpreadHotkey>, &game::DisableAirSpreadCommand},
+            {&RegisterConfiguredCommand<&RegisterAutoFormationWhenHookReady, &OnAutoFormationHotkey>, &game::DisableAutoFormationCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterMindControlSelectCommand, &OnMindControlSelectHotkey>, &game::DisableMindControlSelectCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterUnitKindSelectCommand, &OnUnitKindSelectHotkey>, &game::DisableUnitKindSelectCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterAmmoSelectCommand, &OnAmmoSelectHotkey>, &game::DisableAmmoSelectCommand},
@@ -481,6 +592,8 @@ namespace ra_commands::bootstrap
 
             g_ClickedMissionDispatcher.OnGameFrame();
             g_AutoCrushCommandService.OnGameFrame();
+            g_AutoFormationCommandService.OnGameFrame();
+            TraceFormationProgress(game::GetCurrentGameFrame());
             g_SafeModeToggleCommandService.OnGameFrame(
                 g_ClickedMissionDispatcher.IsSessionActive(), g_ClickedMissionDispatcher.Epoch());
             g_TeslaChargeCommandService.OnGameFrame();
@@ -553,6 +666,7 @@ namespace ra_commands::bootstrap
             }
 
             // 处理器必须在主帧回调和原生命令启动前全部绑定。
+            game::BindAutoFormationGameAdapter(&g_AutoFormationGameAdapter);
             if (!g_ClickedMissionGameAdapter.BindIntentHandler(
                     commands::ClickedMissionProducer::AutoCrush,
                     {&game::ValidateAutoCrushIntent, &game::AttemptAutoCrushIntent}) ||
@@ -564,7 +678,10 @@ namespace ra_commands::bootstrap
                     {&game::ValidateTeslaChargeIntent, &game::AttemptTeslaChargeIntent}) ||
                 !g_ClickedMissionGameAdapter.BindIntentHandler(
                     commands::ClickedMissionProducer::AutoNanoCloud,
-                    {&game::ValidateAutoNanoCloudIntent, &game::AttemptAutoNanoCloudIntent}))
+                    {&game::ValidateAutoNanoCloudIntent, &game::AttemptAutoNanoCloudIntent}) ||
+                !g_ClickedMissionGameAdapter.BindIntentHandler(
+                    commands::ClickedMissionProducer::AutoFormation,
+                    {&game::ValidateAutoFormationIntent, &game::AttemptAutoFormationIntent}))
             {
                 g_LastError = "clicked mission intent handler binding failed";
                 OutputDebugStringA(("[RACommandsPlugin] " + g_LastError + "\n").c_str());
@@ -586,6 +703,12 @@ namespace ra_commands::bootstrap
             else
             {
                 game::SetManualVehicleOrderObserver(&OnManualVehicleOrder);
+            }
+            g_FormationOrderHookReady = g_AFloorHooksReady &&
+                game::InstallFormationOrderHook(&OnFormationVehicleOrder, hookError);
+            if (!g_FormationOrderHookReady)
+            {
+                OutputDebugStringA(("[RACommandsPlugin] formation: " + hookError + "\n").c_str());
             }
             g_RangeDisplayHookReady = game::InstallRangeDisplayHook(
                 &IsRangeDisplayModeEnabled, hookError);
@@ -635,6 +758,7 @@ namespace ra_commands::bootstrap
         g_AutoLoadCommandService.Reset();
         g_AutoNanoCloudCommandService.Reset();
         g_AutoCrushCommandService.Reset();
+        g_AutoFormationCommandService.Reset();
         g_AutoRepairCommandService.Reset();
         g_AutoBuildCommandService.Reset();
         g_AutoSuperWeaponCommandService.Reset();
@@ -648,6 +772,9 @@ namespace ra_commands::bootstrap
         g_RangeDisplayHookReady = false;
         game::DisableAFloorHooks();
         g_AFloorHooksReady = false;
+        g_FormationOrderHookReady = false;
+        g_FormationTraceWasActive = false;
+        g_LastFormationTraceFrame = 0;
         g_ClickedMissionDispatcher.Reset();
         g_NativeNetworkEventAdapter.Reset();
         g_HotkeysReloaded = false;

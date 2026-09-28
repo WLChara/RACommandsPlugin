@@ -2,6 +2,7 @@
 
 #include "Game/GameObjectAccess.h"
 #include "Game/NativeEventCapacity.h"
+#include "Game/PluginOrderScope.h"
 
 #include <YRPPCore.h>
 #include <HouseClass.h>
@@ -66,6 +67,8 @@ namespace ra_commands::game
     void ClickedMissionGameAdapter::AttemptClickedMission(
         const commands::ClickedMissionIntent& intent) const
     {
+        // 原生下令会同步进入命令 Hook；不能将插件自己的调用作为人工取消通知。
+        const PluginOrderScope orderScope;
         if (const auto* const handler = mHandlers.Find(intent.Producer))
         {
             handler->Attempt(intent);

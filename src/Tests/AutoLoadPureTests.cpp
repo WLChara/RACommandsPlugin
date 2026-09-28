@@ -701,6 +701,10 @@ void RunClickedMissionIntentHandlersTests();
 void RunNetworkEventTests();
 void RunAutoBuildPureTests();
 void RunAutoSuperWeaponPureTests();
+void RunAutoFormationPlannerTests();
+void RunAutoFormationServiceTests();
+void RunAutoFormationGameAdapterRulesTests();
+void RunPluginOrderScopeTests();
 
 int main()
 {
@@ -746,6 +750,10 @@ int main()
         RunNetworkEventTests();
         RunAutoBuildPureTests();
         RunAutoSuperWeaponPureTests();
+        RunAutoFormationPlannerTests();
+        RunAutoFormationServiceTests();
+        RunAutoFormationGameAdapterRulesTests();
+        RunPluginOrderScopeTests();
         std::cout << "RACommandsPlugin pure tests passed\n";
         return 0;
     }

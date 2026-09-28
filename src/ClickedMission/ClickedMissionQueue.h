@@ -34,6 +34,7 @@ namespace ra_commands::commands
         AutoLoad,
         AutoCrush,
         AutoNanoCloud,
+        AutoFormation,
         Count,
     };
 
