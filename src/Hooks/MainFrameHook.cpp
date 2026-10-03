@@ -1,14 +1,10 @@
 #include "Hooks/MainFrameHook.h"
 
-#include "Memory/ProcessMemory.h"
-
 #include <Windows.h>
 #include <MinHook.h>
 
-#include <array>
 #include <atomic>
 #include <cstdint>
-#include <cstring>
 
 namespace ra_commands::game
 {
@@ -16,11 +12,6 @@ namespace ra_commands::game
     {
         // docs/ida-evidence.md 所列样本中的 GameUtils::MainFrame。
         constexpr std::uintptr_t MAIN_FRAME_ADDRESS = 0x0055D360u;
-        constexpr std::array<std::uint8_t, 16> MAIN_FRAME_ENTRY = {
-            0xA0, 0xA0, 0xE9, 0xA8, 0x00, 0x81, 0xEC, 0xB4,
-            0x01, 0x00, 0x00, 0x84, 0xC0, 0x53, 0x55, 0x56
-        };
-
         using MainFrameFunction = bool(__cdecl*)();
         std::atomic<MainFrameFunction> g_OriginalMainFrame{nullptr};
         std::atomic<GameFrameCallback> g_FrameCallback{nullptr};
@@ -57,26 +48,23 @@ namespace ra_commands::game
             return true;
         }
 
-        std::array<std::uint8_t, MAIN_FRAME_ENTRY.size()> actualEntry{};
-        if (!memory::TryReadMemory(MAIN_FRAME_ADDRESS, actualEntry.data(), actualEntry.size()) ||
-            actualEntry != MAIN_FRAME_ENTRY)
-        {
-            outError = "game main-frame entry differs from supported build or is already hooked";
-            return false;
-        }
-
         const MH_STATUS initialization = MH_Initialize();
         if (initialization != MH_OK && initialization != MH_ERROR_ALREADY_INITIALIZED)
         {
-            outError = "MinHook initialization failed";
+            outError = "MinHook initialization failed: ";
+            outError += MH_StatusToString(initialization);
             return false;
         }
 
         void* const target = reinterpret_cast<void*>(MAIN_FRAME_ADDRESS);
         void* trampoline = nullptr;
-        if (MH_CreateHook(target, &HookMainFrame, &trampoline) != MH_OK)
+        // 目标EXE指纹已由Bootstrap校验。让MinHook从当前入口构造trampoline；
+        // x86先前Hook的E9由其搬迁，回调再经trampoline转发给既有链。
+        const MH_STATUS creation = MH_CreateHook(target, &HookMainFrame, &trampoline);
+        if (creation != MH_OK)
         {
-            outError = "main-frame hook creation failed";
+            outError = "main-frame hook creation failed: ";
+            outError += MH_StatusToString(creation);
             return false;
         }
         if (!trampoline)
@@ -101,12 +89,14 @@ namespace ra_commands::game
         }
 
         g_FrameCallback.store(callback, std::memory_order_release);
-        if (MH_EnableHook(target) != MH_OK)
+        const MH_STATUS activation = MH_EnableHook(target);
+        if (activation != MH_OK)
         {
             g_FrameCallback.store(nullptr, std::memory_order_release);
             MH_RemoveHook(target);
             g_OriginalMainFrame.store(nullptr, std::memory_order_release);
-            outError = "main-frame hook activation failed";
+            outError = "main-frame hook activation failed: ";
+            outError += MH_StatusToString(activation);
             return false;
         }
 

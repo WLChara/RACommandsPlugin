@@ -7,8 +7,10 @@ namespace ra_commands::game
     using GameFrameCallback = void(*)();
 
     /**
-     * 仅在目标版本验证通过后安装。成功安装会将 DLL 固定到进程结束；
-     * 禁用回调不撤销 Detour，也不允许随后调用 FreeLibrary 卸载本 DLL。
+     * 仅在目标版本验证通过后，向固定主帧入口安装。MinHook以当前入口
+     * 建立trampoline；若已有永久Hook，原函数转发沿其既有链继续执行。
+     * 成功安装会将 DLL 固定到进程结束；禁用回调不撤销 Detour，
+     * 也不允许随后调用 FreeLibrary 卸载本 DLL。
      */
     bool InstallMainFrameHook(GameFrameCallback callback, std::string& outError);
     void DisableMainFrameCallback();

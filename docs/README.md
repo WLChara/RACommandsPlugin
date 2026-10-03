@@ -58,7 +58,7 @@ RACommandsPlugin/
 
 使用常规 `LoadLibrary` 注入后，DLL 会自行安排初始化，调用方不需要调用 `RACommandsPlugin_Initialize`。初始化在 `DllMain` 返回后验证 EXE 并解析 AOB，然后安装主帧 Hook；原生命令在游戏命令表就绪的主帧注册。旧的 `RACommandsPlugin_Initialize` 导出仍可手动重试；`RACommandsPlugin_IsReady` 只表示基础解析和主帧 Hook 已就绪，不表示命令、热键或联机已经通过运行时验收。
 
-该 DLL 在安装主帧 Hook 前将自身固定到进程退出；`Shutdown` 仅停用回调并清空待发命令，不会移除原生命令、撤销 Hook 或使 `FreeLibrary` 成为安全操作。与同时 Hook `MainFrame` 的 YRHackMod 版本不支持共存，遇到已改写的入口会拒绝安装。使用前请在目标游戏环境自行验收，尤其不要将尚未验证的联机行为视为安全。
+该 DLL 在安装主帧 Hook 前将自身固定到进程退出；`Shutdown` 仅停用回调并清空待发命令，不会移除原生命令、撤销 Hook 或使 `FreeLibrary` 成为安全操作。目标 EXE 的哈希门禁通过后，主帧 Hook 使用 MinHook 从当前入口建立跳板；已有的 x86 `E9` 跳转会被重定位，调用返回的跳板会继续既有 Hook 链。主帧接入不再要求入口保持原始指令。两层回调与原函式的链式执行可由隔离宿主验证；与回放插件的实际录制、播放及其他功能交互仍需在目标游戏验收。
 
 `src/NetworkEvent/` 定义目标样本的 0x6F 字节原生事件布局及按事件种类解释的 union，提供建筑 Produce／Place 与超武 SpecialPlace 的建构和本地玩家 OutList 适配器。适配器在目标 EXE 校验通过后绑定游戏线程；返回成功只表示事件已复制进原生 OutList，不表示事件已被执行或联机送达。布局及环形队列行为通过目标样本反汇编与离线测试核对，实际游戏与联机效果仍待验收。
 
