@@ -1,26 +1,26 @@
 #include "Commands/AutoRepairCommand/AutoRepairCommandService.h"
 
-#include <unordered_set>
-
 namespace ra_commands::auto_repair
 {
     namespace
     {
         // 原生修理状态可能晚于事件发送回写，30 帧内不重发同一建筑。
         constexpr std::uint32_t RETRY_INTERVAL_FRAMES = 30;
-        constexpr std::uint32_t MIN_SAFE_REPAIR_DELAY_MS = 1'000;
-        constexpr std::uint32_t MAX_SAFE_REPAIR_DELAY_MS = 4'000;
+        constexpr std::uint32_t MIN_FIRST_SAFE_REPAIR_DELAY_MS = 1'000;
+        constexpr std::uint32_t MAX_FIRST_SAFE_REPAIR_DELAY_MS = 2'000;
+        constexpr std::uint32_t MIN_NEXT_SAFE_REPAIR_DELAY_MS = 100;
+        constexpr std::uint32_t MAX_NEXT_SAFE_REPAIR_DELAY_MS = 1'000;
 
-        std::uint32_t SafeRepairDelayMs(BuildingId id, std::uint32_t frame, int health)
+        std::uint32_t SafeRepairDelayMs(BuildingId id, std::uint32_t frame, int health,
+            std::uint32_t minDelayMs, std::uint32_t maxDelayMs)
         {
-            // 使用稳定的建筑身份和受伤帧选择延迟，避免每帧重新抽取时间。
+            // 用当前快照选择一次延迟，不调用游戏随机数，也不在等待期间重新抽取。
             std::uint32_t value = id.UniqueId * 0x9E3779B9u ^
                 frame * 0x85EBCA6Bu ^ static_cast<std::uint32_t>(health);
             value ^= value >> 16;
             value *= 0x7FEB352Du;
             value ^= value >> 15;
-            return MIN_SAFE_REPAIR_DELAY_MS +
-                value % (MAX_SAFE_REPAIR_DELAY_MS - MIN_SAFE_REPAIR_DELAY_MS + 1);
+            return minDelayMs + value % (maxDelayMs - minDelayMs + 1);
         }
     }
 
@@ -37,21 +37,17 @@ namespace ra_commands::auto_repair
             return;
         }
         mEnabled = !mEnabled;
+        ResetSafeRepairSchedule();
     }
 
     void AutoRepairCommandService::OnGameFrame()
     {
-        if (!SyncSession())
+        if (!SyncSession() || !mEnabled)
         {
             return;
         }
 
         const bool isSafeModeEnabled = mIsSafeModeEnabled.load(std::memory_order_acquire);
-        if (!mEnabled && !isSafeModeEnabled)
-        {
-            return;
-        }
-
         Snapshot snapshot;
         if (!mGame.CaptureSnapshot(snapshot, isSafeModeEnabled) || snapshot.LocalOwner == 0)
         {
@@ -59,20 +55,13 @@ namespace ra_commands::auto_repair
         }
 
         const auto nowMs = isSafeModeEnabled ? mGame.GetCurrentTimeMs() : 0;
-        if (isSafeModeEnabled)
+        if (!isSafeModeEnabled)
         {
-            TrackDamage(snapshot, nowMs);
-        }
-        else
-        {
-            mDamageStates.clear();
-        }
-        if (!mEnabled)
-        {
-            return;
+            ResetSafeRepairSchedule();
         }
 
         const auto frame = mLastObservedFrame;
+        bool hasSafeRepairCandidate = false;
         for (const auto& building : snapshot.Buildings)
         {
             if (building.Id.Address == 0 || building.Id.UniqueId == 0 ||
@@ -84,11 +73,21 @@ namespace ra_commands::auto_repair
 
             if (isSafeModeEnabled)
             {
-                const auto damage = mDamageStates.find(building.Id);
-                if (!building.IsInViewport || damage == mDamageStates.end() ||
-                    damage->second.ReadyAtMs == 0 || nowMs < damage->second.ReadyAtMs)
+                if (!building.IsInViewport)
                 {
                     continue;
+                }
+                hasSafeRepairCandidate = true;
+                if (!mHasSafeRepairSchedule)
+                {
+                    mNextSafeRepairAtMs = nowMs + SafeRepairDelayMs(
+                        building.Id, frame, building.Health,
+                        MIN_FIRST_SAFE_REPAIR_DELAY_MS, MAX_FIRST_SAFE_REPAIR_DELAY_MS);
+                    mHasSafeRepairSchedule = true;
+                }
+                if (nowMs < mNextSafeRepairAtMs)
+                {
+                    break;
                 }
             }
 
@@ -110,15 +109,23 @@ namespace ra_commands::auto_repair
                 mLastAttemptFrames[building.Id] = frame;
                 if (isSafeModeEnabled)
                 {
+                    mNextSafeRepairAtMs = nowMs + SafeRepairDelayMs(
+                        building.Id, frame, building.Health,
+                        MIN_NEXT_SAFE_REPAIR_DELAY_MS, MAX_NEXT_SAFE_REPAIR_DELAY_MS);
                     break;
                 }
             }
+        }
+        if (isSafeModeEnabled && !hasSafeRepairCandidate)
+        {
+            // 无可修建筑时结束本批次；下一次出现候选重新等待首栋延迟。
+            ResetSafeRepairSchedule();
         }
     }
 
     void AutoRepairCommandService::OnSafeModeChanged()
     {
-        mDamageStates.clear();
+        ResetSafeRepairSchedule();
     }
 
     void AutoRepairCommandService::Reset()
@@ -128,7 +135,7 @@ namespace ra_commands::auto_repair
         mSessionIdentity = 0;
         mLastObservedFrame = 0;
         mLastAttemptFrames.clear();
-        mDamageStates.clear();
+        ResetSafeRepairSchedule();
     }
 
     bool AutoRepairCommandService::IsEnabled() const noexcept
@@ -169,33 +176,9 @@ namespace ra_commands::auto_repair
         return true;
     }
 
-    void AutoRepairCommandService::TrackDamage(const Snapshot& snapshot, std::uint64_t nowMs)
+    void AutoRepairCommandService::ResetSafeRepairSchedule()
     {
-        std::unordered_set<BuildingId, BuildingIdHash> seen;
-        for (const auto& building : snapshot.Buildings)
-        {
-            if (building.Owner != snapshot.LocalOwner || building.Id.Address == 0 ||
-                building.Id.UniqueId == 0 || building.Health <= 0)
-            {
-                continue;
-            }
-            seen.insert(building.Id);
-            const auto [it, inserted] = mDamageStates.try_emplace(building.Id);
-            auto& state = it->second;
-            if (building.IsDamaged && (inserted || building.Health < state.LastHealth))
-            {
-                state.ReadyAtMs = nowMs +
-                    SafeRepairDelayMs(building.Id, mLastObservedFrame, building.Health);
-            }
-            else if (!building.IsDamaged)
-            {
-                state.ReadyAtMs = 0;
-            }
-            state.LastHealth = building.Health;
-        }
-        std::erase_if(mDamageStates, [&seen](const auto& item)
-        {
-            return !seen.contains(item.first);
-        });
+        mNextSafeRepairAtMs = 0;
+        mHasSafeRepairSchedule = false;
     }
 }

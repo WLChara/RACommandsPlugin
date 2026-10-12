@@ -86,7 +86,8 @@ namespace ra_commands::game
                 isDamaged,
                 building->IsBeingRepaired,
                 owner == snapshot.LocalOwner && isDamaged &&
-                    !building->IsBeingRepaired && building->CanBeRepaired(),
+                    !building->IsBeingRepaired && building->Type->Repairable &&
+                    building->CanBeRepaired(),
                 building->Health,
                 captureViewport && owner == snapshot.LocalOwner && isDamaged &&
                     IsInViewport(building)
@@ -118,7 +119,7 @@ namespace ra_commands::game
         auto* const building = static_cast<BuildingClass*>(techno);
         if (!IsLiveBuilding(building) || building->Owner != HouseClass::Player.get() ||
             !IsDamaged(building) || building->IsBeingRepaired ||
-            !building->CanBeRepaired() ||
+            !building->Type->Repairable || !building->CanBeRepaired() ||
             (requireViewport && !IsInViewport(building)) ||
             GetNativeEventFreeSlots() < auto_repair::MIN_NATIVE_FREE_SLOTS)
         {

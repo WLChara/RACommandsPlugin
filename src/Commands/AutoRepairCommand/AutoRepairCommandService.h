@@ -33,21 +33,16 @@ namespace ra_commands::auto_repair
         };
 
         [[nodiscard]] bool SyncSession();
-        void TrackDamage(const Snapshot& snapshot, std::uint64_t nowMs);
-
-        struct DamageState
-        {
-            int LastHealth = 0;
-            std::uint64_t ReadyAtMs = 0;
-        };
+        void ResetSafeRepairSchedule();
 
         IAutoRepairGamePort& mGame;
         const std::atomic<bool>& mIsSafeModeEnabled;
         std::unordered_map<BuildingId, std::uint32_t, BuildingIdHash> mLastAttemptFrames;
-        std::unordered_map<BuildingId, DamageState, BuildingIdHash> mDamageStates;
+        std::uint64_t mNextSafeRepairAtMs = 0;
         std::uintptr_t mSessionIdentity = 0;
         std::uint32_t mLastObservedFrame = 0;
         bool mHasSession = false;
         bool mEnabled = false;
+        bool mHasSafeRepairSchedule = false;
     };
 }
