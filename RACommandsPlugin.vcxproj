@@ -625,6 +625,10 @@
     <ClCompile Include="src\Commands\AutoFormationCommand\FormationCellPacking.cpp" />
     <ClInclude Include="src\Commands\AutoFormationCommand\FormationCellPacking.h" />
   </ItemGroup>
+  <ItemGroup Label="RuntimeDiagnostics">
+    <ClCompile Include="src\Bootstrap\RuntimeDiagnostics.cpp" />
+    <ClInclude Include="src\Bootstrap\RuntimeDiagnostics.h" />
+  </ItemGroup>
   <ItemGroup Label="NewSourceFallback">
     <ClCompile Include="src\**\*.cpp" Exclude="src\Tests\**\*.cpp;src\SDK\**\*.cpp;@(ClCompile)" />
   </ItemGroup>

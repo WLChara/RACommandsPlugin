@@ -1,4 +1,5 @@
 #include "Bootstrap/PluginRuntime.h"
+#include "Bootstrap/RuntimeDiagnostics.h"
 
 #include "Commands/AutoLoadCommand/AutoLoadCommandService.h"
 #include "Commands/AutoBuild/AutoBuildCommandRegistry.h"
@@ -70,6 +71,7 @@
 #include <Windows.h>
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <mutex>
 #include <string>
@@ -145,7 +147,11 @@ namespace ra_commands::bootstrap
         std::string g_LastError;
         bool g_IsInitialized = false;
         bool g_IsAutoStartCancelled = false;
-        bool g_HotkeysReloaded = false;
+        std::size_t g_LastHotkeyReloadCommandCount = 0;
+        std::size_t g_LastTraceRegistered = 0;
+        std::size_t g_LastTracePending = 0;
+        std::size_t g_LastTraceFailed = 0;
+        bool g_HasRegistrationTrace = false;
         bool g_AFloorHooksReady = false;
         bool g_RangeDisplayHookReady = false;
         bool g_FormationOrderHookReady = false;
@@ -577,6 +583,7 @@ namespace ra_commands::bootstrap
             {
                 g_GameThreadId = threadId;
                 g_NativeNetworkEventAdapter.BindGameThread(threadId);
+                TraceRuntime("first-game-frame thread=" + std::to_string(threadId));
             }
             if (g_GameThreadId != threadId)
             {
@@ -627,27 +634,41 @@ namespace ra_commands::bootstrap
                 {
                     command.State = CommandState::Failed;
                     OutputDebugStringA(("[RACommandsPlugin] " + g_LastError + "\n").c_str());
+                    TraceRuntime("command-registration failed: " + g_LastError);
                 }
             }
 
-            bool allCommandsSettled = true;
-            bool hasRegisteredCommand = false;
+            std::size_t registered = 0, pending = 0, failed = 0;
             for (const auto& command : g_Commands)
             {
-                allCommandsSettled &= command.State != CommandState::WaitingForGame;
-                hasRegisteredCommand |= command.State == CommandState::Registered;
+                registered += command.State == CommandState::Registered;
+                pending += command.State == CommandState::WaitingForGame;
+                failed += command.State == CommandState::Failed;
+            }
+            if (!g_HasRegistrationTrace || registered != g_LastTraceRegistered ||
+                pending != g_LastTracePending || failed != g_LastTraceFailed)
+            {
+                g_HasRegistrationTrace = true;
+                g_LastTraceRegistered = registered;
+                g_LastTracePending = pending;
+                g_LastTraceFailed = failed;
+                TraceRuntime("command-registration registered=" + std::to_string(registered) +
+                    " pending=" + std::to_string(pending) + " failed=" + std::to_string(failed));
             }
 
-            if (!g_HotkeysReloaded && allCommandsSettled && hasRegisteredCommand)
+            // 本帧新注册的命令共用一次重读；尚未就绪的可选命令不阻塞已注册的命令。
+            if (registered > g_LastHotkeyReloadCommandCount)
             {
-                g_HotkeysReloaded = true;
+                g_LastHotkeyReloadCommandCount = registered;
                 if (!g_GameSymbols.ReloadKeyboardHotkeys())
                 {
                     OutputDebugStringA("[RACommandsPlugin] native hotkey reload failed\n");
+                    TraceRuntime("native hotkey reload failed");
                 }
                 else
                 {
                     OutputDebugStringA("[RACommandsPlugin] native commands registered\n");
+                    TraceRuntime("native hotkey reload succeeded registered=" + std::to_string(registered));
                 }
             }
         }
@@ -660,12 +681,20 @@ namespace ra_commands::bootstrap
             }
 
             const auto moduleBase = reinterpret_cast<std::uintptr_t>(GetModuleHandleW(nullptr));
-            if (!game::IsSupportedHost(g_LastError) ||
-                !g_GameSymbols.Resolve(moduleBase, g_LastError))
+            if (!game::IsSupportedHost(g_LastError))
             {
                 OutputDebugStringA(("[RACommandsPlugin] " + g_LastError + "\n").c_str());
+                TraceRuntime("host-check failed: " + g_LastError);
                 return false;
             }
+            TraceRuntime("host-check succeeded");
+            if (!g_GameSymbols.Resolve(moduleBase, g_LastError))
+            {
+                OutputDebugStringA(("[RACommandsPlugin] " + g_LastError + "\n").c_str());
+                TraceRuntime("symbol-resolution failed: " + g_LastError);
+                return false;
+            }
+            TraceRuntime("symbol-resolution succeeded");
 
             // 处理器必须在主帧回调和原生命令启动前全部绑定。
             game::BindAutoFormationGameAdapter(&g_AutoFormationGameAdapter);
@@ -687,12 +716,14 @@ namespace ra_commands::bootstrap
             {
                 g_LastError = "clicked mission intent handler binding failed";
                 OutputDebugStringA(("[RACommandsPlugin] " + g_LastError + "\n").c_str());
+                TraceRuntime("intent-handler binding failed: " + g_LastError);
                 return false;
             }
 
             if (!game::InstallMainFrameHook(&OnGameFrame, g_LastError))
             {
                 OutputDebugStringA(("[RACommandsPlugin] " + g_LastError + "\n").c_str());
+                TraceRuntime("main-frame-hook failed: " + g_LastError);
                 return false;
             }
 
@@ -701,6 +732,7 @@ namespace ra_commands::bootstrap
             if (!g_AFloorHooksReady)
             {
                 OutputDebugStringA(("[RACommandsPlugin] " + hookError + "\n").c_str());
+                TraceRuntime("a-floor hooks failed: " + hookError);
             }
             else
             {
@@ -711,15 +743,20 @@ namespace ra_commands::bootstrap
             if (!g_FormationOrderHookReady)
             {
                 OutputDebugStringA(("[RACommandsPlugin] formation: " + hookError + "\n").c_str());
+                TraceRuntime("formation-order hook failed: " + hookError);
             }
             g_RangeDisplayHookReady = game::InstallRangeDisplayHook(
                 &IsRangeDisplayModeEnabled, hookError);
             if (!g_RangeDisplayHookReady)
             {
                 OutputDebugStringA(("[RACommandsPlugin] " + hookError + "\n").c_str());
+                TraceRuntime("tactical-render hook failed: " + hookError);
             }
 
             g_IsInitialized = true;
+            TraceRuntime("initialized mainFrame=1 aFloor=" + std::to_string(g_AFloorHooksReady) +
+                " formationOrders=" + std::to_string(g_FormationOrderHookReady) +
+                " tacticalRender=" + std::to_string(g_RangeDisplayHookReady));
             OutputDebugStringA("[RACommandsPlugin] command signatures resolved; main-frame hook installed\n");
             return true;
         }
@@ -779,7 +816,8 @@ namespace ra_commands::bootstrap
         g_LastFormationTraceFrame = 0;
         g_ClickedMissionDispatcher.Reset();
         g_NativeNetworkEventAdapter.Reset();
-        g_HotkeysReloaded = false;
+        g_LastHotkeyReloadCommandCount = 0;
+        g_HasRegistrationTrace = false;
         g_GameThreadId = 0;
         g_LastError.clear();
         g_GameSymbols = {};

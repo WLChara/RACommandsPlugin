@@ -1,4 +1,5 @@
 #include "Bootstrap/PluginRuntime.h"
+#include "Bootstrap/RuntimeDiagnostics.h"
 
 #include <Windows.h>
 
@@ -8,11 +9,15 @@ namespace
     {
         try
         {
-            ra_commands::bootstrap::AutoInitialize();
+            ra_commands::bootstrap::TraceRuntimeStartup();
+            const bool initialized = ra_commands::bootstrap::AutoInitialize();
+            ra_commands::bootstrap::TraceRuntime(initialized ?
+                "bootstrap-complete initialized=1" : "bootstrap-complete initialized=0");
         }
         catch (...)
         {
             OutputDebugStringA("[RACommandsPlugin] bootstrap initialization failed\n");
+            ra_commands::bootstrap::TraceRuntime("bootstrap initialization threw an exception");
         }
         return 0;
     }
