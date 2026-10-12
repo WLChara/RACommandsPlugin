@@ -5,3 +5,6 @@
 .vs/
 /docs/*
 !/docs/README.md
+
+# 本机协作说明不纳入版本控制
+AGENTS.md
