@@ -621,6 +621,10 @@
     <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationDiagnostics.h" />
   </ItemGroup>
   <!-- 已列出的文件供 VS 文件夹视图使用；新增源文件仍可在手动加入项目之前参与编译。 -->
+  <ItemGroup Label="FormationCellPacking">
+    <ClCompile Include="src\Commands\AutoFormationCommand\FormationCellPacking.cpp" />
+    <ClInclude Include="src\Commands\AutoFormationCommand\FormationCellPacking.h" />
+  </ItemGroup>
   <ItemGroup Label="NewSourceFallback">
     <ClCompile Include="src\**\*.cpp" Exclude="src\Tests\**\*.cpp;src\SDK\**\*.cpp;@(ClCompile)" />
   </ItemGroup>

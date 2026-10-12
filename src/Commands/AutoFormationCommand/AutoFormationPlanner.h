@@ -22,6 +22,31 @@ namespace ra_commands::auto_formation
         double mY = 0.0;
     };
 
+    enum class ActorKind { Vehicle, Infantry };
+    enum class OccupancyPlane { Ground, Air };
+
+    struct ActorProfile
+    {
+        ActorId mId = 0;
+        ActorKind mKind = ActorKind::Vehicle;
+        OccupancyPlane mPlane = OccupancyPlane::Ground;
+        bool mOnBridge = false;
+        bool operator==(const ActorProfile&) const = default;
+    };
+
+    struct ActorObservation
+    {
+        Cell mCell;
+        ActorKind mKind = ActorKind::Vehicle;
+        OccupancyPlane mPlane = OccupancyPlane::Ground;
+    };
+
+    struct CandidateCapacity
+    {
+        Cell mCell;
+        std::uint8_t mAvailable = 0;
+    };
+
     struct ActorSnapshot
     {
         ActorId mId = 0;
@@ -30,6 +55,10 @@ namespace ra_commands::auto_formation
         Center mPosition;
         // 只含适配器确认可占的候选格；不能将这个集合当作原生寻路成功证明。
         std::vector<Cell> mCandidates;
+        ActorKind mKind = ActorKind::Vehicle;
+        OccupancyPlane mPlane = OccupancyPlane::Ground;
+        // 未列出的候选具有本类别完整容量（载具1、步兵3）；部分占用必须明确列出。
+        std::vector<CandidateCapacity> mCapacityLimits;
     };
 
     struct Snapshot
@@ -42,6 +71,10 @@ namespace ra_commands::auto_formation
     {
         ActorId mActor = 0;
         Cell mDestination;
+        ActorKind mKind = ActorKind::Vehicle;
+        OccupancyPlane mPlane = OccupancyPlane::Ground;
+        // 逻辑预约号，不是游戏原生子位置编号；步兵0..2，载具仅0。
+        std::uint8_t mSeat = 0;
 
         bool operator==(const Assignment&) const = default;
     };
@@ -59,7 +92,7 @@ namespace ra_commands::auto_formation
     [[nodiscard]] Center CalculateCenter(const std::vector<ActorSnapshot>& actors);
 
     /**
-     * 对值快照作有界匹配；每个格（含桥层）最多分配一辆车。
+     * 对值快照作有界匹配；陆空资源独立，同层同格为一辆车或最多三名步兵。
      * 优先分配数量、紧凑且近方形的包络和内部填充，最后减少移动。
      * 相同输入产生相同结果；不持有游戏对象或调用游戏 API。
      */

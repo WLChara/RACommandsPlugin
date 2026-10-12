@@ -153,14 +153,16 @@ namespace ra_commands::bootstrap
         std::uint32_t g_LastFormationTraceFrame = 0;
         DWORD g_GameThreadId = 0;
 
-        void CancelSelectedFormationActors()
+        void CancelSelectedFormationActors(bool includeInfantry = false)
         {
             if (!g_AutoFormationCommandService.IsActive())
             {
                 return;
             }
             // 插件热键不会进入人工原生观察器，故在新的载具任务用例入口主动让出控制。
-            for (const auto actor : game::CaptureSelectedUnitIds())
+            const auto selected = includeInfantry ?
+                g_AutoFormationGameAdapter.CaptureSelectedActorIds() : game::CaptureSelectedUnitIds();
+            for (const auto actor : selected)
             {
                 g_AutoFormationCommandService.OnManualOrder(actor);
             }
@@ -172,7 +174,7 @@ namespace ra_commands::bootstrap
             std::lock_guard lock(g_StateMutex);
             if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
             {
-                CancelSelectedFormationActors();
+                CancelSelectedFormationActors(true);
                 g_AutoLoadCommandService.OnHotkey();
             }
         }

@@ -19,16 +19,21 @@ namespace ra_commands::game
         [[nodiscard]] std::uint32_t Epoch() const override;
         [[nodiscard]] std::uint32_t CurrentFrame() const override;
         [[nodiscard]] std::vector<auto_formation::ActorId> CaptureSelectedActorIds() const override;
+        [[nodiscard]] std::vector<auto_formation::ActorProfile> CaptureSelectedActorProfiles() const;
         [[nodiscard]] bool TryCaptureSnapshot(const std::vector<auto_formation::ActorId>& ids,
             std::optional<auto_formation::Center> fixedCenter,
             auto_formation::Snapshot& outSnapshot) const override;
-        void BeginPlan(const std::vector<auto_formation::ActorId>& assignedActors) override;
-        [[nodiscard]] bool TryGetActorCell(auto_formation::ActorId actor,
-            auto_formation::Cell& outCell) const override;
-        [[nodiscard]] bool SubmitMove(auto_formation::ActorId actor,
-            auto_formation::Cell destination) override;
-        [[nodiscard]] auto_formation::MoveState ObserveMove(auto_formation::ActorId actor,
-            auto_formation::Cell destination) const override;
+        /** 有界显式候选查询；任一身份无效整次失败，目标层按参与者所在层查询。 */
+        [[nodiscard]] bool TryCaptureSnapshotForCells(
+            const std::vector<auto_formation::ActorId>& ids,
+            const std::vector<auto_formation::Cell>& cells,
+            auto_formation::Snapshot& outSnapshot) const;
+        void BeginPlan(const std::vector<auto_formation::Assignment>& assignments) override;
+        [[nodiscard]] bool TryGetActorState(auto_formation::ActorId actor,
+            auto_formation::ActorObservation& outState) const override;
+        [[nodiscard]] bool SubmitMove(const auto_formation::Assignment& assignment) override;
+        [[nodiscard]] auto_formation::MoveState ObserveMove(
+            const auto_formation::Assignment& assignment) const override;
         void CancelPending(auto_formation::ActorId actor) override;
         void Reset() override;
 
@@ -48,6 +53,7 @@ namespace ra_commands::game
         commands::ClickedMissionDispatcher& mDispatcher;
         mutable std::map<auto_formation::ActorId, PendingMove> mMoves;
         std::unordered_set<auto_formation::ActorId> mParticipants;
+        std::map<auto_formation::ActorId, auto_formation::Assignment> mPlanAssignments;
         mutable std::unordered_set<auto_formation::ActorId> mLoggedRejectedActors;
         mutable std::uint32_t mLastSelectionTraceFrame = 0;
         mutable std::uint32_t mSelectionTraceEpoch = 0;

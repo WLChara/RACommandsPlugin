@@ -292,4 +292,9 @@
     <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationMoveState.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
     <ClCompile Include="src\Tests\AutoFormationGameAdapterRulesTests.cpp"><Filter>src\Tests</Filter></ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Commands\AutoFormationCommand\FormationCellPacking.cpp"><Filter>src\Commands\AutoFormationCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoFormationCommand\FormationCellPacking.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
+    <ClCompile Include="src\Tests\FormationCellPackingTests.cpp"><Filter>src\Tests</Filter></ClCompile>
+  </ItemGroup>
 </Project>

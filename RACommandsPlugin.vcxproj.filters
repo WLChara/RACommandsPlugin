@@ -1741,4 +1741,8 @@
     <ClCompile Include="src\Commands\AutoFormationCommand\AutoFormationDiagnostics.cpp"><Filter>src\Commands\AutoFormationCommand</Filter></ClCompile>
     <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationDiagnostics.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Commands\AutoFormationCommand\FormationCellPacking.cpp"><Filter>src\Commands\AutoFormationCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoFormationCommand\FormationCellPacking.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
+  </ItemGroup>
 </Project>

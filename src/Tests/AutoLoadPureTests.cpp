@@ -702,6 +702,7 @@ void RunNetworkEventTests();
 void RunAutoBuildPureTests();
 void RunAutoSuperWeaponPureTests();
 void RunAutoFormationPlannerTests();
+void RunFormationCellPackingTests();
 void RunAutoFormationServiceTests();
 void RunAutoFormationGameAdapterRulesTests();
 void RunPluginOrderScopeTests();
@@ -751,6 +752,7 @@ int main()
         RunAutoBuildPureTests();
         RunAutoSuperWeaponPureTests();
         RunAutoFormationPlannerTests();
+        RunFormationCellPackingTests();
         RunAutoFormationServiceTests();
         RunAutoFormationGameAdapterRulesTests();
         RunPluginOrderScopeTests();

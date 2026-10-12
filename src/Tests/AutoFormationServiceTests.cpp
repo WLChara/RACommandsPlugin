@@ -32,12 +32,15 @@ namespace
         std::uint32_t mFrame = 100;
         std::vector<ActorId> mSelected{ 1 };
         std::map<ActorId, Cell> mCells{ { 1, { 0, 0, false } } };
+        std::map<ActorId, ActorKind> mKinds;
+        std::map<ActorId, OccupancyPlane> mPlanes;
         std::map<ActorId, bool> mAlive;
         std::map<ActorId, MoveState> mStates;
         std::map<ActorId, Cell> mDestinations;
         std::map<ActorId, std::vector<Cell>> mCandidatesByActor;
         std::set<ActorId> mAuthorized;
         std::vector<ActorId> mBegunActors;
+        std::vector<Assignment> mBegunAssignments;
         std::vector<Assignment> mSubmitted;
         std::vector<ActorId> mCancelled;
         std::vector<std::vector<ActorId>> mCapturedIds;
@@ -73,6 +76,8 @@ namespace
                 value.mId = actor;
                 value.mCurrentCell = cell->second;
                 value.mPosition = { static_cast<double>(cell->second.mX), static_cast<double>(cell->second.mY) };
+                value.mKind = KindOf(actor);
+                value.mPlane = PlaneOf(actor);
                 const auto candidates = mCandidatesByActor.find(actor);
                 if (candidates != mCandidatesByActor.end())
                 {
@@ -98,37 +103,45 @@ namespace
             return true;
         }
 
-        void BeginPlan(const std::vector<ActorId>& assignedActors) override
+        void BeginPlan(const std::vector<Assignment>& assignments) override
         {
-            mAuthorized = { assignedActors.begin(), assignedActors.end() };
-            mBegunActors = assignedActors;
+            mBegunAssignments = assignments;
+            mAuthorized.clear();
+            mBegunActors.clear();
+            for (const auto& assignment : assignments)
+            {
+                mAuthorized.insert(assignment.mActor);
+                mBegunActors.push_back(assignment.mActor);
+            }
         }
 
-        bool TryGetActorCell(ActorId actor, Cell& outCell) const override
+        bool TryGetActorState(ActorId actor, ActorObservation& outState) const override
         {
             const auto found = mCells.find(actor);
             if (found == mCells.end() || IsDead(actor))
             {
                 return false;
             }
-            outCell = found->second;
+            outState = {found->second, KindOf(actor), PlaneOf(actor)};
             return true;
         }
 
-        bool SubmitMove(ActorId actor, Cell destination) override
+        bool SubmitMove(const Assignment& assignment) override
         {
-            mSubmitted.push_back({ actor, destination });
+            mSubmitted.push_back(assignment);
+            const auto actor = assignment.mActor;
             if (mRejectSubmissions || !mAuthorized.contains(actor) || IsDead(actor))
             {
                 return false;
             }
-            mDestinations[actor] = destination;
+            mDestinations[actor] = assignment.mDestination;
             mStates[actor] = MoveState::Queued;
             return true;
         }
 
-        MoveState ObserveMove(ActorId actor, Cell) const override
+        MoveState ObserveMove(const Assignment& assignment) const override
         {
+            const auto actor = assignment.mActor;
             if (!mAuthorized.contains(actor) || IsDead(actor))
             {
                 return MoveState::Invalid;
@@ -222,6 +235,18 @@ namespace
         }
 
     private:
+        ActorKind KindOf(ActorId actor) const
+        {
+            const auto found = mKinds.find(actor);
+            return found == mKinds.end() ? ActorKind::Vehicle : found->second;
+        }
+
+        OccupancyPlane PlaneOf(ActorId actor) const
+        {
+            const auto found = mPlanes.find(actor);
+            return found == mPlanes.end() ? OccupancyPlane::Ground : found->second;
+        }
+
         bool IsDead(ActorId actor) const
         {
             const auto found = mAlive.find(actor);
@@ -407,6 +432,39 @@ namespace
             "a scattered arrived member should return to its original goal without replanning the team");
     }
 
+    void TestExternalPlanValidationPreservesCurrentOperation()
+    {
+        FakeGame game;
+        game.mSelected = {1, 2};
+        game.mCells = {{1, {10, 10, false}}, {2, {11, 10, false}}};
+        AutoFormationCommandService service(game);
+        PlanResult plan;
+        plan.mAssignments = {{1, {20, 20, false}}, {2, {21, 20, false}}};
+        Require(service.StartPlan(plan) && service.Progress().mTotalActors == 2,
+            "external complete targets should enter the existing executor without selection capture");
+        Require(game.mCapturedIds.empty() && game.mSubmitted.empty(),
+            "StartPlan should not plan or immediately send native tasks");
+        const auto resetCount = game.mResetCount;
+        const auto authorized = game.mAuthorized;
+        auto invalid = plan;
+        invalid.mAssignments[1].mDestination = invalid.mAssignments[0].mDestination;
+        Require(!service.StartPlan(invalid), "duplicate destination must reject the whole plan");
+        invalid = plan;
+        invalid.mAssignments[1].mActor = 1;
+        Require(!service.StartPlan(invalid), "duplicate actor must reject the whole plan");
+        invalid = plan;
+        invalid.mAssignments[1].mActor = 3;
+        Require(!service.StartPlan(invalid), "invalid actor must reject the whole plan");
+        invalid = plan;
+        invalid.mAssignments[1].mDestination.mX = 512;
+        Require(!service.StartPlan(invalid), "invalid target must reject the whole plan");
+        Require(service.IsActive() && game.mResetCount == resetCount && game.mAuthorized == authorized,
+            "rejected external targets should preserve existing operation and authorization");
+        service.OnGameFrame();
+        Require(game.mSubmitted == plan.mAssignments,
+            "the existing retry executor should submit externally supplied fixed targets");
+    }
+
     void TestManualDeathAndLifecycleOnlyRemoveTheirOwnMembers()
     {
         FakeGame game;
@@ -437,6 +495,78 @@ namespace
         Require(!service.IsActive() && !service.Progress().mTimedOut,
             "frame rollback should clear authorization without misreporting a timeout");
     }
+
+    void TestInfantrySeatsAndSeparateAirPlane()
+    {
+        FakeGame game;
+        game.mCells = {{1, {10, 10, false}}, {2, {11, 10, false}},
+            {3, {12, 10, false}}, {4, {13, 10, false}}};
+        for (ActorId actor = 1; actor <= 4; ++actor)
+        {
+            game.mKinds[actor] = ActorKind::Infantry;
+        }
+        AutoFormationCommandService service(game);
+        PlanResult infantry;
+        infantry.mAssignments = {
+            {1, {20, 20, false}, ActorKind::Infantry, OccupancyPlane::Ground, 0},
+            {2, {20, 20, false}, ActorKind::Infantry, OccupancyPlane::Ground, 1},
+            {3, {20, 20, false}, ActorKind::Infantry, OccupancyPlane::Ground, 2}};
+        Require(service.StartPlan(infantry) && game.mBegunAssignments == infantry.mAssignments,
+            "three infantry seats in one ground cell should keep complete assignments");
+        service.OnGameFrame();
+        Require(game.mSubmitted == infantry.mAssignments,
+            "queued move arguments must preserve infantry kind, plane and seat");
+
+        const auto resetCount = game.mResetCount;
+        auto invalid = infantry;
+        invalid.mAssignments.push_back(
+            {4, {20, 20, false}, ActorKind::Infantry, OccupancyPlane::Ground, 3});
+        Require(!service.StartPlan(invalid), "fourth infantry in a cell must be rejected");
+        invalid = infantry;
+        invalid.mAssignments[2].mSeat = 1;
+        Require(!service.StartPlan(invalid), "duplicate infantry seat must be rejected");
+        game.mKinds[4] = ActorKind::Vehicle;
+        invalid = infantry;
+        invalid.mAssignments.push_back(
+            {4, {20, 20, false}, ActorKind::Vehicle, OccupancyPlane::Ground, 0});
+        Require(!service.StartPlan(invalid), "ground vehicle and infantry cannot reserve the same cell");
+        Require(service.IsActive() && game.mResetCount == resetCount,
+            "invalid reservations must preserve the current plan");
+
+        game.mKinds[4] = ActorKind::Infantry;
+        game.mPlanes[4] = OccupancyPlane::Air;
+        PlanResult mixed;
+        mixed.mAssignments = {
+            {1, {22, 22, false}, ActorKind::Infantry, OccupancyPlane::Ground, 0},
+            {4, {22, 22, false}, ActorKind::Infantry, OccupancyPlane::Air, 0}};
+        Require(service.StartPlan(mixed),
+            "ground and air must have independent reservations at one XY cell");
+    }
+
+    void TestPlaneTransitionAndInfantryManualOrder()
+    {
+        FakeGame game;
+        game.mCells = {{1, {1, 1, false}}, {2, {2, 1, false}}, {3, {3, 1, false}}};
+        game.mKinds[2] = ActorKind::Infantry;
+        game.mKinds[3] = ActorKind::Infantry;
+        game.mPlanes[2] = OccupancyPlane::Air;
+        AutoFormationCommandService service(game);
+        PlanResult plan;
+        plan.mAssignments = {
+            {1, {11, 11, false}, ActorKind::Vehicle, OccupancyPlane::Ground, 0},
+            {2, {12, 11, false}, ActorKind::Infantry, OccupancyPlane::Air, 0},
+            {3, {13, 11, false}, ActorKind::Infantry, OccupancyPlane::Ground, 0}};
+        Require(service.StartPlan(plan), "mixed Foot plan should start");
+        game.mPlanes[2] = OccupancyPlane::Ground;
+        service.OnGameFrame();
+        Require(service.IsActive() && game.mAuthorized == std::set<ActorId>{1, 3} &&
+            service.Progress().mRemoved == 1,
+            "air-to-ground transition should remove only that actor");
+        service.OnManualOrder(3);
+        Require(service.IsActive() && game.mAuthorized == std::set<ActorId>{1} &&
+            service.Progress().mRemoved == 2,
+            "manual infantry order should cancel only that member");
+    }
 }
 
 void RunAutoFormationServiceTests()
@@ -446,4 +576,7 @@ void RunAutoFormationServiceTests()
     TestSixtyFourActorsReachOneFixedEightByEightFormation();
     TestParkedBesideGoalAndArrivedScatterKeepOriginalGoal();
     TestManualDeathAndLifecycleOnlyRemoveTheirOwnMembers();
+    TestExternalPlanValidationPreservesCurrentOperation();
+    TestInfantrySeatsAndSeparateAirPlane();
+    TestPlaneTransitionAndInfantryManualOrder();
 }

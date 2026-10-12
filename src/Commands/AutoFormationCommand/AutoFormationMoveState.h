@@ -3,6 +3,7 @@
 #include "Commands/AutoFormationCommand/IAutoFormationGamePort.h"
 
 #include <optional>
+#include <span>
 
 namespace ra_commands::auto_formation
 {
@@ -11,6 +12,38 @@ namespace ra_commands::auto_formation
         bool deactivated, bool immobilized, bool attackedByLocomotor) noexcept
     {
         return !deactivated && !immobilized && !attackedByLocomotor;
+    }
+
+    struct CapacityClaim
+    {
+        ActorId mActor = 0;
+        std::uint8_t mLogicalSeat = 0;
+        bool mAtGoal = false;
+    };
+
+    /** 逻辑 seat 只用于稳定排序；剩余容量按仍有效的目标成员重新分配。 */
+    [[nodiscard]] constexpr bool CanAdmitCapacityClaim(
+        std::span<const CapacityClaim> claims, ActorId actor, unsigned available) noexcept
+    {
+        const CapacityClaim* own = nullptr;
+        for (const auto& claim : claims)
+        {
+            if (claim.mActor == actor) { own = &claim; break; }
+        }
+        if (!own || available == 0) { return false; }
+        unsigned rank = 0;
+        for (const auto& claim : claims)
+        {
+            if (claim.mActor == actor) { continue; }
+            if ((claim.mAtGoal && !own->mAtGoal) ||
+                (claim.mAtGoal == own->mAtGoal &&
+                    (claim.mLogicalSeat < own->mLogicalSeat ||
+                        (claim.mLogicalSeat == own->mLogicalSeat && claim.mActor < actor))))
+            {
+                ++rank;
+            }
+        }
+        return rank < available;
     }
 
     /**

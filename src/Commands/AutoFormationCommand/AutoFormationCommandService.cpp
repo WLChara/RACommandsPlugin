@@ -1,4 +1,5 @@
 #include "Commands/AutoFormationCommand/AutoFormationCommandService.h"
+#include "Commands/AutoFormationCommand/FormationCellPacking.h"
 
 #include <utility>
 #include <vector>
@@ -13,6 +14,19 @@ namespace ra_commands::auto_formation
         constexpr std::uint32_t RETRY_INTERVAL_FRAMES = 15;
         // 仅对持续 180 帧没有换格的移动单位重试，给原生寻路留出时间。
         constexpr std::uint32_t MOVING_STALL_FRAMES = 180;
+        // 与既有规划器的参与者预算及值型地图坐标范围保持一致。
+        constexpr std::size_t MAX_PLAN_ACTORS = 256;
+        constexpr std::int32_t MAP_AXIS_LIMIT = 512;
+
+        bool HasCompatibleTraits(const Assignment& assignment,
+            const ActorObservation& observation)
+        {
+            return observation.mKind == assignment.mKind &&
+                observation.mPlane == assignment.mPlane &&
+                (assignment.mPlane == OccupancyPlane::Air ?
+                    !observation.mCell.mOnBridge && !assignment.mDestination.mOnBridge :
+                    observation.mCell.mOnBridge == assignment.mDestination.mOnBridge);
+        }
     }
 
     AutoFormationCommandService::AutoFormationCommandService(IAutoFormationGamePort& game)
@@ -38,34 +52,42 @@ namespace ra_commands::auto_formation
             return result;
         }
         result = Plan(snapshot);
-        if (result.mBudgetExceeded || result.mAssignments.empty())
+        (void)StartPlan(result);
+        return result;
+    }
+
+    bool AutoFormationCommandService::StartPlan(const PlanResult& plan)
+    {
+        if (!mGame.IsSessionActive() || plan.mBudgetExceeded ||
+            plan.mAssignments.empty() || plan.mAssignments.size() > MAX_PLAN_ACTORS ||
+            !HasValidReservations(plan.mAssignments))
         {
-            return result;
+            return false;
         }
 
-        std::vector<ActorId> assignedActors;
-        assignedActors.reserve(result.mAssignments.size());
-        for (const auto& assignment : result.mAssignments)
+        std::map<ActorId, ActorState> actors;
+        for (const auto& assignment : plan.mAssignments)
         {
-            Cell currentCell;
-            if (!mGame.TryGetActorCell(assignment.mActor, currentCell))
+            ActorObservation observation;
+            const auto cell = assignment.mDestination;
+            if (assignment.mActor == 0 || cell.mX < 0 || cell.mX >= MAP_AXIS_LIMIT ||
+                cell.mY < 0 || cell.mY >= MAP_AXIS_LIMIT ||
+                !mGame.TryGetActorState(assignment.mActor, observation) ||
+                !HasCompatibleTraits(assignment, observation))
             {
-                continue;
+                return false;
             }
             ActorState state;
-            state.mDestination = assignment.mDestination;
-            state.mLastCell = currentCell;
+            state.mAssignment = assignment;
+            state.mLastCell = observation.mCell;
             state.mProgressFrame = mGame.CurrentFrame();
             state.mHasProgressFrame = true;
-            mActors.try_emplace(assignment.mActor, state);
-            assignedActors.push_back(assignment.mActor);
+            if (!actors.try_emplace(assignment.mActor, state).second) { return false; }
         }
-        if (mActors.empty())
-        {
-            return result;
-        }
-
-        mGame.BeginPlan(assignedActors);
+        Reset();
+        mProgress = {};
+        mActors = std::move(actors);
+        mGame.BeginPlan(plan.mAssignments);
         mEpoch = mGame.Epoch();
         mStartFrame = mGame.CurrentFrame();
         mLastFrame = mStartFrame;
@@ -73,7 +95,7 @@ namespace ra_commands::auto_formation
         mActive = true;
         mProgress.mActive = true;
         mProgress.mTotalActors = mActors.size();
-        return result;
+        return true;
     }
 
     void AutoFormationCommandService::OnGameFrame()
@@ -108,12 +130,14 @@ namespace ra_commands::auto_formation
         bool allArrived = true;
         for (auto& [actor, state] : mActors)
         {
-            Cell currentCell;
-            if (!mGame.TryGetActorCell(actor, currentCell))
+            ActorObservation observation;
+            if (!mGame.TryGetActorState(actor, observation) ||
+                !HasCompatibleTraits(state.mAssignment, observation))
             {
                 removedActors.push_back(actor);
                 continue;
             }
+            const auto currentCell = observation.mCell;
             if (!state.mHasProgressFrame || currentCell != state.mLastCell)
             {
                 state.mLastCell = currentCell;
@@ -121,14 +145,15 @@ namespace ra_commands::auto_formation
                 state.mHasProgressFrame = true;
             }
 
-            const auto moveState = mGame.ObserveMove(actor, state.mDestination);
+            const auto moveState = mGame.ObserveMove(state.mAssignment);
             if (moveState == MoveState::Invalid || moveState == MoveState::Overridden)
             {
                 removedActors.push_back(actor);
                 continue;
             }
 
-            const bool arrived = moveState == MoveState::Arrived && currentCell == state.mDestination;
+            const bool arrived = moveState == MoveState::Arrived &&
+                currentCell == state.mAssignment.mDestination;
             if (arrived)
             {
                 ++mProgress.mArrived;
@@ -164,7 +189,7 @@ namespace ra_commands::auto_formation
 
             state.mLastAttemptFrame = frame;
             state.mHasAttemptFrame = true;
-            if (mGame.SubmitMove(actor, state.mDestination))
+            if (mGame.SubmitMove(state.mAssignment))
             {
                 ++mProgress.mSubmitted;
             }

@@ -35,12 +35,12 @@ namespace ra_commands::auto_formation
         [[nodiscard]] virtual bool TryCaptureSnapshot(const std::vector<ActorId>& ids,
             std::optional<Center> fixedCenter, Snapshot& outSnapshot) const = 0;
         /** 授权本次已获目标格的参与者；队友临时占格不等同静态障碍。 */
-        virtual void BeginPlan(const std::vector<ActorId>& assignedActors) = 0;
+        virtual void BeginPlan(const std::vector<Assignment>& assignments) = 0;
         /** 读取当前位置用于判断真实进展；false 表示身份或控制权已失效。 */
-        [[nodiscard]] virtual bool TryGetActorCell(ActorId actor, Cell& outCell) const = 0;
+        [[nodiscard]] virtual bool TryGetActorState(ActorId actor, ActorObservation& outState) const = 0;
         /** true 仅表示高级队列接受；暂时占用/拥塞返回 false，在操作期限内重试。 */
-        [[nodiscard]] virtual bool SubmitMove(ActorId actor, Cell destination) = 0;
-        [[nodiscard]] virtual MoveState ObserveMove(ActorId actor, Cell destination) const = 0;
+        [[nodiscard]] virtual bool SubmitMove(const Assignment& assignment) = 0;
+        [[nodiscard]] virtual MoveState ObserveMove(const Assignment& assignment) const = 0;
         virtual void CancelPending(ActorId actor) = 0;
         virtual void Reset() = 0;
     };

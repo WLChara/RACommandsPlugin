@@ -22,13 +22,18 @@ namespace ra_commands::auto_formation
         bool mTimedOut = false;
     };
 
-    /** 一次性热键列队；跨帧状态只保存值 ID 与格子，不保存游戏对象指针。 */
+    /** 一次性热键列队；跨帧仅保存值型身份、目标及进度，不保存游戏对象指针。 */
     class AutoFormationCommandService final
     {
     public:
         explicit AutoFormationCommandService(IAutoFormationGamePort& game);
 
         [[nodiscard]] PlanResult OnHotkey();
+        /**
+         * 接收值型目标；所有assignment身份、层与席位均有效后才替换当前队伍。
+         * false 不改变当前操作；不采集选区、不重新规划、不立即发送原生任务。
+         */
+        [[nodiscard]] bool StartPlan(const PlanResult& plan);
         /** 由游戏线程主帧调用。 */
         void OnGameFrame();
         void OnManualOrder(ActorId actorId);
@@ -39,7 +44,7 @@ namespace ra_commands::auto_formation
     private:
         struct ActorState
         {
-            Cell mDestination;
+            Assignment mAssignment;
             Cell mLastCell;
             std::uint32_t mLastAttemptFrame = 0;
             std::uint32_t mProgressFrame = 0;

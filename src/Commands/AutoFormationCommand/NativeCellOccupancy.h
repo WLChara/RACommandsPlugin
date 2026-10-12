@@ -42,12 +42,12 @@ namespace ra_commands::auto_formation
         return actorDirection == NativeHeadingBucket(towardOccupant);
     }
 
-    /** 原生 Move 值仅在适配器已完成地形、层、内容和组授权检查后使用。 */
+    /** 原生 Move 值仅在适配器已完成地形、层、内容及剩余容量检查后使用。 */
     [[nodiscard]] constexpr bool NativeMoveAllowsGroupDestination(
-        int nativeMove, bool hasAuthorizedParticipant, bool knownHeadOnBlock) noexcept
+        int nativeMove, bool canWaitForTemporaryOccupation, bool knownBoundedNo) noexcept
     {
         if (nativeMove == 0) { return true; }
-        return hasAuthorizedParticipant &&
-            (nativeMove == 2 || nativeMove == 6 || (nativeMove == 7 && knownHeadOnBlock));
+        return canWaitForTemporaryOccupation &&
+            (nativeMove == 2 || nativeMove == 6 || (nativeMove == 7 && knownBoundedNo));
     }
 }

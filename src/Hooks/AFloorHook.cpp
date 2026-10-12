@@ -97,7 +97,8 @@ namespace ra_commands::game
             const auto allowedThread = g_AllowedGameThreadId.load(std::memory_order_acquire);
             if (!observer || !allowedThread || allowedThread != GetCurrentThreadId() ||
                 IsPluginOrderActive() || !IsGameSessionReady() || !actor ||
-                actor->WhatAmI() != AbstractType::Unit || !actor->UniqueID ||
+                (actor->WhatAmI() != AbstractType::Unit &&
+                    actor->WhatAmI() != AbstractType::Infantry) || !actor->UniqueID ||
                 actor->Owner != HouseClass::Player.get())
             {
                 return;

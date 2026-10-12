@@ -151,5 +151,10 @@
     <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationMoveState.h" />
     <ClCompile Include="src\Tests\AutoFormationGameAdapterRulesTests.cpp" />
   </ItemGroup>
+  <ItemGroup Label="FormationCellPacking">
+    <ClCompile Include="src\Commands\AutoFormationCommand\FormationCellPacking.cpp" />
+    <ClCompile Include="src\Tests\FormationCellPackingTests.cpp" />
+    <ClInclude Include="src\Commands\AutoFormationCommand\FormationCellPacking.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

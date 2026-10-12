@@ -1,4 +1,5 @@
 #include "Commands/AutoFormationCommand/AutoFormationPlanner.h"
+#include "Commands/AutoFormationCommand/FormationCellPacking.h"
 
 #include <algorithm>
 #include <cmath>
@@ -559,6 +560,14 @@ namespace ra_commands::auto_formation
 
     PlanResult Plan(const Snapshot& snapshot)
     {
+        if (std::any_of(snapshot.mActors.begin(), snapshot.mActors.end(),
+            [](const ActorSnapshot& actor)
+            {
+                return actor.mKind != ActorKind::Vehicle || actor.mPlane != OccupancyPlane::Ground;
+            }))
+        {
+            return PlanCompactPacking(snapshot);
+        }
         PlanResult result;
         result.mCenter = snapshot.mCenter;
         const auto firstActors = FirstActors(snapshot.mActors);

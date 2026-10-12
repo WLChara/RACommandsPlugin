@@ -120,4 +120,15 @@ void RunAutoFormationGameAdapterRulesTests()
         !CanAcceptFormationMove(false, true, false) &&
         !CanAcceptFormationMove(false, false, true),
         "deactivation chrono immobilization and locomotor attacks must remain protected");
+
+    // seat 是计划的逻辑标号。取消前两个成员后，剩余 seat2 仍可占唯一可用容量。
+    constexpr std::array<CapacityClaim, 1> remaining{{{3, 2, false}}};
+    static_assert(CanAdmitCapacityClaim(remaining, 3, 1));
+    // 外来步兵占去一个名额时，先保留已在目标格的成员，再按 seat/ID 稳定取舍。
+    constexpr std::array<CapacityClaim, 3> crowded{{
+        {11, 0, false}, {12, 1, true}, {13, 2, false}}};
+    static_assert(CanAdmitCapacityClaim(crowded, 12, 2));
+    static_assert(CanAdmitCapacityClaim(crowded, 11, 2));
+    static_assert(!CanAdmitCapacityClaim(crowded, 13, 2));
+    static_assert(CanAdmitCapacityClaim(crowded, 13, 3));
 }
