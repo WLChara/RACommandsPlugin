@@ -1742,11 +1742,32 @@
     <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationDiagnostics.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Commands\AutoFormationCommand\FormationCellPacking.cpp"><Filter>src\Commands\AutoFormationCommand</Filter></ClCompile>
-    <ClInclude Include="src\Commands\AutoFormationCommand\FormationCellPacking.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
+    <Filter Include="src\Commands\DragFormationCommand"><UniqueIdentifier>{5EDE6B7B-5C8C-4F77-A238-795A35C85AD1}</UniqueIdentifier></Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Commands\DragFormationCommand\DragFormationPlanner.cpp"><Filter>src\Commands\DragFormationCommand</Filter></ClCompile>
+    <ClCompile Include="src\Commands\DragFormationCommand\DragFormationCommandService.cpp"><Filter>src\Commands\DragFormationCommand</Filter></ClCompile>
+    <ClCompile Include="src\Commands\DragFormationCommand\DragFormationGameAdapter.cpp"><Filter>src\Commands\DragFormationCommand</Filter></ClCompile>
+    <ClCompile Include="src\Commands\DragFormationCommand\DragFormationCommandRegistry.cpp"><Filter>src\Commands\DragFormationCommand</Filter></ClCompile>
+    <ClCompile Include="src\Hooks\DragFormationInputHook.cpp"><Filter>src\Hooks</Filter></ClCompile>
+    <ClInclude Include="src\Commands\DragFormationCommand\DragFormationTypes.h"><Filter>src\Commands\DragFormationCommand</Filter></ClInclude>
+    <ClInclude Include="src\Commands\DragFormationCommand\DragFormationPlanner.h"><Filter>src\Commands\DragFormationCommand</Filter></ClInclude>
+    <ClInclude Include="src\Commands\DragFormationCommand\IDragFormationGamePort.h"><Filter>src\Commands\DragFormationCommand</Filter></ClInclude>
+    <ClInclude Include="src\Commands\DragFormationCommand\DragFormationCommandService.h"><Filter>src\Commands\DragFormationCommand</Filter></ClInclude>
+    <ClInclude Include="src\Commands\DragFormationCommand\DragFormationGameAdapter.h"><Filter>src\Commands\DragFormationCommand</Filter></ClInclude>
+    <ClInclude Include="src\Commands\DragFormationCommand\DragFormationCommandRegistry.h"><Filter>src\Commands\DragFormationCommand</Filter></ClInclude>
+    <ClInclude Include="src\Hooks\DragFormationInputHook.h"><Filter>src\Hooks</Filter></ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Bootstrap\RuntimeDiagnostics.cpp"><Filter>src\Bootstrap</Filter></ClCompile>
     <ClInclude Include="src\Bootstrap\RuntimeDiagnostics.h"><Filter>src\Bootstrap</Filter></ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Commands\AutoFormationCommand\FormationCellPacking.cpp"><Filter>src\Commands\AutoFormationCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoFormationCommand\FormationCellPacking.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Commands\DragFormationCommand\DragFormationProjection.cpp"><Filter>src\Commands\DragFormationCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\DragFormationCommand\DragFormationProjection.h"><Filter>src\Commands\DragFormationCommand</Filter></ClInclude>
   </ItemGroup>
 </Project>

@@ -620,14 +620,32 @@
     <ClCompile Include="src\Commands\AutoFormationCommand\AutoFormationDiagnostics.cpp" />
     <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationDiagnostics.h" />
   </ItemGroup>
+  <ItemGroup Label="DragFormationDemo">
+    <ClCompile Include="src\Commands\DragFormationCommand\DragFormationPlanner.cpp" />
+    <ClCompile Include="src\Commands\DragFormationCommand\DragFormationCommandService.cpp" />
+    <ClCompile Include="src\Commands\DragFormationCommand\DragFormationGameAdapter.cpp" />
+    <ClCompile Include="src\Commands\DragFormationCommand\DragFormationCommandRegistry.cpp" />
+    <ClCompile Include="src\Hooks\DragFormationInputHook.cpp" />
+    <ClInclude Include="src\Commands\DragFormationCommand\DragFormationTypes.h" />
+    <ClInclude Include="src\Commands\DragFormationCommand\DragFormationPlanner.h" />
+    <ClInclude Include="src\Commands\DragFormationCommand\IDragFormationGamePort.h" />
+    <ClInclude Include="src\Commands\DragFormationCommand\DragFormationCommandService.h" />
+    <ClInclude Include="src\Commands\DragFormationCommand\DragFormationGameAdapter.h" />
+    <ClInclude Include="src\Commands\DragFormationCommand\DragFormationCommandRegistry.h" />
+    <ClInclude Include="src\Hooks\DragFormationInputHook.h" />
+  </ItemGroup>
   <!-- 已列出的文件供 VS 文件夹视图使用；新增源文件仍可在手动加入项目之前参与编译。 -->
+  <ItemGroup Label="RuntimeDiagnostics">
+    <ClCompile Include="src\Bootstrap\RuntimeDiagnostics.cpp" />
+    <ClInclude Include="src\Bootstrap\RuntimeDiagnostics.h" />
+  </ItemGroup>
   <ItemGroup Label="FormationCellPacking">
     <ClCompile Include="src\Commands\AutoFormationCommand\FormationCellPacking.cpp" />
     <ClInclude Include="src\Commands\AutoFormationCommand\FormationCellPacking.h" />
   </ItemGroup>
-  <ItemGroup Label="RuntimeDiagnostics">
-    <ClCompile Include="src\Bootstrap\RuntimeDiagnostics.cpp" />
-    <ClInclude Include="src\Bootstrap\RuntimeDiagnostics.h" />
+  <ItemGroup Label="DragFormationProjection">
+    <ClCompile Include="src\Commands\DragFormationCommand\DragFormationProjection.cpp" />
+    <ClInclude Include="src\Commands\DragFormationCommand\DragFormationProjection.h" />
   </ItemGroup>
   <ItemGroup Label="NewSourceFallback">
     <ClCompile Include="src\**\*.cpp" Exclude="src\Tests\**\*.cpp;src\SDK\**\*.cpp;@(ClCompile)" />

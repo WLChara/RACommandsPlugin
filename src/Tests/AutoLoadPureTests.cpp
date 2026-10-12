@@ -704,6 +704,9 @@ void RunAutoSuperWeaponPureTests();
 void RunAutoFormationPlannerTests();
 void RunFormationCellPackingTests();
 void RunAutoFormationServiceTests();
+void RunDragFormationPlannerTests();
+void RunDragFormationProjectionTests();
+void RunDragFormationServiceTests();
 void RunAutoFormationGameAdapterRulesTests();
 void RunPluginOrderScopeTests();
 
@@ -754,6 +757,9 @@ int main()
         RunAutoFormationPlannerTests();
         RunFormationCellPackingTests();
         RunAutoFormationServiceTests();
+        RunDragFormationPlannerTests();
+        RunDragFormationProjectionTests();
+        RunDragFormationServiceTests();
         RunAutoFormationGameAdapterRulesTests();
         RunPluginOrderScopeTests();
         std::cout << "RACommandsPlugin pure tests passed\n";

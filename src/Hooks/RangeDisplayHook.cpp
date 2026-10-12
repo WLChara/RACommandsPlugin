@@ -39,6 +39,7 @@ namespace ra_commands::game
 
         std::atomic<RadialDispatcherFunction> g_OriginalDispatcher{nullptr};
         std::atomic<RangeDisplayModeQuery> g_ModeQuery{nullptr};
+        std::atomic<RangeDisplayRenderCallback> g_RenderCallback{nullptr};
         std::atomic<DWORD> g_AllowedGameThreadId{0};
         bool g_IsInstalled = false;
         bool g_InstallationFailed = false;
@@ -93,13 +94,21 @@ namespace ra_commands::game
             }
 
             const auto isEnabled = g_ModeQuery.load(std::memory_order_acquire);
+            const auto renderCallback = g_RenderCallback.load(std::memory_order_acquire);
             const auto allowedThread = g_AllowedGameThreadId.load(std::memory_order_acquire);
-            if (!isEnabled || !allowedThread ||
-                allowedThread != GetCurrentThreadId() || !isEnabled() ||
+            if (!allowedThread || allowedThread != GetCurrentThreadId() ||
                 !IsGameSessionReady())
             {
                 return;
             }
+
+            // 预览与射程开关共用一个原生绘制入口；Hook 不持有预览状态。
+            if (renderCallback)
+            {
+                try { renderCallback(); }
+                catch (...) { OutputDebugStringA("[RACommandsPlugin] render callback failed\n"); }
+            }
+            if (!isEnabled || !isEnabled()) { return; }
 
             auto* const selected = &ObjectClass::CurrentObjects.get();
             if (!selected->IsInitialized || selected->Count < 0 ||
@@ -207,9 +216,15 @@ namespace ra_commands::game
         g_AllowedGameThreadId.store(threadId, std::memory_order_release);
     }
 
+    void SetRangeDisplayRenderCallback(RangeDisplayRenderCallback callback) noexcept
+    {
+        g_RenderCallback.store(callback, std::memory_order_release);
+    }
+
     void DisableRangeDisplayHook() noexcept
     {
         g_ModeQuery.store(nullptr, std::memory_order_release);
+        g_RenderCallback.store(nullptr, std::memory_order_release);
         g_AllowedGameThreadId.store(0, std::memory_order_release);
     }
 }

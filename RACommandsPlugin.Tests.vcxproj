@@ -151,10 +151,25 @@
     <ClInclude Include="src\Commands\AutoFormationCommand\AutoFormationMoveState.h" />
     <ClCompile Include="src\Tests\AutoFormationGameAdapterRulesTests.cpp" />
   </ItemGroup>
+  <ItemGroup Label="DragFormationDemo">
+    <ClCompile Include="src\Commands\DragFormationCommand\DragFormationPlanner.cpp" />
+    <ClCompile Include="src\Commands\DragFormationCommand\DragFormationCommandService.cpp" />
+    <ClCompile Include="src\Tests\DragFormationPlannerTests.cpp" />
+    <ClCompile Include="src\Tests\DragFormationServiceTests.cpp" />
+    <ClInclude Include="src\Commands\DragFormationCommand\DragFormationTypes.h" />
+    <ClInclude Include="src\Commands\DragFormationCommand\DragFormationPlanner.h" />
+    <ClInclude Include="src\Commands\DragFormationCommand\IDragFormationGamePort.h" />
+    <ClInclude Include="src\Commands\DragFormationCommand\DragFormationCommandService.h" />
+  </ItemGroup>
   <ItemGroup Label="FormationCellPacking">
     <ClCompile Include="src\Commands\AutoFormationCommand\FormationCellPacking.cpp" />
     <ClCompile Include="src\Tests\FormationCellPackingTests.cpp" />
     <ClInclude Include="src\Commands\AutoFormationCommand\FormationCellPacking.h" />
+  </ItemGroup>
+  <ItemGroup Label="DragFormationProjection">
+    <ClCompile Include="src\Commands\DragFormationCommand\DragFormationProjection.cpp" />
+    <ClCompile Include="src\Tests\DragFormationProjectionTests.cpp" />
+    <ClInclude Include="src\Commands\DragFormationCommand\DragFormationProjection.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

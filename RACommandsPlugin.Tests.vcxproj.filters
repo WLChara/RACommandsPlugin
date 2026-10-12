@@ -293,8 +293,26 @@
     <ClCompile Include="src\Tests\AutoFormationGameAdapterRulesTests.cpp"><Filter>src\Tests</Filter></ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <Filter Include="src\Commands\DragFormationCommand"><UniqueIdentifier>{5EDE6B7B-5C8C-4F77-A238-795A35C85AD1}</UniqueIdentifier></Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Commands\DragFormationCommand\DragFormationPlanner.cpp"><Filter>src\Commands\DragFormationCommand</Filter></ClCompile>
+    <ClCompile Include="src\Commands\DragFormationCommand\DragFormationCommandService.cpp"><Filter>src\Commands\DragFormationCommand</Filter></ClCompile>
+    <ClCompile Include="src\Tests\DragFormationPlannerTests.cpp"><Filter>src\Tests</Filter></ClCompile>
+    <ClCompile Include="src\Tests\DragFormationServiceTests.cpp"><Filter>src\Tests</Filter></ClCompile>
+    <ClInclude Include="src\Commands\DragFormationCommand\DragFormationTypes.h"><Filter>src\Commands\DragFormationCommand</Filter></ClInclude>
+    <ClInclude Include="src\Commands\DragFormationCommand\DragFormationPlanner.h"><Filter>src\Commands\DragFormationCommand</Filter></ClInclude>
+    <ClInclude Include="src\Commands\DragFormationCommand\IDragFormationGamePort.h"><Filter>src\Commands\DragFormationCommand</Filter></ClInclude>
+    <ClInclude Include="src\Commands\DragFormationCommand\DragFormationCommandService.h"><Filter>src\Commands\DragFormationCommand</Filter></ClInclude>
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="src\Commands\AutoFormationCommand\FormationCellPacking.cpp"><Filter>src\Commands\AutoFormationCommand</Filter></ClCompile>
     <ClInclude Include="src\Commands\AutoFormationCommand\FormationCellPacking.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
     <ClCompile Include="src\Tests\FormationCellPackingTests.cpp"><Filter>src\Tests</Filter></ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Commands\DragFormationCommand\DragFormationProjection.cpp"><Filter>src\Commands\DragFormationCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\DragFormationCommand\DragFormationProjection.h"><Filter>src\Commands\DragFormationCommand</Filter></ClInclude>
+    <ClCompile Include="src\Tests\DragFormationProjectionTests.cpp"><Filter>src\Tests</Filter></ClCompile>
   </ItemGroup>
 </Project>

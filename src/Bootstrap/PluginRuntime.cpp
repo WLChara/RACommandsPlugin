@@ -36,6 +36,9 @@
 #include "Commands/AutoFormationCommand/AutoFormationGameAdapter.h"
 #include "Commands/AutoFormationCommand/AutoFormationIntentHandler.h"
 #include "Commands/AutoFormationCommand/AutoFormationDiagnostics.h"
+#include "Commands/DragFormationCommand/DragFormationCommandRegistry.h"
+#include "Commands/DragFormationCommand/DragFormationCommandService.h"
+#include "Commands/DragFormationCommand/DragFormationGameAdapter.h"
 #include "Commands/AFloorCommand/AFloorCommandRegistry.h"
 #include "Commands/AFloorCommand/AFloorCommandService.h"
 #include "Commands/AFloorCommand/AFloorGameAdapter.h"
@@ -66,6 +69,7 @@
 #include "Hooks/MainFrameHook.h"
 #include "Hooks/AFloorHook.h"
 #include "Hooks/RangeDisplayHook.h"
+#include "Hooks/DragFormationInputHook.h"
 #include "Game/TargetVersion.h"
 
 #include <Windows.h>
@@ -125,6 +129,9 @@ namespace ra_commands::bootstrap
         game::AirSpreadGameAdapter g_AirSpreadGameAdapter(g_ClickedMissionDispatcher);
         game::AutoFormationGameAdapter g_AutoFormationGameAdapter(g_ClickedMissionDispatcher);
         auto_formation::AutoFormationCommandService g_AutoFormationCommandService(g_AutoFormationGameAdapter);
+        game::DragFormationGameAdapter g_DragFormationGameAdapter(
+            g_AutoFormationGameAdapter, g_AutoFormationCommandService);
+        drag_formation::DragFormationCommandService g_DragFormationCommandService(g_DragFormationGameAdapter);
         game::AutoCrushGameAdapter g_AutoCrushGameAdapter(g_ClickedMissionDispatcher);
         auto_crush::AutoCrushCommandService g_AutoCrushCommandService(g_AutoCrushGameAdapter);
         safe_mode::SafeModeToggleCommandService g_SafeModeToggleCommandService(
@@ -155,6 +162,8 @@ namespace ra_commands::bootstrap
         bool g_AFloorHooksReady = false;
         bool g_RangeDisplayHookReady = false;
         bool g_FormationOrderHookReady = false;
+        bool g_DragInputHookReady = false;
+        bool g_DragInputHookAttempted = false;
         bool g_FormationTraceWasActive = false;
         std::uint32_t g_LastFormationTraceFrame = 0;
         DWORD g_GameThreadId = 0;
@@ -354,6 +363,87 @@ namespace ra_commands::bootstrap
             {
                 OutputDebugStringA("[RACommandsPlugin] formation plan incomplete or over budget\n");
             }
+        }
+
+        bool IsDragFormationModeEnabled()
+        {
+            // Capture/ReleaseCapture 可同步重入窗口过程；不等待已被外层持有的锁。
+            std::unique_lock lock(g_StateMutex, std::try_to_lock);
+            return lock.owns_lock() && g_IsInitialized &&
+                g_GameThreadId == GetCurrentThreadId() && g_DragFormationCommandService.IsEnabled();
+        }
+
+        void OnDragFormationPointer(const game::DragPointerEvent& raw)
+        {
+            std::unique_lock lock(g_StateMutex, std::try_to_lock);
+            if (!lock.owns_lock() || !g_IsInitialized || g_GameThreadId != GetCurrentThreadId()) { return; }
+            drag_formation::PointerEvent event;
+            switch (raw.mKind)
+            {
+            case game::DragPointerEventKind::Down: event.mKind = drag_formation::PointerEventKind::Down; break;
+            case game::DragPointerEventKind::Up: event.mKind = drag_formation::PointerEventKind::Up; break;
+            case game::DragPointerEventKind::Move: event.mKind = drag_formation::PointerEventKind::Move; break;
+            case game::DragPointerEventKind::Cancel: event.mKind = drag_formation::PointerEventKind::Cancel; break;
+            }
+            event.mButton = raw.mButton == game::DragPointerButton::Left ? drag_formation::PointerButton::Left :
+                raw.mButton == game::DragPointerButton::Right ? drag_formation::PointerButton::Right :
+                drag_formation::PointerButton::None;
+            event.mTimeMs = raw.mTimeMs;
+            if (event.mKind != drag_formation::PointerEventKind::Cancel)
+            {
+                event.mPosition = g_DragFormationGameAdapter.CaptureWorldPointFromClient(raw.mClientX, raw.mClientY);
+                if (event.mKind == drag_formation::PointerEventKind::Down)
+                {
+                    g_DragFormationGameAdapter.TracePointerPoint(raw.mClientX, raw.mClientY, event.mPosition);
+                }
+            }
+            const bool wasEnabled = g_DragFormationCommandService.IsEnabled();
+            g_DragFormationCommandService.OnPointerEvent(event);
+            if (wasEnabled && !g_DragFormationCommandService.IsEnabled())
+            {
+                g_DragFormationGameAdapter.ShowFeedback(g_DragFormationCommandService.GetOutcome());
+            }
+        }
+
+        void RenderDragFormationPreview()
+        {
+            std::unique_lock lock(g_StateMutex, std::try_to_lock);
+            if (lock.owns_lock() && g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
+            {
+                g_DragFormationGameAdapter.RenderPreview(g_DragFormationCommandService.GetPreview());
+            }
+        }
+
+        void OnDragFormationHotkey()
+        {
+            bool cancelled = false;
+            {
+                std::lock_guard lock(g_StateMutex);
+                if (!g_IsInitialized || !g_DragInputHookReady || !g_RangeDisplayHookReady ||
+                    g_GameThreadId != GetCurrentThreadId()) { return; }
+                const bool wasEnabled = g_DragFormationCommandService.IsEnabled();
+                g_DragFormationCommandService.OnHotkey();
+                cancelled = !g_DragFormationCommandService.IsEnabled();
+                if (wasEnabled || !cancelled)
+                {
+                    g_DragFormationGameAdapter.ShowFeedback(g_DragFormationCommandService.GetOutcome());
+                }
+                game::TraceAutoFormation(cancelled ? "drag-mode=off" : "drag-mode=armed");
+            }
+            // 释放捕获可同步触发窗口消息，必须在状态锁之外执行。
+            if (cancelled) { game::CancelDragFormationInputCapture(); }
+        }
+
+        game::CommandRegistrationResult RegisterDragFormationWhenHooksReady(
+            const game::GameSymbols& symbols, void(*callback)(), std::string& outError)
+        {
+            if (!g_DragInputHookAttempted) { return game::CommandRegistrationResult::Pending; }
+            if (!g_DragInputHookReady || !g_RangeDisplayHookReady || !g_FormationOrderHookReady)
+            {
+                outError = "drag formation requires input, tactical render and order observation hooks";
+                return game::CommandRegistrationResult::Failed;
+            }
+            return game::TryRegisterDragFormationCommand(symbols, callback, outError);
         }
 
         void OnForceShieldHotkey()
@@ -556,6 +646,7 @@ namespace ra_commands::bootstrap
             {&RegisterConfiguredCommand<&game::TryRegisterAutoRageInductorCommand, &OnAutoRageInductorHotkey>, &game::DisableAutoRageInductorCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterAirSpreadCommand, &OnAirSpreadHotkey>, &game::DisableAirSpreadCommand},
             {&RegisterConfiguredCommand<&RegisterAutoFormationWhenHookReady, &OnAutoFormationHotkey>, &game::DisableAutoFormationCommand},
+            {&RegisterConfiguredCommand<&RegisterDragFormationWhenHooksReady, &OnDragFormationHotkey>, &game::DisableDragFormationCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterMindControlSelectCommand, &OnMindControlSelectHotkey>, &game::DisableMindControlSelectCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterUnitKindSelectCommand, &OnUnitKindSelectHotkey>, &game::DisableUnitKindSelectCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterAmmoSelectCommand, &OnAmmoSelectHotkey>, &game::DisableAmmoSelectCommand},
@@ -598,8 +689,47 @@ namespace ra_commands::bootstrap
             {
                 game::SetRangeDisplayGameThread(threadId);
             }
+            if (!g_DragInputHookAttempted && g_ClickedMissionGameAdapter.IsMatchReady())
+            {
+                const auto window = reinterpret_cast<HWND>(g_DragFormationGameAdapter.OwnerWindowHandle());
+                // 战场已就绪时窗口也应已创建；缺失窗口只拒绝拖拽功能，不能永久挂起整批注册。
+                g_DragInputHookAttempted = true;
+                TraceRuntime("drag-input-install window=" +
+                    std::to_string(reinterpret_cast<std::uintptr_t>(window)) +
+                    " ownerThread=" + std::to_string(window ? GetWindowThreadProcessId(window, nullptr) : 0));
+                if (window)
+                {
+                    std::string inputError;
+                    g_DragInputHookReady = game::InstallDragFormationInputHook(window,
+                        &OnDragFormationPointer, &IsDragFormationModeEnabled, inputError);
+                    if (!g_DragInputHookReady)
+                    {
+                        OutputDebugStringA(("[RACommandsPlugin] " + inputError + "\n").c_str());
+                        TraceRuntime(inputError);
+                    }
+                }
+                TraceRuntime(g_DragInputHookReady ? "drag-input-install succeeded" : "drag-input-install failed");
+            }
 
             g_ClickedMissionDispatcher.OnGameFrame();
+            const auto dragTimeMs = GetTickCount64();
+            const bool dragWasEnabled = g_DragFormationCommandService.IsEnabled();
+            if (dragWasEnabled)
+            {
+                // 镜头滚动时鼠标像素可以不变；每帧重新换算终点的世界坐标。
+                g_DragFormationCommandService.OnPointerEvent({drag_formation::PointerEventKind::Move,
+                    drag_formation::PointerButton::None,
+                    g_DragFormationGameAdapter.CaptureCursorWorldPoint(), dragTimeMs});
+            }
+            g_DragFormationCommandService.OnGameFrame(dragTimeMs);
+            if (!g_DragFormationCommandService.IsEnabled())
+            {
+                game::CancelDragFormationInputCapture();
+                if (dragWasEnabled)
+                {
+                    g_DragFormationGameAdapter.ShowFeedback(g_DragFormationCommandService.GetOutcome());
+                }
+            }
             g_AutoCrushCommandService.OnGameFrame();
             g_AutoFormationCommandService.OnGameFrame();
             TraceFormationProgress(game::GetCurrentGameFrame());
@@ -752,6 +882,10 @@ namespace ra_commands::bootstrap
                 OutputDebugStringA(("[RACommandsPlugin] " + hookError + "\n").c_str());
                 TraceRuntime("tactical-render hook failed: " + hookError);
             }
+            else
+            {
+                game::SetRangeDisplayRenderCallback(&RenderDragFormationPreview);
+            }
 
             g_IsInitialized = true;
             TraceRuntime("initialized mainFrame=1 aFloor=" + std::to_string(g_AFloorHooksReady) +
@@ -798,6 +932,10 @@ namespace ra_commands::bootstrap
         g_AutoNanoCloudCommandService.Reset();
         g_AutoCrushCommandService.Reset();
         g_AutoFormationCommandService.Reset();
+        g_DragFormationCommandService.Reset();
+        game::DisableDragFormationInputHook();
+        g_DragInputHookReady = false;
+        g_DragInputHookAttempted = false;
         g_AutoRepairCommandService.Reset();
         g_AutoBuildCommandService.Reset();
         g_AutoSuperWeaponCommandService.Reset();
