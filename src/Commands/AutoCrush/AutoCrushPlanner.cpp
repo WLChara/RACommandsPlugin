@@ -33,6 +33,7 @@ namespace ra_commands::auto_crush
             Facing mDirection;
             int mTurnSteps;
             std::vector<Cell> mPath;
+            bool mEndsAtTarget = false;
         };
 
         struct Reservation
@@ -92,6 +93,16 @@ namespace ra_commands::auto_crush
                         routes.push_back({direction, CountTurnSteps(crusher.mFacing, direction), path});
                     }
                 }
+                // 后方找不到空格时，允许直接把最后一个敌兵格作为 Move 终点。
+                if (!path.empty() && std::any_of(crusher.mTargets.begin(), crusher.mTargets.end(),
+                    [&path](const TargetPrediction& target)
+                    {
+                        return target.mCurrentCell == path.back();
+                    }))
+                {
+                    routes.push_back({direction,
+                        CountTurnSteps(crusher.mFacing, direction), path, true});
+                }
             }
             return routes;
         }
@@ -131,8 +142,9 @@ namespace ra_commands::auto_crush
                 }
 
                 double bestProbability = 0.0;
-                // 终点不计收益：原生 Move 可能在步兵所在格之前停下。
-                for (std::size_t index = 0; index + 1 < route.mPath.size(); ++index)
+                const auto scoredLength = route.mEndsAtTarget
+                    ? route.mPath.size() : route.mPath.size() - 1;
+                for (std::size_t index = 0; index < scoredLength; ++index)
                 {
                     const int arrivalSteps = static_cast<int>(index) + 1 + route.mTurnSteps;
                     bestProbability = (std::max)(bestProbability,

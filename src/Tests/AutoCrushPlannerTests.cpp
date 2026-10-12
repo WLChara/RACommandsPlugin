@@ -80,10 +80,12 @@ namespace
 
     void TestAdapterMarksMixedCells()
     {
-        const auto blocked = Plan({{Crusher(1, {0, 0}, Facing::East,
+        const auto fallback = Plan({{Crusher(1, {0, 0}, Facing::East,
             {{1, 0}, {3, 0}}, {Target(7, {1, 0}, {1, 0})})}});
-        Require(blocked.mMoves.empty(),
-            "an impassable cell behind the target must prevent a through-route");
+        Require(fallback.mMoves.size() == 1 &&
+            fallback.mMoves[0].mDestination == Cell{1, 0} &&
+            fallback.mMoves[0].mExpectedTargetIds == std::vector<TargetId>{7},
+            "an enemy cell must be a fallback destination if the next cell is blocked");
 
         const auto marked = Plan({{Crusher(1, {0, 0}, Facing::East,
             {{1, 0}, {2, 0}, {3, 0}},
@@ -174,9 +176,17 @@ namespace
             EastCells({0, 0}, 9), {Target(8, {8, 0}, {8, 0})})}});
         Require(edge.mMoves.size() == 1 && edge.mMoves[0].mDestination == Cell{9, 0},
             "a target on the eighth cell needs a legal ninth-cell stopping point");
-        Require(Plan({{Crusher(1, {0, 0}, Facing::East,
-            EastCells({0, 0}, 8), {Target(8, {8, 0}, {8, 0})})}}).mMoves.empty(),
-            "the eighth-cell target is skipped if no ninth stopping cell exists");
+        const auto noNinth = Plan({{Crusher(1, {0, 0}, Facing::East,
+            EastCells({0, 0}, 8), {Target(8, {8, 0}, {8, 0})})}});
+        Require(noNinth.mMoves.size() == 1 &&
+            noNinth.mMoves[0].mDestination == Cell{8, 0},
+            "the eighth-cell target must be usable when no ninth stopping cell exists");
+
+        const auto adjacent = Plan({{Crusher(1, {0, 0}, Facing::East,
+            {{1, 0}}, {Target(9, {1, 0}, {1, 0})})}});
+        Require(adjacent.mMoves.size() == 1 &&
+            adjacent.mMoves[0].mDestination == Cell{1, 0},
+            "an adjacent target needs no cell beyond it to receive a Move");
     }
 
     void TestStableTieOrder()

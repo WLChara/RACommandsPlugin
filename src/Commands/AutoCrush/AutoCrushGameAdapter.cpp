@@ -41,15 +41,21 @@ namespace ra_commands::game
                 techno->UniqueID;
         }
 
-        bool IsEligibleUnit(const UnitClass* unit)
+        bool CanRetainUnit(const UnitClass* unit)
         {
             return unit && unit->UniqueID != 0 &&
                 unit->Owner == HouseClass::Player.get() && unit->Type &&
                 (unit->Type->Crusher || unit->Type->OmniCrusher) &&
                 unit->Type->MovementZone != MovementZone::Fly &&
                 unit->Type->SpeedType != SpeedType::Winged &&
-                unit->IsAlive && unit->IsOnMap && !unit->InLimbo &&
-                unit->IsInPlayfield && !unit->IsDead() &&
+                unit->Health > 0 && !unit->IsDead();
+        }
+
+        bool IsEligibleUnit(const UnitClass* unit)
+        {
+            return CanRetainUnit(unit) && unit->IsAlive &&
+                unit->IsOnMap && !unit->InLimbo &&
+                unit->IsInPlayfield &&
                 !unit->Transporter && !unit->InAir && !unit->OnBridge &&
                 !unit->Deactivated && !unit->IsImmobilized &&
                 unit->InWhichLayer() == Layer::Ground;
@@ -94,19 +100,6 @@ namespace ra_commands::game
             return found && found->MapCoords == coords ? found : nullptr;
         }
 
-        bool IsKnownOpenTerrain(const CellClass* cell, const CellClass* origin,
-            bool allowOwnUnit = false)
-        {
-            // 缺少精确且无副作用的逐车通行查询，只把已见的平坦空地和道路纳入规划。
-            // SDK 标注 Foggedness == -1 为可见；对象的 IsVisible 仅表示上次是否绘入视口。
-            return cell && origin && !cell->IsShrouded() && cell->Foggedness == -1 &&
-                !cell->ContainsBridge() && !cell->AltObject &&
-                cell->SlopeIndex == 0 && cell->Level == origin->Level &&
-                cell->OverlayTypeIndex < 0 &&
-                (allowOwnUnit || cell->AltOccupationFlags == 0) &&
-                (cell->LandType == LandType::Clear || cell->LandType == LandType::Road);
-        }
-
         bool CanCrushVisibleInfantry(const UnitClass* crusher,
             const InfantryClass* infantry, auto_crush::Cell cell)
         {
@@ -129,31 +122,38 @@ namespace ra_commands::game
                 crusher->Owner != infantry->Owner;
         }
 
-        bool TryClassifyCell(const MapClass* map, const CellClass* origin,
+        bool TryClassifyCell(const MapClass* map,
             const UnitClass* crusher, auto_crush::Cell position,
             std::vector<auto_crush::TargetPrediction>& outTargets)
         {
             outTargets.clear();
             auto* const cell = FindMapCell(map, position);
-            if (!IsKnownOpenTerrain(cell, origin))
+            // 只挡明确的墙/对象；坡地、高度、覆盖物和空白雾区交给原生寻路。
+            if (!cell || cell->LandType == LandType::Wall)
             {
                 return false;
             }
-            if (cell->GetUnit(false) || cell->GetBuilding())
+            if (cell->GetUnit(crusher->OnBridge) || cell->GetBuilding())
             {
                 return false;
             }
-            auto* object = cell->FirstObject;
+            auto* object = crusher->OnBridge ? cell->AltObject : cell->FirstObject;
             int count = 0;
             while (object && count < MAX_CELL_CONTENT)
             {
+                // 可以穿过未探明的空地，但不能利用尚未可见的敌军资料选目标。
+                if (cell->IsShrouded() || cell->Foggedness != -1)
+                {
+                    return false;
+                }
                 if (object->WhatAmI() != AbstractType::Infantry)
                 {
                     return false;
                 }
                 auto* const infantry = static_cast<InfantryClass*>(object);
                 // 任意一名不可确认能碾压的占用者都会封锁整格，不发送混合占用格。
-                if (!CanCrushVisibleInfantry(crusher, infantry, position))
+                if (infantry->OnBridge != crusher->OnBridge ||
+                    !CanCrushVisibleInfantry(crusher, infantry, position))
                 {
                     return false;
                 }
@@ -167,8 +167,7 @@ namespace ra_commands::game
 
         bool CanAssessRoute(const UnitClass* crusher, const CellClass* origin)
         {
-            return crusher && crusher->Type && origin &&
-                IsKnownOpenTerrain(origin, origin, true);
+            return crusher && crusher->Type && origin;
         }
 
         commands::ClickedMissionIdentity IdentityFromId(
@@ -224,7 +223,7 @@ namespace ra_commands::game
         const int deltaX = destination.X - current.mX;
         const int deltaY = destination.Y - current.mY;
         const int steps = (std::max)(std::abs(deltaX), std::abs(deltaY));
-        if (steps < 2 || steps > auto_crush::MAX_ROUTE_CELLS ||
+        if (steps < 1 || steps > auto_crush::MAX_ROUTE_CELLS ||
             (deltaX != 0 && deltaY != 0 && std::abs(deltaX) != std::abs(deltaY)))
         {
             return nullptr;
@@ -238,21 +237,11 @@ namespace ra_commands::game
         {
             const auto_crush::Cell position{
                 current.mX + stepX * step, current.mY + stepY * step};
-            if (!TryClassifyCell(map, origin, crusher, position, targets))
+            if (!TryClassifyCell(map, crusher, position, targets))
             {
                 return nullptr;
             }
-            if (step == steps)
-            {
-                if (!targets.empty())
-                {
-                    return nullptr;
-                }
-            }
-            else
-            {
-                hasTarget |= !targets.empty();
-            }
+            hasTarget |= !targets.empty();
         }
         if (!hasTarget)
         {
@@ -320,6 +309,17 @@ namespace ra_commands::game
         return ids;
     }
 
+    bool AutoCrushGameAdapter::CanRetainMark(auto_crush::CrusherId id) const
+    {
+        if (!IsSessionActive())
+        {
+            mHasEligibleIds = false;
+            return false;
+        }
+        RefreshEligibleIds();
+        return mRetainableIds.contains(id);
+    }
+
     bool AutoCrushGameAdapter::IsEligibleCrusher(auto_crush::CrusherId id) const
     {
         if (!IsSessionActive())
@@ -339,14 +339,20 @@ namespace ra_commands::game
         {
             return;
         }
+        mRetainableIds.clear();
         mEligibleIds.clear();
         auto* const units = UnitClass::Array.get();
         for (int index = 0; index < units->Count; ++index)
         {
             auto* const unit = units->Items[index];
-            if (IsEligibleUnit(unit))
+            if (CanRetainUnit(unit))
             {
-                mEligibleIds.insert(EncodeId(unit));
+                const auto id = EncodeId(unit);
+                mRetainableIds.insert(id);
+                if (IsEligibleUnit(unit))
+                {
+                    mEligibleIds.insert(id);
+                }
             }
         }
         mEligibleFrame = frame;
@@ -418,7 +424,7 @@ namespace ra_commands::game
                     const auto_crush::Cell position{
                         current.mX + direction.mX * step,
                         current.mY + direction.mY * step};
-                    if (!TryClassifyCell(map, origin, crusher, position, targets))
+                    if (!TryClassifyCell(map, crusher, position, targets))
                     {
                         break;
                     }

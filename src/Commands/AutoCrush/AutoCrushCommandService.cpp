@@ -81,7 +81,7 @@ namespace ra_commands::auto_crush
         }
         for (auto it = mMarked.begin(); it != mMarked.end();)
         {
-            if (mGame.IsEligibleCrusher(it->first))
+            if (mGame.CanRetainMark(it->first))
             {
                 ++it;
                 continue;

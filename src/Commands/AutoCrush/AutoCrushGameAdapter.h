@@ -28,6 +28,7 @@ namespace ra_commands::game
             CaptureSelectedEligibleCrushers() const override;
         [[nodiscard]] std::vector<auto_crush::CrusherId>
             CaptureSelectedVehicleIds() const override;
+        [[nodiscard]] bool CanRetainMark(auto_crush::CrusherId id) const override;
         [[nodiscard]] bool IsEligibleCrusher(auto_crush::CrusherId id) const override;
         [[nodiscard]] bool TryCaptureSnapshot(
             const std::vector<auto_crush::CrusherId>& ids,
@@ -41,6 +42,7 @@ namespace ra_commands::game
 
         commands::ClickedMissionDispatcher& mDispatcher;
         // 只缓存本帧的稳定 ID，绝不跨帧保存可解引用的游戏对象指针。
+        mutable std::unordered_set<auto_crush::CrusherId> mRetainableIds;
         mutable std::unordered_set<auto_crush::CrusherId> mEligibleIds;
         mutable std::uint32_t mEligibleFrame = 0;
         mutable std::uint32_t mEligibleEpoch = 0;

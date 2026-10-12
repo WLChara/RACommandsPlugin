@@ -20,6 +20,8 @@ namespace ra_commands::auto_crush
         [[nodiscard]] virtual std::vector<CrusherId> CaptureSelectedEligibleCrushers() const = 0;
         // 包含当前选中的本地 Unit，即使它已不符合自动碾压资格。
         [[nodiscard]] virtual std::vector<CrusherId> CaptureSelectedVehicleIds() const = 0;
+        // 身份、所属方及碾压能力仍有效时保留标记；暂时不能行动不应清除。
+        [[nodiscard]] virtual bool CanRetainMark(CrusherId id) const = 0;
         [[nodiscard]] virtual bool IsEligibleCrusher(CrusherId id) const = 0;
         // 每辆车只采集目标半径 8 格、落点最多 9 格的八方向走廊值快照。
         [[nodiscard]] virtual bool TryCaptureSnapshot(

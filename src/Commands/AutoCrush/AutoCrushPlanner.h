@@ -50,7 +50,7 @@ namespace ra_commands::auto_crush
         Facing mFacing = Facing::North;
         // 适配器放入八方向最多 MAX_ROUTE_CELLS 格的可通行格，目标仍限前 8 格。
         std::vector<Cell> mTraversableCells;
-        // 可通行但不能作为 Move 终点的格；不在此集合的可通行格可停靠。
+        // 含敌兵的格优先穿过；后方无空格时可作最后的 Move 终点。
         std::vector<Cell> mNonStoppableCells;
         // 适配器仅放入本车可以碾压的敌方步兵；同一 ID 最多贡献一次收益。
         std::vector<TargetPrediction> mTargets;
@@ -67,7 +67,7 @@ namespace ra_commands::auto_crush
         Cell mDestination;
         // 从当前格的下一格开始，依次包含所有中间格与最终停靠格。
         std::vector<Cell> mPath;
-        // 按 ID 升序排列；只包含至少有一条中间格命中可能性的目标。
+        // 按 ID 升序排列；包含路径中间格或备用目标终点上的预期目标。
         std::vector<TargetId> mExpectedTargetIds;
         // 每目标取路径上的最大命中概率，再对不同目标求和。
         double mExpectedCrushCount = 0.0;
@@ -81,7 +81,7 @@ namespace ra_commands::auto_crush
     };
 
     /**
-     * 在每车 8 格目标半径内规划直线 Move，终点最多在第 9 格；只输出正收益路线。
+     * 在每车 8 格目标半径内规划直线 Move，必要时以敌兵格作终点。
      * 重复车辆 ID 只使用首次快照，输出按车辆 ID 升序排列。
      * 纯路径只表示规划意图，不保证游戏原生寻路实际沿线行驶。
      */

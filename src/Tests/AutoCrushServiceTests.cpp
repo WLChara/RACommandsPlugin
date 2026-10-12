@@ -21,6 +21,7 @@ namespace
     public:
         bool Active = true;
         bool Eligible = true;
+        bool RetainMark = true;
         std::uint32_t SessionEpoch = 1;
         std::uint32_t Frame = 100;
         std::vector<CrusherId> Selected{42};
@@ -42,10 +43,19 @@ namespace
         {
             return Eligible && id == 42;
         }
+        bool CanRetainMark(CrusherId id) const override
+        {
+            return RetainMark && id == 42;
+        }
         bool TryCaptureSnapshot(const std::vector<CrusherId>& ids,
             Snapshot& outSnapshot) const override
         {
             Snapshot snapshot;
+            if (!Eligible)
+            {
+                outSnapshot = std::move(snapshot);
+                return true;
+            }
             for (const auto id : ids)
             {
                 CrusherSnapshot crusher;
@@ -109,12 +119,12 @@ namespace
         FakeGame game;
         AutoCrushCommandService service(game);
         service.OnAddHotkey();
-        game.Eligible = false;
+        game.RetainMark = false;
         service.OnGameFrame();
         Require(service.MarkedCount() == 0 && game.Cancelled.size() == 1,
-            "ineligible crusher must be removed without dereferencing stale objects");
+            "lost or invalid crusher identity must be removed without stale pointers");
 
-        game.Eligible = true;
+        game.RetainMark = true;
         service.OnAddHotkey();
         game.SessionEpoch = 2;
         service.OnGameFrame();
@@ -126,10 +136,29 @@ namespace
         Require(service.MarkedCount() == 0,
             "leaving a match must clear all markings");
     }
+
+    void TestTemporaryIneligibilityKeepsMark()
+    {
+        FakeGame game;
+        AutoCrushCommandService service(game);
+        service.OnAddHotkey();
+        game.Eligible = false;
+        service.OnGameFrame();
+        Require(service.MarkedCount() == 1 && game.Cancelled.empty() &&
+            game.Submitted.empty(),
+            "temporarily inactive crusher must retain its mark without issuing Move");
+
+        game.Eligible = true;
+        game.Frame = 115;
+        service.OnGameFrame();
+        Require(service.MarkedCount() == 1 && game.Submitted.size() == 1,
+            "recovered crusher must resume without a second hotkey press");
+    }
 }
 
 void RunAutoCrushServiceTests()
 {
     TestMarkManualCancelAndExplicitExit();
     TestEpochAndEligibilityReset();
+    TestTemporaryIneligibilityKeepsMark();
 }
