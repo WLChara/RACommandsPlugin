@@ -10,6 +10,8 @@
 namespace ra_commands::network_event
 {
     constexpr std::size_t SHORT_FRAME_INFO_SIZE = 14;
+    // 原版 DoList 的单次 House 扫描使用256槽 MegaMission缓冲，不代表整次操作只能控制256个单位。
+    // 真实对局是否会超出该批容量尚待具体复现；取得事件种类、House、执行帧和消费数量后再处理。
     constexpr std::uint32_t NATIVE_MEGA_EVENTS_PER_HOUSE_FRAME = 256;
     // 原生/其他生产者保留128个同目标帧Mega槽；插件自己的普通producer已全部接管。
     constexpr std::size_t EXTRA_EVENTS_PER_TIMESTAMP = 128;

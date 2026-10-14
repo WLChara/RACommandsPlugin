@@ -337,6 +337,9 @@ namespace ra_commands::game::command_capacity
             }
             // 637DD0已设置flag1；Commit关闭规划模式后仍须保留在同一FIFO末尾。
             // 只复制原始111字节，跟随引用和所有规划字段不由普通Mission builder重建。
+            // 待复现：PlanCommit 后各客户端由原生逻辑生成下一步执行事件，不经过本编辑事件FIFO。
+            // 这些事件可能集中触及原生256槽消费缓冲；目前未取得实际丢命令的具体触发方式。
+            // 按当前约定先记录此边界，保留原生执行时序；出现问题后再核对模式、人数、任务与执行帧。
             return Capture(event);
         }
 
