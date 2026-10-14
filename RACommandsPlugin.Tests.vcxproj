@@ -172,4 +172,8 @@
     <ClInclude Include="src\Commands\DragFormationCommand\DragFormationProjection.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ItemGroup Label="SelectionCapacity">
+    <ClCompile Include="src\Tests\CandidateStorageTests.cpp" />
+    <ClInclude Include="src\SelectionCapacity\CandidateStorage.h" />
+  </ItemGroup>
 </Project>

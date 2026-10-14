@@ -1,0 +1,63 @@
+#pragma once
+#include "Memory/VerifiedOperandPatch.h"
+#include <array>
+#include <cstdint>
+
+namespace ra_commands::game::selection_capacity::profile
+{
+    // 仅用于 SHA-256 7cd005d2…cd0747 的 PE32 gamemd.exe，映像基址 0x400000。
+    inline constexpr std::uintptr_t BUILD_ADDRESS = 0x006D9CE0;
+    inline constexpr std::uintptr_t COUNT_OFFSET = 0xDB0;
+    inline constexpr std::uint32_t ORIGINAL_BASE = 0x00B0CEC8;
+    inline constexpr std::uint32_t ORIGINAL_END = 0x00B0E638;
+    inline constexpr std::uint32_t FIXED_CAPACITY = 4096;
+    inline constexpr std::uint32_t FIXED_END_OFFSET = FIXED_CAPACITY * 12;
+    inline constexpr std::uintptr_t EPOCH_GATE_ADDRESS = 0x006D3D21;
+    inline constexpr std::uintptr_t CAPACITY_GATE_ADDRESS = 0x006D9E54;
+    inline constexpr std::uintptr_t CAPACITY_SKIP_ADDRESS = 0x006D9ECA;
+    inline constexpr std::uintptr_t ADD_ADDRESS = 0x006D9EF0;
+    inline constexpr std::uintptr_t RECT_ADDRESS = 0x006DA080;
+    inline constexpr std::uintptr_t FIND_ADDRESS = 0x006DA380;
+    inline constexpr std::uintptr_t SELECT_ADDRESS = 0x006DA5C0;
+    inline constexpr std::uintptr_t REPLAY_FLAGS_ADDRESS = 0x00A8D5F8;
+    inline constexpr std::uint32_t REPLAY_FLAG = 0x02;
+    inline constexpr std::uintptr_t VIEW_WIDTH_ADDRESS = 0x00886FA8;
+    inline constexpr std::uintptr_t VIEW_HEIGHT_ADDRESS = 0x00886FAC;
+    inline constexpr std::array<memory::PatchSite, 14> FIXED_PATCH_SITES = {{
+        { 0x6D9E5C, { 0x3D, 0xF4, 0x01, 0x00, 0x00 }, { 0xFF, 0x00, 0x00, 0x00, 0x00 }, 5, 1, memory::ReplacementKind::Immediate, 0x1F4, FIXED_CAPACITY },
+        { 0x6D9EF7, { 0x3D, 0xF4, 0x01, 0x00, 0x00 }, { 0xFF, 0x00, 0x00, 0x00, 0x00 }, 5, 1, memory::ReplacementKind::Immediate, 0x1F4, FIXED_CAPACITY },
+        { 0x6D9E8E, { 0x89, 0x0C, 0x85, 0xC8, 0xCE, 0xB0, 0x00 }, { 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00 }, 7, 3, memory::ReplacementKind::BaseRelativeAddress, ORIGINAL_BASE + 0, 0 },
+        { 0x6D9EAF, { 0x89, 0x14, 0x85, 0xCC, 0xCE, 0xB0, 0x00 }, { 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00 }, 7, 3, memory::ReplacementKind::BaseRelativeAddress, ORIGINAL_BASE + 4, 4 },
+        { 0x6D9EB6, { 0x89, 0x0C, 0x85, 0xD0, 0xCE, 0xB0, 0x00 }, { 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00 }, 7, 3, memory::ReplacementKind::BaseRelativeAddress, ORIGINAL_BASE + 8, 8 },
+        { 0x6D9F32, { 0x89, 0x14, 0x85, 0xC8, 0xCE, 0xB0, 0x00 }, { 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00 }, 7, 3, memory::ReplacementKind::BaseRelativeAddress, ORIGINAL_BASE + 0, 0 },
+        { 0x6D9F53, { 0x89, 0x34, 0x85, 0xCC, 0xCE, 0xB0, 0x00 }, { 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00 }, 7, 3, memory::ReplacementKind::BaseRelativeAddress, ORIGINAL_BASE + 4, 4 },
+        { 0x6D9F5B, { 0x89, 0x14, 0x85, 0xD0, 0xCE, 0xB0, 0x00 }, { 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00 }, 7, 3, memory::ReplacementKind::BaseRelativeAddress, ORIGINAL_BASE + 8, 8 },
+        { 0x6DA0DF, { 0xBE, 0xC8, 0xCE, 0xB0, 0x00 }, { 0xFF, 0x00, 0x00, 0x00, 0x00 }, 5, 1, memory::ReplacementKind::BaseRelativeAddress, ORIGINAL_BASE + 0, 0 },
+        { 0x6DA3CA, { 0xBF, 0xCC, 0xCE, 0xB0, 0x00 }, { 0xFF, 0x00, 0x00, 0x00, 0x00 }, 5, 1, memory::ReplacementKind::BaseRelativeAddress, ORIGINAL_BASE + 4, 4 },
+        { 0x6DA564, { 0xB8, 0xC8, 0xCE, 0xB0, 0x00 }, { 0xFF, 0x00, 0x00, 0x00, 0x00 }, 5, 1, memory::ReplacementKind::BaseRelativeAddress, ORIGINAL_BASE + 0, 0 },
+        { 0x6DA576, { 0x3D, 0x38, 0xE6, 0xB0, 0x00 }, { 0xFF, 0x00, 0x00, 0x00, 0x00 }, 5, 1, memory::ReplacementKind::BaseRelativeAddress, ORIGINAL_END, FIXED_END_OFFSET },
+        { 0x6DA5FE, { 0xBF, 0xC8, 0xCE, 0xB0, 0x00 }, { 0xFF, 0x00, 0x00, 0x00, 0x00 }, 5, 1, memory::ReplacementKind::BaseRelativeAddress, ORIGINAL_BASE + 0, 0 },
+        { 0x6DC437, { 0x8B, 0x04, 0x85, 0xC8, 0xCE, 0xB0, 0x00 }, { 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00 }, 7, 3, memory::ReplacementKind::BaseRelativeAddress, ORIGINAL_BASE + 0, 0 },
+    }};
+
+    using PatchSites = std::array<memory::PatchSite, 14>;
+    inline constexpr std::array<std::uintptr_t, 7> HOOK_ADDRESSES = {
+        EPOCH_GATE_ADDRESS, CAPACITY_GATE_ADDRESS, BUILD_ADDRESS,
+        ADD_ADDRESS, RECT_ADDRESS, FIND_ADDRESS, SELECT_ADDRESS
+    };
+    // 中段必须仍为这些完整指令；函数入口允许 MinHook 重定位已有 E9 链。
+    inline constexpr std::array<std::uint8_t, 10> EPOCH_BYTES = {
+        0xC7,0x85,0xB0,0x0D,0,0,0,0,0,0 };
+    inline constexpr std::array<std::uint8_t, 6> CAPACITY_BYTES = {
+        0x8B,0x86,0xB0,0x0D,0,0 };
+    inline constexpr std::array<std::uint8_t, 12> BUILD_BYTES = {
+        0x83,0xEC,0x24,0x8B,0x54,0x24,0x28,0x53,0x56,0x8B,0xF1,0x57 };
+    inline constexpr std::array<std::uint8_t, 7> ADD_BYTES = {
+        0x8B,0x81,0xB0,0x0D,0,0,0x56 };
+    inline constexpr std::array<std::uint8_t, 12> RECT_BYTES = {
+        0x8B,0x81,0x98,0x0D,0,0,0x8B,0x91,0x9C,0x0D,0,0 };
+    inline constexpr std::array<std::uint8_t, 12> FIND_BYTES = {
+        0x83,0xEC,0x28,0x55,0x56,0x8B,0x74,0x24,0x34,0x8B,0xE9,0x57 };
+    inline constexpr std::array<std::uint8_t, 6> SELECT_BYTES = {
+        0x51,0x53,0x8B,0x5C,0x24,0x0C };
+}

@@ -648,6 +648,14 @@
     <ClInclude Include="src\Commands\DragFormationCommand\DragFormationProjection.h" />
   </ItemGroup>
   <ItemGroup Label="NewSourceFallback">
+    <ClCompile Include="src\Game\SelectionCapacity.cpp" />
+    <ClCompile Include="src\Hooks\SelectionCapacityHooks.cpp" />
+    <ClCompile Include="src\Memory\VerifiedOperandPatch.cpp" />
+    <ClInclude Include="src\Game\SelectionCapacity.h" />
+    <ClInclude Include="src\Hooks\SelectionCapacityHooks.h" />
+    <ClInclude Include="src\Memory\VerifiedOperandPatch.h" />
+    <ClInclude Include="src\Game\TargetProfiles\SelectionCapacityProfile.h" />
+    <ClInclude Include="src\SelectionCapacity\CandidateStorage.h" />
     <ClCompile Include="src\Bootstrap\PluginStartup.cpp" />
     <ClCompile Include="src\Bootstrap\SyringeCompatibility.cpp" />
     <ClInclude Include="src\Bootstrap\PluginStartup.h" />

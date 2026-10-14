@@ -709,6 +709,7 @@ void RunDragFormationProjectionTests();
 void RunDragFormationServiceTests();
 void RunAutoFormationGameAdapterRulesTests();
 void RunPluginOrderScopeTests();
+void RunCandidateStorageTests();
 
 int main()
 {
@@ -762,6 +763,7 @@ int main()
         RunDragFormationServiceTests();
         RunAutoFormationGameAdapterRulesTests();
         RunPluginOrderScopeTests();
+        RunCandidateStorageTests();
         std::cout << "RACommandsPlugin pure tests passed\n";
         return 0;
     }

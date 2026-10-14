@@ -71,6 +71,7 @@
 #include "Hooks/RangeDisplayHook.h"
 #include "Hooks/DragFormationInputHook.h"
 #include "Game/TargetVersion.h"
+#include "Game/SelectionCapacity.h"
 
 #include <Windows.h>
 
@@ -164,6 +165,7 @@ namespace ra_commands::bootstrap
         bool g_FormationOrderHookReady = false;
         bool g_DragInputHookReady = false;
         bool g_DragInputHookAttempted = false;
+        bool g_SelectionCapacityInstallAttempted = false;
         bool g_FormationTraceWasActive = false;
         std::uint32_t g_LastFormationTraceFrame = 0;
         DWORD g_GameThreadId = 0;
@@ -712,6 +714,20 @@ namespace ra_commands::bootstrap
             }
 
             g_ClickedMissionDispatcher.OnGameFrame();
+            if (!g_SelectionCapacityInstallAttempted && g_ClickedMissionDispatcher.IsSessionActive())
+            {
+                g_SelectionCapacityInstallAttempted = true;
+                std::string selectionError;
+                const bool installed = game::selection_capacity::Install(selectionError);
+                const auto state = game::selection_capacity::GetState();
+                TraceRuntime("selection-capacity installed=" + std::to_string(installed) +
+                    " fixed=" + std::to_string(state.mFixedAvailable) +
+                    " dynamic=" + std::to_string(state.mDynamicAvailable) +
+                    " capacity=" + std::to_string(state.mCapacity) +
+                    (selectionError.empty() ? std::string{} : "; " + selectionError));
+            }
+            game::selection_capacity::OnGameFrame(
+                g_ClickedMissionDispatcher.IsSessionActive(), g_ClickedMissionDispatcher.Epoch());
             const auto dragTimeMs = GetTickCount64();
             const bool dragWasEnabled = g_DragFormationCommandService.IsEnabled();
             if (dragWasEnabled)
@@ -927,6 +943,8 @@ namespace ra_commands::bootstrap
         std::lock_guard lock(g_StateMutex);
         g_IsAutoStartCancelled = true;
         g_IsInitialized = false;
+        game::selection_capacity::Disable();
+        g_SelectionCapacityInstallAttempted = false;
         game::DisableMainFrameCallback();
         for (auto& command : g_Commands)
         {

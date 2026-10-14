@@ -1776,4 +1776,17 @@
     <ClInclude Include="src\Bootstrap\PluginStartup.h"><Filter>src\Bootstrap</Filter></ClInclude>
     <ClInclude Include="src\Bootstrap\SyringeCompatibility.h"><Filter>src\Bootstrap</Filter></ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <Filter Include="src\SelectionCapacity"><UniqueIdentifier>{7E83586F-B5C4-4D57-A218-9E0E4F166C71}</UniqueIdentifier></Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Game\SelectionCapacity.cpp"><Filter>src\Game</Filter></ClCompile>
+    <ClCompile Include="src\Hooks\SelectionCapacityHooks.cpp"><Filter>src\Hooks</Filter></ClCompile>
+    <ClCompile Include="src\Memory\VerifiedOperandPatch.cpp"><Filter>src\Memory</Filter></ClCompile>
+    <ClInclude Include="src\Game\SelectionCapacity.h"><Filter>src\Game</Filter></ClInclude>
+    <ClInclude Include="src\Hooks\SelectionCapacityHooks.h"><Filter>src\Hooks</Filter></ClInclude>
+    <ClInclude Include="src\Memory\VerifiedOperandPatch.h"><Filter>src\Memory</Filter></ClInclude>
+    <ClInclude Include="src\Game\TargetProfiles\SelectionCapacityProfile.h"><Filter>src\Game\TargetProfiles</Filter></ClInclude>
+    <ClInclude Include="src\SelectionCapacity\CandidateStorage.h"><Filter>src\SelectionCapacity</Filter></ClInclude>
+  </ItemGroup>
 </Project>
