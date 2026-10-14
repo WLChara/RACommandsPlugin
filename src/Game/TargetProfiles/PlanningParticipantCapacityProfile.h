@@ -13,6 +13,8 @@ namespace ra_commands::game::planning_participant_capacity::profile
     };
     inline constexpr std::array<std::uint8_t, 2> RESTORE_REGISTERS_BYTES = {0x5D, 0x5B};
     inline constexpr std::array<std::uint8_t, 4> ACCEPT_BYTES = {0xB0, 0x01, 0x59, 0xC3};
+    // 原生参与者计数表包含24个House槽；无效玩家身份不进入数量扩容。
+    inline constexpr int HOUSE_COUNTER_SLOTS = 24;
     // cmp 前已 pop edi/pop esi；cmp 后依次 pop ebp/pop ebx，成功段 mov al,1/pop ecx/ret。
     inline constexpr std::uintptr_t REPLAY_FLAGS_ADDRESS = 0x00A8D5F8u;
     inline constexpr std::uint32_t REPLAY_FLAG = 0x02u;

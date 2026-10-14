@@ -18,6 +18,12 @@ namespace
 {
     bool g_SessionReady = true;
     bool g_FaultSessionQuery = false;
+    bool g_PlanningTransportReady = true;
+}
+namespace ra_commands::game::command_capacity
+{
+    // 传输测试在独立夹具中执行；这里单独验证参与者入口的能力降级门禁。
+    bool CanCapturePlanningEvents() noexcept { return g_PlanningTransportReady; }
 }
 namespace ra_commands::game
 {
@@ -311,6 +317,14 @@ int wmain(int argc, wchar_t** argv)
     g_ProbeCount = 129; CheckProbe(false, false);
     Check(capacity::Install(error), "reactivation of resident middle hook failed");
     Mode(5);
+    g_PlanningTransportReady = false;
+    CheckOriginal(129);
+    g_PlanningTransportReady = true;
+    *reinterpret_cast<int*>(g_House + 0x30) = -1;
+    CheckOriginal(129);
+    *reinterpret_cast<int*>(g_House + 0x30) = 24;
+    CheckOriginal(129);
+    *reinterpret_cast<int*>(g_House + 0x30) = 0;
     *reinterpret_cast<std::uint32_t*>(profile::REPLAY_FLAGS_ADDRESS) = 2;
     CheckOriginal(129);
     *reinterpret_cast<std::uint32_t*>(profile::REPLAY_FLAGS_ADDRESS) = 0;

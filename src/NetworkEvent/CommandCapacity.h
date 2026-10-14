@@ -30,6 +30,7 @@ namespace ra_commands::game::command_capacity
         std::uint32_t mCapacity = 0;
         bool mInstalled = false;
         bool mReady = false;
+        bool mPlanningInstalled = false;
     };
 
     /** 版本门禁及Syringe启动阶段完成后调用；成功的detour保留至进程退出。 */
@@ -39,6 +40,8 @@ namespace ra_commands::game::command_capacity
     void OnGameFrame() noexcept;
     /** 原子停用并取消当前代次；不移除永久Hook，也不允许FreeLibrary卸载。 */
     void Disable() noexcept;
+    /** 线程安全能力快照；会话瞬时有效性由游戏门禁及实际Capture再次检查。 */
+    [[nodiscard]] bool CanCapturePlanningEvents() noexcept;
     [[nodiscard]] std::uint32_t GetEffectiveClickedMissionFreeSlots() noexcept;
     /** 仅在既有6FFE00 Hook的人工取消观察之后调用，不自行安装同点Hook。 */
     [[nodiscard]] CaptureResult TryCaptureSimpleClickedEvent(
@@ -59,4 +62,5 @@ namespace ra_commands::game::command_capacity
     [[nodiscard]] CaptureMarker GetCaptureMarker() noexcept;
     [[nodiscard]] bool HasCapturedSince(CaptureMarker marker) noexcept;
     [[nodiscard]] Stats GetStats() noexcept;
+
 }

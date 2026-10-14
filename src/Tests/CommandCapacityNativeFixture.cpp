@@ -36,6 +36,8 @@ namespace
     constexpr std::uintptr_t FAST_ADDRESS = 0x646F70;
     constexpr std::uintptr_t PARSER_ADDRESS = 0x647260;
     constexpr std::uintptr_t SEND_ADDRESS = 0x649CA0;
+    // 目标样本通用 OutList 入口：111 字节按值参数占 112 字节栈槽，RET 70h。
+    constexpr std::uintptr_t ENQUEUE_ADDRESS = 0x6521C0;
     constexpr std::uintptr_t CONSUMER_ADDRESS = 0x64C380;
     constexpr std::uintptr_t PACK_ADDRESS = 0x6E6AB0;
     constexpr std::uintptr_t DO_EVENTS_ADDRESS = 0x8B4204;
@@ -48,6 +50,7 @@ namespace
         char, const events::TargetPayload*, int, int);
     using ParserFunction = void(__cdecl*)();
     using SendFunction = int(__fastcall*)(void*, events::NetworkEvent*, int, int, std::uint16_t);
+    using EnqueueFunction = bool(__stdcall*)(events::NetworkEvent);
 
     std::vector<events::NetworkEvent> g_Recorded;
     std::vector<events::NetworkEvent> g_Executed;
@@ -60,6 +63,11 @@ namespace
     std::uint32_t g_ParserCalls = 0;
     std::uint32_t g_OriginalMegaCalls = 0;
     std::uint32_t g_OriginalFastCalls = 0;
+    std::uint32_t g_OriginalEnqueueCalls = 0;
+    bool g_OriginalEnqueueResult = true;
+    events::NetworkEvent g_LastOriginalEnqueue{};
+    volatile int g_EnqueueStackDelta = 0;
+    volatile std::uint32_t g_EnqueueReturn = 0;
     int g_OriginalSpeed = 0;
     int g_OriginalMaximumSpeed = 0;
     int g_OriginalSelfId = 0;
@@ -151,6 +159,77 @@ namespace
         At<events::NetworkEvent>(OUT_EVENTS_ADDRESS + write * sizeof(event)) = event;
         write = (write + 1) & 127;
         ++count;
+    }
+
+    bool __stdcall OriginalEnqueue(events::NetworkEvent event)
+    {
+        ++g_OriginalEnqueueCalls;
+        g_LastOriginalEnqueue = event;
+        if (g_OriginalEnqueueResult)
+        {
+            event.Timestamp = static_cast<std::uint32_t>(Unsorted::CurrentFrame);
+            PushNativeOut(event);
+        }
+        // 修改本地参数尾部，证明原链按值转发不会回写调用方的 111 字节对象。
+        // volatile 保证 /O2 不将这次隔离参数修改当作无效写入删除。
+        auto* const tail = reinterpret_cast<volatile std::uint8_t*>(event.Data.Raw + 103);
+        *tail = static_cast<std::uint8_t>(*tail ^ 1u);
+        return g_OriginalEnqueueResult;
+    }
+
+    // 手工建立原生的 112 字节参数槽；错误清栈也能恢复探针栈并报告差值。
+    __declspec(naked) bool __cdecl ProbeEnqueue(const events::NetworkEvent*)
+    {
+        __asm {
+            push ebp
+            mov ebp, esp
+            push ebx
+            push esi
+            push edi
+            mov ebx, esp
+            sub esp, 112
+            mov esi, [ebp + 8]
+            mov edi, esp
+            mov ecx, 111
+            rep movsb
+            mov byte ptr [esp + 111], 0D3h
+            mov eax, 006521C0h
+            call eax
+            mov g_EnqueueReturn, eax
+            mov eax, esp
+            sub eax, ebx
+            mov g_EnqueueStackDelta, eax
+            mov esp, ebx
+            pop edi
+            pop esi
+            pop ebx
+            pop ebp
+            mov eax, g_EnqueueReturn
+            ret
+        }
+    }
+
+    bool EnqueueNative(const events::NetworkEvent& event)
+    {
+        const bool accepted = ProbeEnqueue(&event);
+        RequireNative(g_EnqueueStackDelta == 0,
+            "generic Enqueue must pop exactly 112 native stack bytes (RET 70h)");
+        return accepted;
+    }
+
+    int FixturePayloadSize(std::uint8_t kind)
+    {
+        // 独立使用已核验的原生协议大小，避免 decoder 复用待验证的生产编码实现。
+        switch (kind)
+        {
+        case 4: return 23;
+        case 5: return 24;
+        case 6: case 7: case 9: case 10: case 22: return 5;
+        case 0x2A: return 10;
+        case 0x2B: return 0;
+        case 0x2C: return 5;
+        default: throw std::runtime_error("unverified event kind reached fixture decoder");
+        }
     }
 
     void NativeConsumerBody()
@@ -246,7 +325,7 @@ namespace
             event.Kind = packet[offset++];
             event.HouseIndex = header.HouseIndex;
             event.Timestamp = header.Timestamp;
-            const int payloadSize = event.Kind == 4 ? 23 : event.Kind == 5 ? 24 : 5;
+            const int payloadSize = FixturePayloadSize(event.Kind);
             if (event.Kind == 4)
                 RequireNative(offset < size && packet[offset++] == 1,
                     "Mega compressed count must remain one");
@@ -574,6 +653,280 @@ namespace
         RequireNative(SendWindow() == 1 && capacity::GetStats().mPending == 0,
             "repaired ring and a new timestamp must release the preserved network prefix");
     }
+
+    events::NetworkEvent MakePlanningNode(std::uint32_t actorId,
+        std::uint32_t frame, std::uint32_t nodeSerial)
+    {
+        auto event = MakeMega(actorId, frame);
+        event.Data.Raw[22] = 1;
+        // 两次节点的目标不同，完整载荷比较能识别合并、复写和 FIFO 次序错误。
+        std::memcpy(event.Data.Raw + 12, &nodeSerial, sizeof(nodeSerial));
+        return event;
+    }
+
+    events::NetworkEvent MakePlanningControl(std::uint8_t kind,
+        std::uint32_t frame, std::uint32_t firstId = 0, std::uint32_t secondId = 0)
+    {
+        events::NetworkEvent event{};
+        event.Kind = kind;
+        event.HouseIndex = 2;
+        event.Timestamp = frame;
+        if (kind == 0x2A || kind == 0x2C)
+        {
+            const events::TargetPayload first{firstId, 52};
+            std::memcpy(event.Data.Raw, &first, sizeof(first));
+        }
+        if (kind == 0x2A)
+        {
+            const events::TargetPayload second{secondId, 52};
+            std::memcpy(event.Data.Raw + 5, &second, sizeof(second));
+        }
+        return event;
+    }
+
+    void RequirePlanningSequence(const std::vector<events::NetworkEvent>& actual,
+        const std::vector<events::NetworkEvent>& expected)
+    {
+        RequireNative(actual.size() == expected.size(), "planning sequence lost or duplicated events");
+        for (std::size_t index = 0; index < expected.size(); ++index)
+        {
+            auto submitted = expected[index];
+            submitted.Timestamp = actual[index].Timestamp;
+            RequireNative(std::memcmp(&actual[index], &submitted, sizeof(submitted)) == 0,
+                "planning FIFO changed payload/flag or Commit overtook an earlier node");
+            if (index)
+                RequireNative(events::IsFrameDue(actual[index - 1].Timestamp, actual[index].Timestamp),
+                    "planning FIFO timestamp moved backwards");
+        }
+    }
+
+    void TestPlanningByValueAbiAndControls()
+    {
+        StartSession(GameMode::Skirmish, 2000);
+        RequireNative(capacity::CanCapturePlanningEvents() && capacity::GetStats().mPlanningInstalled,
+            "optional planning Enqueue Hook was not installed with the ordinary producers");
+        At<std::uint8_t>(0xAC4CF4) = 1;
+        auto opaque = MakePlanningNode(20001, 2000, 701);
+        // 协议范围外的尾部只用于本机按值 ABI 测试；不把它传入压缩 wire 测试。
+        for (std::size_t index = 23; index < sizeof(opaque.Data.Raw); ++index)
+            opaque.Data.Raw[index] = static_cast<std::uint8_t>(index ^ 0xA5u);
+        const auto expectedOpaque = opaque;
+        const auto nativeBefore = g_OriginalEnqueueCalls;
+        RequireNative(EnqueueNative(opaque), "planning generic Enqueue did not capture copied event");
+        std::memset(&opaque, 0, sizeof(opaque));
+        reinterpret_cast<ParserFunction>(PARSER_ADDRESS)();
+        RequireNative(g_OriginalEnqueueCalls == nativeBefore && g_Executed.size() == 1 &&
+            std::memcmp(&g_Executed.front(), &expectedOpaque, sizeof(expectedOpaque)) == 0 &&
+            g_Recorded.size() == 1 &&
+            std::memcmp(&g_Recorded.front(), &expectedOpaque, sizeof(expectedOpaque)) == 0,
+            "111-byte capture kept caller storage or changed the native replay-visible copy");
+
+        StartSession(GameMode::LAN, 2100, 2, 1, 0);
+        // Commit 常在关闭规划之后发出；controls 与 flag1 节点不得依赖瞬时规划开关。
+        At<std::uint8_t>(0xAC4CF4) = 0;
+        const std::vector<events::NetworkEvent> expected{
+            MakePlanningNode(21001, 2100, 801),
+            MakePlanningControl(0x2A, 2100, 21001, 21002),
+            MakePlanningNode(21002, 2100, 802),
+            MakePlanningControl(0x2C, 2100, 21002),
+            MakePlanningControl(0x2B, 2100)};
+        for (const auto& event : expected)
+            RequireNative(EnqueueNative(event), "planning control or closed-mode node was not captured");
+        RequireNative(capacity::CancelPendingActor(21001, 52) == 0 &&
+                capacity::CancelPendingActor(21002, 52) == 0 &&
+                capacity::GetStats().mPending == expected.size(),
+            "actor cancellation removed a planning node/control or split the shared FIFO");
+        RequireNative(SendWindow() == static_cast<int>(expected.size()),
+            "planning controls did not fit their verified native compressed payload sizes");
+        reinterpret_cast<ParserFunction>(PARSER_ADDRESS)();
+        RequirePlanningSequence(g_WireEvents, expected);
+        RequirePlanningSequence(g_Executed, expected);
+        RequireNative(g_WireEvents.size() == g_Executed.size(), "planning control self-echo differs");
+        for (std::size_t index = 0; index < g_Executed.size(); ++index)
+            RequireNative(std::memcmp(&g_WireEvents[index], &g_Executed[index],
+                    sizeof(events::NetworkEvent)) == 0,
+                "planning controls changed between native-compatible wire decode and self-echo");
+
+        StartSession(GameMode::Internet, 2110, 2, 1, 0);
+        const std::vector<events::NetworkEvent> canonical{
+            MakePlanningNode(21101, 2110, 811),
+            MakePlanningControl(0x2A, 2110, 21101, 21102),
+            MakePlanningControl(0x2B, 2110)};
+        for (const auto& event : canonical)
+        {
+            auto raw = event;
+            const auto payloadBytes = static_cast<std::size_t>(FixturePayloadSize(raw.Kind));
+            for (std::size_t index = payloadBytes; index < sizeof(raw.Data.Raw); ++index)
+                raw.Data.Raw[index] = static_cast<std::uint8_t>(0x80u | (index & 0x7Fu));
+            RequireNative(EnqueueNative(raw), "network opaque-tail planning event capture failed");
+        }
+        RequireNative(SendWindow() == 3, "opaque-tail planning batch was not sent once");
+        reinterpret_cast<ParserFunction>(PARSER_ADDRESS)();
+        RequirePlanningSequence(g_WireEvents, canonical);
+        RequirePlanningSequence(g_Executed, canonical);
+        for (std::size_t index = 0; index < canonical.size(); ++index)
+            RequireNative(std::memcmp(&g_WireEvents[index], &g_Executed[index],
+                    sizeof(events::NetworkEvent)) == 0,
+                "payload-external garbage leaked into planning self-echo but not peer wire decode");
+    }
+
+    void TestPlanningNodeAndCommitFifo(GameMode mode, std::uint32_t units,
+        std::uint32_t firstFrame, int packetMode = 2)
+    {
+        StartSession(mode, firstFrame, packetMode, 1, 0);
+        At<std::uint8_t>(0xAC4CF4) = 1;
+        const bool isNetwork = mode == GameMode::LAN || mode == GameMode::Internet;
+        const auto nativeBefore = g_OriginalEnqueueCalls;
+        std::vector<events::NetworkEvent> expected;
+        expected.reserve(2 * units + 1);
+        for (std::uint32_t node = 0; node < 2; ++node)
+        {
+            for (std::uint32_t index = 0; index < units; ++index)
+            {
+                const std::uint32_t actorId = 30000 + index;
+                if (node)
+                    RequireNative(capacity::HasPendingActor(actorId, 52) &&
+                            capacity::CancelPendingActor(actorId, 52) == 0,
+                        "second planning edit cancelled the actor's first unsent flag1 node");
+                const auto event = MakePlanningNode(actorId, firstFrame, 1000 + node * units + index);
+                expected.push_back(event);
+                RequireNative(EnqueueNative(event), "129/257/1000-unit planning node was dropped at Enqueue");
+            }
+        }
+        At<std::uint8_t>(0xAC4CF4) = 0;
+        expected.push_back(MakePlanningControl(0x2B, firstFrame));
+        RequireNative(EnqueueNative(expected.back()) &&
+                capacity::GetStats().mPending == expected.size() &&
+                g_OriginalEnqueueCalls == nativeBefore,
+            "immediate PlanCommit bypassed retained nodes or planning production used legacy OutList");
+
+        // 这里只消费节点和控制消息；假的 consumer 不执行 PlanMgr，不能证明 Commit
+        // 随后产生的 N 个 flag2 执行事件突破了原生每帧 256 个 Mega 的限制。
+        for (std::uint32_t frame = firstFrame; frame < firstFrame + 64 &&
+                (capacity::GetStats().mPending || At<int>(0x8B41F8) || At<int>(0xA802C8)); ++frame)
+        {
+            SetFrame(frame);
+            if (isNetwork)
+            {
+                const int submitted = SendWindow();
+                RequireNative(submitted >= 0 && submitted <= 128,
+                    "planning network timestamp exceeded the unchanged 128 extra-event window");
+                if (packetMode != 2)
+                    RequireNative(submitted <= 116 && g_Packets.empty(),
+                        "planning native OutList fallback ignored reserved slots or used extra packets");
+            }
+            reinterpret_cast<ParserFunction>(PARSER_ADDRESS)();
+        }
+        RequireNative(capacity::GetStats().mPending == 0 && At<int>(0x8B41F8) == 0 &&
+                At<int>(0xA802C8) == 0,
+            "planning FIFO did not drain within bounded local/network frames");
+        RequirePlanningSequence(g_Recorded, expected);
+        RequirePlanningSequence(g_Executed, expected);
+        if (isNetwork && packetMode == 2)
+        {
+            RequirePlanningSequence(g_WireEvents, expected);
+            for (std::size_t index = 0; index < g_Executed.size(); ++index)
+                RequireNative(std::memcmp(&g_WireEvents[index], &g_Executed[index],
+                        sizeof(events::NetworkEvent)) == 0,
+                    "planning network wire and local self-echo differed in shape or frame");
+        }
+        RequireNative(!g_Executed.empty() && g_Executed.back().Kind == 0x2B,
+            "PlanCommit did not remain after both nodes for every actor");
+        std::cout << "Planning FIFO passed mode=" << static_cast<int>(mode) <<
+            " units=" << units << " nodes=2 packetMode=" << packetMode << '\n';
+    }
+
+    void RequireNativeEnqueueFallback(events::NetworkEvent event, bool expectedResult)
+    {
+        const auto callsBefore = g_OriginalEnqueueCalls;
+        const auto pendingBefore = capacity::GetStats().mPending;
+        const auto originalArgument = event;
+        g_OriginalEnqueueResult = expectedResult;
+        RequireNative(EnqueueNative(event) == expectedResult &&
+                g_OriginalEnqueueCalls == callsBefore + 1 &&
+                capacity::GetStats().mPending == pendingBefore &&
+                std::memcmp(&g_LastOriginalEnqueue, &originalArgument, sizeof(event)) == 0 &&
+                std::memcmp(&event, &originalArgument, sizeof(event)) == 0,
+            "generic Enqueue E9 fallback changed 111-byte by-value argument, bool, or backlog");
+        g_OriginalEnqueueResult = true;
+    }
+
+    void TestPlanningFallbackCancellationAndSessionReset()
+    {
+        StartSession(GameMode::Skirmish, 4000);
+        auto event = MakePlanningNode(40001, 3999, 901);
+        CaptureMany(1, 40001);
+        RequireNative(EnqueueNative(event) && capacity::GetStats().mPending == 2 &&
+                capacity::CancelPendingActor(40001, 52) == 1 && capacity::GetStats().mPending == 1,
+            "ordinary actor cancellation failed to preserve its pending flag1 planning node");
+        event.Data.Raw[22] = 2;
+        RequireNativeEnqueueFallback(event, true);
+        event.Data.Raw[22] = 0;
+        RequireNativeEnqueueFallback(event, false);
+        event.Kind = 15;
+        RequireNativeEnqueueFallback(event, true);
+        event.Kind = 16;
+        RequireNativeEnqueueFallback(event, false);
+        event = MakePlanningNode(40001, 3999, 901);
+        event.HouseIndex = 3;
+        RequireNativeEnqueueFallback(event, true);
+        event = MakePlanningControl(0x2B, 3999);
+        event.HouseIndex = 3;
+        RequireNativeEnqueueFallback(event, false);
+
+        At<std::uint8_t>(0xAC4CF4) = 1;
+        const auto pendingBefore = capacity::GetStats().mPending;
+        for (const auto kind : {6, 7, 9})
+            RequireNative(capacity::TryCaptureSimpleClickedEvent(g_Actor, kind) ==
+                    capacity::CaptureResult::NotHandled &&
+                    capacity::GetStats().mPending == pendingBefore,
+                "planning Stop/Scatter/Deploy fabricated an ordinary simple event");
+        RequireNative(!reinterpret_cast<MegaFunction>(MEGA_ADDRESS)(2, nullptr, 40002, 52, nullptr) &&
+                !reinterpret_cast<FastFunction>(FAST_ADDRESS)(2, nullptr, 40003, 52, nullptr, 3, 4),
+            "ordinary Mega producers bypassed their existing planning-mode native fallback");
+
+        for (int state = 0; state < 5; ++state)
+        {
+            StartSession(GameMode::Skirmish, static_cast<std::uint32_t>(4100 + state));
+            if (state == 0) At<std::uint32_t>(0xA8D5F8) = 2;
+            if (state == 1) HouseClass::Observer = g_Player;
+            if (state == 2) g_WorldReady = false;
+            if (state == 3) SessionClass::Instance.get().GameMode = static_cast<GameMode>(2);
+            if (state == 4) capacity::Disable();
+            capacity::OnGameFrame();
+            RequireNative(!capacity::CanCapturePlanningEvents(),
+                "planning capability remained ready in replay/observer/bad session/disabled state");
+            RequireNativeEnqueueFallback(MakePlanningNode(41001, 4099, 902), state % 2 == 0);
+            RequireNativeEnqueueFallback(MakePlanningControl(0x2B, 4099), state % 2 != 0);
+        }
+
+        StartSession(GameMode::Skirmish, 4200);
+        RequireNative(EnqueueNative(MakePlanningNode(42001, 4200, 903)), "reset fixture capture failed");
+        const auto oldMarker = capacity::GetCaptureMarker();
+        SessionClass::Instance.get().UniqueID = ++g_SessionId;
+        SetFrame(4201);
+        RequireNative(capacity::GetStats().mPending == 0 && !capacity::HasCapturedSince(oldMarker),
+            "session replacement retained old planning nodes or stale capture generation");
+        RequireNative(EnqueueNative(MakePlanningControl(0x2B, 4201)), "new-session planning capture failed");
+        reinterpret_cast<ParserFunction>(PARSER_ADDRESS)();
+        RequireNative(g_Executed.size() == 1 && g_Executed.front().Kind == 0x2B,
+            "old-session planning nodes revived before new-session Commit");
+    }
+
+    void TestPlanningCapacity()
+    {
+        TestPlanningByValueAbiAndControls();
+        std::uint32_t firstFrame = 2500;
+        for (const auto mode : {GameMode::Campaign, GameMode::Skirmish, GameMode::LAN, GameMode::Internet})
+            for (const std::uint32_t units : {129u, 257u, 1000u})
+            {
+                TestPlanningNodeAndCommitFifo(mode, units, firstFrame);
+                firstFrame += 100;
+            }
+        TestPlanningNodeAndCommitFifo(GameMode::LAN, 257, 3900, 1);
+        TestPlanningFallbackCancellationAndSessionReset();
+        std::cout << "Planning Enqueue ABI, node/control FIFO, native fallback and session boundaries passed.\n";
+    }
 }
 
 namespace ra_commands::game
@@ -587,6 +940,7 @@ int main()
     try
     {
         Map(0x640000, 0x10000);
+        Map(0x650000, 0x10000);
         Map(0x6E0000, 0x10000);
         Map(0x8B0000, 0x260000);
         RunEventBacklogTests();
@@ -606,12 +960,37 @@ int main()
         WriteJump(FAST_ADDRESS, &OriginalFast);
         WriteJump(PARSER_ADDRESS, &OriginalParser);
         WriteJump(SEND_ADDRESS, &OriginalSend);
+        WriteJump(ENQUEUE_ADDRESS, &OriginalEnqueue);
+        // profile 在 E9 共存时仍核对不会执行的原生 body，防止仅凭首字节接受错误 ABI。
+        constexpr std::array<std::uint8_t, 9> ENQUEUE_WRITE_SIGNATURE{
+            0x40, 0x83, 0xE0, 0x7F, 0xA3, 0xD0, 0x02, 0xA8, 0x00};
+        constexpr std::array<std::uint8_t, 10> ENQUEUE_RETURN_SIGNATURE{
+            0xB0, 0x01, 0xC2, 0x70, 0x00, 0x32, 0xC0, 0xC2, 0x70, 0x00};
+        std::memcpy(reinterpret_cast<void*>(0x652211), ENQUEUE_WRITE_SIGNATURE.data(),
+            ENQUEUE_WRITE_SIGNATURE.size());
+        std::memcpy(reinterpret_cast<void*>(0x652225), ENQUEUE_RETURN_SIGNATURE.data(),
+            ENQUEUE_RETURN_SIGNATURE.size());
+        wchar_t failedPlanningProfile[2]{};
+        const bool testUnavailablePlanningHook = GetEnvironmentVariableW(
+            L"RA_COMMANDS_FIXTURE_BAD_PLANNING_RETURN", failedPlanningProfile, 2) != 0;
+        if (testUnavailablePlanningHook)
+            At<std::uint8_t>(0x652228) = 0x6F; // 原生 RET 70h 改成错误的 6Fh，能力必须独立关闭。
         WriteJump(CONSUMER_ADDRESS, &ReplayThenConsumer);
         WriteJump(PACK_ADDRESS, &PackStub);
         TestLocalReplayAndFifo();
         TestScopeCancellationAndFallback();
         TestNetworkWireAndCollision();
         TestMalformedNativeRing();
+        if (testUnavailablePlanningHook)
+        {
+            RequireNative(capacity::GetStats().mReady && !capacity::GetStats().mPlanningInstalled &&
+                    !capacity::CanCapturePlanningEvents(),
+                "invalid planning RET guard disabled ordinary hooks or enabled planning capture");
+            capacity::Disable();
+            std::cout << "Ordinary command capacity survives an unavailable optional planning Hook.\n";
+            return 0;
+        }
+        TestPlanningCapacity();
         capacity::Disable();
         std::cout << "Command capacity pure tests and Win32 native fixture passed.\n";
         return 0;

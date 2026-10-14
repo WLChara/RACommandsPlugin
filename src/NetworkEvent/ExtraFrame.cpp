@@ -1,5 +1,6 @@
 #include "NetworkEvent/ExtraFrame.h"
 #include "NetworkEvent/EventBacklog.h"
+#include "NetworkEvent/PlanningEvents.h"
 
 #include <algorithm>
 #include <cstring>
@@ -12,6 +13,14 @@ namespace ra_commands::network_event
         {
             std::memcpy(destination, &target.RuntimeId, sizeof(target.RuntimeId));
             destination[4] = target.AbstractKind;
+        }
+
+        std::optional<std::size_t> GetCapacityPayloadSize(std::uint8_t kind) noexcept
+        {
+            if (const auto size = GetPlanningPayloadSize(kind)) return size;
+            if (kind == 5) return 24;
+            if (IsCapacitySimpleEvent(kind)) return 5;
+            return std::nullopt;
         }
     }
 
@@ -67,12 +76,25 @@ namespace ra_commands::network_event
 
     std::size_t GetCapacityCompressedEventSize(const NetworkEvent& event) noexcept
     {
-        // MegaMission有一字节聚合数量；MegaMissionF仅Kind+24字节载荷。
-        if (event.Kind == 4 || event.Kind == 5)
+        if (const auto payloadSize = GetCapacityPayloadSize(event.Kind))
         {
-            return 25;
+            // MegaMission有一字节聚合数量；三个规划控制事件只有Kind+各自载荷。
+            return 1 + *payloadSize + (event.Kind == PLANNING_MEGA_MISSION_KIND ? 1 : 0);
         }
-        return IsCapacitySimpleEvent(event.Kind) ? 6 : 0;
+        return 0;
+    }
+
+    std::optional<NetworkEvent> BuildCapacityReceivedEvent(
+        const NetworkEvent& event, const ExtraFrameHeader& header) noexcept
+    {
+        const auto payloadSize = GetCapacityPayloadSize(event.Kind);
+        if (!payloadSize || event.HouseIndex != header.mHouseIndex) return std::nullopt;
+        NetworkEvent received{};
+        received.Kind = event.Kind;
+        received.HouseIndex = header.mHouseIndex;
+        received.Timestamp = header.mTimestamp;
+        if (*payloadSize != 0) std::memcpy(received.Data.Raw, event.Data.Raw, *payloadSize);
+        return received;
     }
 
     bool TryGetAlignedFrameTimestamp(std::uint32_t frame,
@@ -140,8 +162,8 @@ namespace ra_commands::network_event
             {
                 packet[offset++] = 1;
             }
-            const auto payloadSize = event.Kind == 4 ? 23u : event.Kind == 5 ? 24u : 5u;
-            std::memcpy(packet.data() + offset, event.Data.Raw, payloadSize);
+            const auto payloadSize = *GetCapacityPayloadSize(event.Kind);
+            if (payloadSize != 0) std::memcpy(packet.data() + offset, event.Data.Raw, payloadSize);
             offset += payloadSize;
         }
         outPacket.swap(packet);

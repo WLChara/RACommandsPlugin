@@ -741,6 +741,7 @@ namespace ra_commands::bootstrap
                 std::string planningError;
                 const bool installed = game::planning_participant_capacity::Install(planningError);
                 TraceRuntime("planning-participant-capacity installed=" + std::to_string(installed) +
+                    " capture=" + std::to_string(game::command_capacity::CanCapturePlanningEvents()) +
                     (planningError.empty() ? std::string{} : "; " + planningError));
             }
             if (g_CommandCapacityHooksReady)

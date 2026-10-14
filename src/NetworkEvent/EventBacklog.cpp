@@ -1,4 +1,5 @@
 #include "NetworkEvent/EventBacklog.h"
+#include "NetworkEvent/PlanningEvents.h"
 
 #include <algorithm>
 #include <cstring>
@@ -35,7 +36,8 @@ namespace ra_commands::network_event
     {
         std::lock_guard lock(mMutex);
         if (mEvents.size() >= mCapacity ||
-            (!IsCapacityMegaEvent(event) && !IsCapacitySimpleEvent(event.Kind)))
+            (!IsCapacityMegaEvent(event) && !IsCapacitySimpleEvent(event.Kind) &&
+                !IsPlanningControlEvent(event.Kind)))
         {
             ++mRejected;
             return false;
@@ -156,7 +158,9 @@ namespace ra_commands::network_event
         std::uint8_t nativeTargetKind) noexcept
     {
         return CancelMatching([=](const PendingEvent& event) {
-            return HasCapacityEventActor(event.mEvent, actorId, nativeTargetKind);
+            // 规划追加不是新的普通Move替换：后续节点或原生NoStop不能删除尚未发送的旧节点。
+            return !IsPlanningAppendEvent(event.mEvent) &&
+                HasCapacityEventActor(event.mEvent, actorId, nativeTargetKind);
         });
     }
 

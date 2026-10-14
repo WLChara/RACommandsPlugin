@@ -1,5 +1,6 @@
 #include "NetworkEvent/ExtraFrame.h"
 #include "NetworkEvent/EventBacklog.h"
+#include "NetworkEvent/PlanningEvents.h"
 
 #include <cstring>
 #include <stdexcept>
@@ -54,4 +55,25 @@ void RunCommandCapacityTests()
     backlog.Clear();
     RequireCapacity(backlog.GetStats().mPending == 0 && backlog.GetStats().mGeneration > 1,
         "clear must invalidate captured generations and free buffered capacity");
+
+    auto planningNode = base;
+    RequireCapacity(!IsPlanningQueuedEvent(planningNode), "ordinary flag0 Mega must not enter generic planning capture");
+    planningNode.Data.Raw[PLANNING_FLAG_PAYLOAD_OFFSET] = 1;
+    RequireCapacity(IsPlanningAppendEvent(planningNode) && IsPlanningQueuedEvent(planningNode),
+        "native flag1 append must be recognized after upstream constructor");
+    planningNode.Data.Raw[PLANNING_FLAG_PAYLOAD_OFFSET] = 2;
+    RequireCapacity(!IsPlanningQueuedEvent(planningNode), "native flag2 deferred execution must keep its original path");
+    RequireCapacity(!IsPlanningQueuedEvent(fast), "kind5 must retain its ordinary producer path");
+    RequireCapacity(GetPlanningPayloadSize(0x2A) == 10u && GetPlanningPayloadSize(0x2B) == 0u &&
+        GetPlanningPayloadSize(0x2C) == 5u && !GetPlanningPayloadSize(0x60),
+        "planning controls must use exact native lengths, including valid zero-byte Commit");
+    for (const auto kind : {0x2Au, 0x2Bu, 0x2Cu})
+    {
+        NetworkEvent control{};
+        control.Kind = static_cast<std::uint8_t>(kind);
+        control.HouseIndex = 2;
+        control.Data.Target = {123, 52};
+        RequireCapacity(IsPlanningQueuedEvent(control) && !HasCapacityEventActor(control, 123, 52),
+            "planning controls must never be reinterpreted as ordinary actor replacements");
+    }
 }

@@ -1798,6 +1798,9 @@
     <ClCompile Include="src\NetworkEvent\CommandCapacity.cpp"><Filter>src\NetworkEvent</Filter></ClCompile>
     <ClCompile Include="src\NetworkEvent\CommandCapacityNativeAdapter.cpp"><Filter>src\NetworkEvent</Filter></ClCompile>
     <ClCompile Include="src\NetworkEvent\EventBacklog.cpp"><Filter>src\NetworkEvent</Filter></ClCompile>
+    <ClCompile Include="src\NetworkEvent\PlanningEvents.cpp"><Filter>src\NetworkEvent</Filter></ClCompile>
+    <ClInclude Include="src\NetworkEvent\PlanningEvents.h"><Filter>src\NetworkEvent</Filter></ClInclude>
+    <ClInclude Include="src\Game\TargetProfiles\PlanningEventsProfile.h"><Filter>src\Game\TargetProfiles</Filter></ClInclude>
     <ClCompile Include="src\NetworkEvent\ExtraFrame.cpp"><Filter>src\NetworkEvent</Filter></ClCompile>
     <ClCompile Include="src\Hooks\CommandCapacityHook.cpp"><Filter>src\Hooks</Filter></ClCompile>
     <ClInclude Include="src\NetworkEvent\CommandCapacity.h"><Filter>src\NetworkEvent</Filter></ClInclude>

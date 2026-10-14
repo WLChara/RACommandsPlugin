@@ -315,4 +315,8 @@
     <ClInclude Include="src\Commands\DragFormationCommand\DragFormationProjection.h"><Filter>src\Commands\DragFormationCommand</Filter></ClInclude>
     <ClCompile Include="src\Tests\DragFormationProjectionTests.cpp"><Filter>src\Tests</Filter></ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\NetworkEvent\PlanningEvents.cpp"><Filter>src\NetworkEvent</Filter></ClCompile>
+    <ClInclude Include="src\NetworkEvent\PlanningEvents.h"><Filter>src\NetworkEvent</Filter></ClInclude>
+  </ItemGroup>
 </Project>

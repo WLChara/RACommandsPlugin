@@ -3,6 +3,7 @@
 #include "Game/TargetProfiles/PlanningParticipantCapacityProfile.h"
 #include "Hooks/PlanningParticipantCapacityHook.h"
 #include "Memory/ProcessMemory.h"
+#include "NetworkEvent/CommandCapacity.h"
 #include <Windows.h>
 #include <HouseClass.h>
 #include <SessionClass.h>
@@ -25,13 +26,16 @@ namespace ra_commands::game::planning_participant_capacity
         bool CanBypass() noexcept
         {
             if (!g_Enabled.load(std::memory_order_acquire)
-                || GetCurrentThreadId() != g_OwnerThread.load(std::memory_order_acquire)) return false;
+                || GetCurrentThreadId() != g_OwnerThread.load(std::memory_order_acquire)
+                || !command_capacity::CanCapturePlanningEvents()) return false;
+            // 传输能力失效时沿用原生数量限制，避免入口放行后又被128槽OutList截断。
             // 所有 SDK 状态只在安装所属游戏线程读取；损坏的会话数据按原生检查回退。
             __try
             {
                 if (!IsGameSessionReady()) return false;
                 const auto* player = HouseClass::Player.get();
-                if (!player || player == HouseClass::Observer.get()) return false;
+                if (!player || player == HouseClass::Observer.get()
+                    || player->ArrayIndex < 0 || player->ArrayIndex >= profile::HOUSE_COUNTER_SLOTS) return false;
                 const auto mode = SessionClass::Instance->GameMode;
                 if (mode != GameMode::Campaign && mode != GameMode::Skirmish
                     && mode != GameMode::LAN && mode != GameMode::Internet) return false;

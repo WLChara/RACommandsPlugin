@@ -35,6 +35,9 @@ namespace ra_commands::network_event
         TargetPayload actor) noexcept;
     [[nodiscard]] std::size_t GetCapacityCompressedEventSize(
         const NetworkEvent& event) noexcept;
+    /** 与原生压缩接收方相同的事件副本；只保留线上载荷，未传输的尾部字节归零。 */
+    [[nodiscard]] std::optional<NetworkEvent> BuildCapacityReceivedEvent(
+        const NetworkEvent& event, const ExtraFrameHeader& header) noexcept;
     [[nodiscard]] bool TryGetAlignedFrameTimestamp(std::uint32_t frame,
         std::uint32_t delay, std::uint32_t rate, std::uint32_t& outTimestamp) noexcept;
     [[nodiscard]] bool IsFrameDue(std::uint32_t timestamp,

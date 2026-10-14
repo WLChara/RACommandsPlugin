@@ -1,4 +1,5 @@
 #include "NetworkEvent/ExtraFrame.h"
+#include "NetworkEvent/PlanningEvents.h"
 
 #include <cstring>
 #include <stdexcept>
@@ -74,4 +75,46 @@ void RunExtraFrameTests()
     window.Reset();
     RequireExtra(window.TryBegin(0xFFFFFFFDu, 0, 1) && window.TryBegin(0, 1, 1),
         "strictly increasing serial timestamps must support wraparound");
+
+    auto node = base;
+    node.Data.Raw[PLANNING_FLAG_PAYLOAD_OFFSET] = 1;
+    node.Data.Raw[17] = 0x99;
+    node.Data.Raw[21] = 11;
+    NetworkEvent connect{};
+    connect.Kind = static_cast<std::uint8_t>(PlanningEventKind::Connect);
+    connect.HouseIndex = 3;
+    for (std::size_t index = 0; index < 10; ++index)
+        connect.Data.Raw[index] = static_cast<std::uint8_t>(0x30 + index);
+    NetworkEvent commit{};
+    commit.Kind = static_cast<std::uint8_t>(PlanningEventKind::Commit);
+    commit.HouseIndex = 3;
+    std::memset(commit.Data.Raw, 0xCC, sizeof(commit.Data.Raw));
+    NetworkEvent deletion{};
+    deletion.Kind = static_cast<std::uint8_t>(PlanningEventKind::NodeDelete);
+    deletion.HouseIndex = 3;
+    for (std::size_t index = 0; index < 5; ++index)
+        deletion.Data.Raw[index] = static_cast<std::uint8_t>(0x70 + index);
+    const std::vector<NetworkEvent> controls{node, connect, commit, deletion};
+    RequireExtra(GetCapacityCompressedEventSize(connect) == 11 &&
+        GetCapacityCompressedEventSize(commit) == 1 && GetCapacityCompressedEventSize(deletion) == 6,
+        "control wire widths must match native 10/0/5 payloads without Mega count fields");
+    RequireExtra(!BuildExtraFramePacket(header, controls, 56, packet) &&
+        BuildExtraFramePacket(header, controls, 57, packet) && packet.size() == 57,
+        "planning mixed packet must preflight its exact byte capacity");
+    RequireExtra(packet[14] == 4 && packet[15] == 1 && packet[38] == 1 &&
+        packet[33] == 0x99 && packet[37] == 11 && packet[39] == 0x2A &&
+        std::memcmp(packet.data() + 40, connect.Data.Raw, 10) == 0 &&
+        packet[50] == 0x2B && packet[51] == 0x2C &&
+        std::memcmp(packet.data() + 52, deletion.Data.Raw, 5) == 0,
+        "wire must preserve flag1/follow fields and zero-byte Commit without copying garbage payload");
+    const auto receivedNode = BuildCapacityReceivedEvent(node, header);
+    const auto receivedCommit = BuildCapacityReceivedEvent(commit, header);
+    RequireExtra(receivedNode && receivedCommit && receivedNode->Timestamp == header.mTimestamp &&
+        receivedNode->Data.Raw[17] == 0x99 && receivedNode->Data.Raw[21] == 11 &&
+        receivedNode->Data.Raw[22] == 1 && receivedCommit->Unused == 0,
+        "self-echo must preserve transmitted follow/flag and native frame identity");
+    for (const auto value : receivedCommit->Data.Raw)
+        RequireExtra(value == 0, "zero-payload Commit must self-echo zero data rather than native stack tail garbage");
+    for (std::size_t index = 23; index < sizeof(receivedNode->Data.Raw); ++index)
+        RequireExtra(receivedNode->Data.Raw[index] == 0, "untransmitted Mega tail must not differ from peer decode");
 }

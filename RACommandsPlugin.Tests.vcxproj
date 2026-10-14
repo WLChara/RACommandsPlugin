@@ -176,6 +176,8 @@
     <ClInclude Include="src\SelectionCapacity\CandidateStorage.h" />
   </ItemGroup>
   <ItemGroup Label="CommandCapacity">
+    <ClCompile Include="src\NetworkEvent\PlanningEvents.cpp" />
+    <ClInclude Include="src\NetworkEvent\PlanningEvents.h" />
     <ClCompile Include="src\NetworkEvent\EventBacklog.cpp" />
     <ClCompile Include="src\NetworkEvent\ExtraFrame.cpp" />
     <ClCompile Include="src\Tests\EventBacklogTests.cpp" />

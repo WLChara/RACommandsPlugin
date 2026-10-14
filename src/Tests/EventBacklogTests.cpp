@@ -1,5 +1,6 @@
 #include "NetworkEvent/EventBacklog.h"
 #include "NetworkEvent/ExtraFrame.h"
+#include "NetworkEvent/PlanningEvents.h"
 
 #include <atomic>
 #include <stdexcept>
@@ -117,4 +118,64 @@ void RunEventBacklogTests()
     catch (const std::runtime_error&) {}
     RequireBacklog(backlog.GetStats().mPending == 1 && backlog.BeginSnapshot(35).mValid,
         "exception must reset execution state without dropping an unsubmitted record");
+
+    EventBacklog planned;
+    auto firstNode = MakeBacklogEvent(40);
+    firstNode.Data.Raw[PLANNING_FLAG_PAYLOAD_OFFSET] = 1;
+    firstNode.Data.Raw[17] = 0xAA;
+    firstNode.Data.Raw[21] = 11;
+    auto secondNode = firstNode;
+    secondNode.Data.Raw[12] = 0xAB;
+    auto ordinaryMove = MakeBacklogEvent(40);
+    NetworkEvent connect{};
+    connect.Kind = static_cast<std::uint8_t>(PlanningEventKind::Connect);
+    connect.HouseIndex = 2;
+    connect.Data.Target = {40, 52};
+    NetworkEvent commit{};
+    commit.Kind = static_cast<std::uint8_t>(PlanningEventKind::Commit);
+    commit.HouseIndex = 2;
+    NetworkEvent deletion = connect;
+    deletion.Kind = static_cast<std::uint8_t>(PlanningEventKind::NodeDelete);
+    RequireBacklog(planned.Submit(firstNode, {}) && planned.Submit(ordinaryMove, {}) &&
+        planned.Submit(secondNode, {}) && planned.Submit(connect, {}) &&
+        planned.Submit(commit, {}) && planned.Submit(deletion, {}),
+        "node append and all control kinds must share the existing queue");
+    RequireBacklog(planned.CancelActor(40, 52) == 1 && planned.HasActor(40, 52) &&
+        planned.GetStats().mPending == 5,
+        "ordinary manual replacement must spare earlier flag1 nodes and all controls");
+    const auto planSnapshot = planned.BeginSnapshot(100);
+    const auto planEvents = planned.CopyPrefix(planSnapshot, 5);
+    RequireBacklog(planEvents.size() == 5 && planEvents[0].Data.Raw[17] == 0xAA &&
+        planEvents[0].Data.Raw[21] == 11 && planEvents[1].Data.Raw[12] == 0xAB &&
+        planEvents[2].Kind == 0x2A && planEvents[3].Kind == 0x2B && planEvents[4].Kind == 0x2C,
+        "complete following references, repeated actor nodes, and control FIFO must remain intact");
+
+    EventBacklog largePlan;
+    for (int node = 0; node < 2; ++node)
+    {
+        for (std::uint32_t actor = 1; actor <= 129; ++actor)
+        {
+            auto event = MakeBacklogEvent(actor);
+            event.Data.Raw[PLANNING_FLAG_PAYLOAD_OFFSET] = 1;
+            event.Data.Raw[12] = static_cast<std::uint8_t>(node + 1);
+            RequireBacklog(largePlan.Submit(event, {}), "129 participant nodes must not hit the original 128 outgoing bound");
+        }
+    }
+    RequireBacklog(largePlan.Submit(commit, {}), "immediate Commit must fit behind all appended nodes");
+    std::vector<NetworkEvent> delivered;
+    for (std::uint32_t frame = 200; largePlan.GetStats().mPending; ++frame)
+    {
+        const auto largeSnapshot = largePlan.BeginSnapshot(frame);
+        const auto prefix = largePlan.CopyPrefix(largeSnapshot, 128);
+        RequireBacklog(largePlan.ConsumePrefix(largeSnapshot, prefix.size(), [&](const auto& events) {
+            delivered.insert(delivered.end(), events.begin(), events.end());
+            return true;
+        }), "bounded planning prefix must remain consumable across frames");
+    }
+    RequireBacklog(delivered.size() == 259 && delivered.back().Kind == 0x2B,
+        "Commit must follow all 258 copied nodes instead of overtaking an unsent batch");
+    for (std::size_t index = 0; index < 258; ++index)
+        RequireBacklog(HasCapacityEventActor(delivered[index], static_cast<std::uint32_t>(index % 129 + 1), 52) &&
+            delivered[index].Data.Raw[12] == index / 129 + 1,
+            "each participant must retain both original ordered planning nodes");
 }

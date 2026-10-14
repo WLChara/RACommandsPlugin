@@ -63,6 +63,8 @@ namespace ra_commands::game::command_capacity::native
 
 namespace ra_commands::game::command_capacity::detail
 {
+    // 仅供原生生产 Hook 调用；完整事件的复制契约不暴露给上层命令业务。
+    CaptureResult CapturePlanningEvent(const network_event::NetworkEvent& event) noexcept;
     CaptureResult CaptureMegaMission(int mission,
         const network_event::TargetPayload* target, int selfId, char selfKind,
         const network_event::TargetPayload* destination) noexcept;

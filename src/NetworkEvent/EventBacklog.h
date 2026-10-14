@@ -61,6 +61,7 @@ namespace ra_commands::network_event
         bool ConsumePrefix(EventBacklogSnapshot snapshot, std::size_t count,
             const SubmitBatch& submit);
         void Clear() noexcept;
+        /** 普通人工替换只撤销普通actor命令，保留flag1规划节点及三个控制事件。 */
         std::uint32_t CancelActor(std::uint32_t actorId, std::uint8_t nativeTargetKind) noexcept;
         std::uint32_t CancelProducer(std::uint8_t producerTag) noexcept;
         std::uint32_t CancelProducerActor(std::uint8_t producerTag,

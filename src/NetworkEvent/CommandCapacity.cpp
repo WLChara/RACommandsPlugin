@@ -2,6 +2,7 @@
 
 #include "Hooks/CommandCapacityHook.h"
 #include "NetworkEvent/CommandCapacityNativeAdapter.h"
+#include "NetworkEvent/PlanningEvents.h"
 
 #include <algorithm>
 #include <atomic>
@@ -244,9 +245,16 @@ namespace ra_commands::game::command_capacity
         g_ResetSession.store(true, std::memory_order_release);
     }
 
+    bool CanCapturePlanningEvents() noexcept
+    {
+        return g_Enabled.load(std::memory_order_acquire) &&
+            g_Ready.load(std::memory_order_acquire) && !g_Faulted.load(std::memory_order_acquire) &&
+            hooks::IsInstalled() && hooks::IsPlanningInstalled();
+    }
+
     std::uint32_t GetEffectiveClickedMissionFreeSlots() noexcept
     {
-        if (!RefreshSession() || g_Session.mPlanning)
+        if (!RefreshSession() || (g_Session.mPlanning && !CanCapturePlanningEvents()))
         {
             return IsGameThread() ? native::GetOutListFreeSlots() : 0;
         }
@@ -315,11 +323,23 @@ namespace ra_commands::game::command_capacity
             g_ExtraSubmitted.load(), g_PausedWindows.load(), g_FaultedSubmissions.load(),
             static_cast<std::uint32_t>(backlog.mPending),
             static_cast<std::uint32_t>(backlog.mCapacity), hooks::IsInstalled(),
-            g_Enabled.load() && !g_Faulted.load() && g_Ready.load()};
+            g_Enabled.load() && !g_Faulted.load() && g_Ready.load(), hooks::IsPlanningInstalled()};
     }
 
     namespace detail
     {
+        CaptureResult CapturePlanningEvent(const NetworkEvent& event) noexcept
+        {
+            if (!RefreshSession() || !CanCapturePlanningEvents() ||
+                event.HouseIndex != g_Session.mHouseIndex || !network_event::IsPlanningQueuedEvent(event))
+            {
+                return CaptureResult::NotHandled;
+            }
+            // 637DD0已设置flag1；Commit关闭规划模式后仍须保留在同一FIFO末尾。
+            // 只复制原始111字节，跟随引用和所有规划字段不由普通Mission builder重建。
+            return Capture(event);
+        }
+
         CaptureResult CaptureMegaMission(int mission,
             const network_event::TargetPayload* target, int selfId, char selfKind,
             const network_event::TargetPayload* destination) noexcept
@@ -465,6 +485,15 @@ namespace ra_commands::game::command_capacity
                         {
                             return false;
                         }
+                        // 所有可能分配的副本在发送前准备；发送接受后不得因复制失败保留原队列重发。
+                        std::vector<NetworkEvent> echoEvents;
+                        echoEvents.reserve(events.size());
+                        for (const auto& event : events)
+                        {
+                            const auto received = network_event::BuildCapacityReceivedEvent(event, header);
+                            if (!received) return false;
+                            echoEvents.push_back(*received);
+                        }
                         const auto sendResult = native::SendPacket(transport, packet.data(), packet.size());
                         if (sendResult == native::SubmitResult::NotAccepted) return false;
                         if (sendResult == native::SubmitResult::Faulted)
@@ -483,7 +512,7 @@ namespace ra_commands::game::command_capacity
                             MarkFault();
                             return true;
                         }
-                        const auto echoResult = native::AppendDoList(events, header.mTimestamp,
+                        const auto echoResult = native::AppendDoList(echoEvents, header.mTimestamp,
                             NATIVE_TRANSFER_RESERVED_SLOTS);
                         g_ExtraWindow.MarkSent(header.mTimestamp);
                         sent += events.size();
