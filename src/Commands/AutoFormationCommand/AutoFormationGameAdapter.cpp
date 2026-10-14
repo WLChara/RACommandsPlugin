@@ -912,6 +912,14 @@ namespace ra_commands::game
         {
             return MoveState::Invalid;
         }
+        if (mDispatcher.HasPendingActor(commands::ClickedMissionProducer::AutoFormation,
+                pending.mIdentity.Address, pending.mIdentity.UniqueId))
+        {
+            // 点击入口已调用仍可能在扩容传输队列中；以真正离开待发队列的时刻开始
+            // 观察原生落地宽限，避免排队时反复复制同一目标。
+            pending.mIssuedFrame = CurrentFrame();
+            return MoveState::Queued;
+        }
         if (!pending.mHasIssued)
         {
             const bool queued = mDispatcher.HasPendingActor(commands::ClickedMissionProducer::AutoFormation,

@@ -710,6 +710,10 @@ void RunDragFormationServiceTests();
 void RunAutoFormationGameAdapterRulesTests();
 void RunPluginOrderScopeTests();
 void RunCandidateStorageTests();
+void RunEventBacklogTests();
+void RunExtraFrameTests();
+void RunCommandCapacityTests();
+void RunClickedMissionTransportTests();
 
 int main()
 {
@@ -764,6 +768,10 @@ int main()
         RunAutoFormationGameAdapterRulesTests();
         RunPluginOrderScopeTests();
         RunCandidateStorageTests();
+        RunEventBacklogTests();
+        RunExtraFrameTests();
+        RunCommandCapacityTests();
+        RunClickedMissionTransportTests();
         std::cout << "RACommandsPlugin pure tests passed\n";
         return 0;
     }

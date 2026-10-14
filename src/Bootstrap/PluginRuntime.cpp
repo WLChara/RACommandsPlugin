@@ -72,6 +72,7 @@
 #include "Hooks/DragFormationInputHook.h"
 #include "Game/TargetVersion.h"
 #include "Game/SelectionCapacity.h"
+#include "NetworkEvent/CommandCapacity.h"
 
 #include <Windows.h>
 
@@ -166,6 +167,10 @@ namespace ra_commands::bootstrap
         bool g_DragInputHookReady = false;
         bool g_DragInputHookAttempted = false;
         bool g_SelectionCapacityInstallAttempted = false;
+        bool g_CommandCapacityHooksReady = false;
+        std::uint32_t g_LastCommandCapacityTraceFrame = 0;
+        std::uint64_t g_LastCommandCapacityFaults = 0;
+        bool g_CommandCapacityHadPending = false;
         bool g_FormationTraceWasActive = false;
         std::uint32_t g_LastFormationTraceFrame = 0;
         DWORD g_GameThreadId = 0;
@@ -683,10 +688,10 @@ namespace ra_commands::bootstrap
                 return;
             }
 
-            if (g_AFloorHooksReady)
-            {
-                game::SetAFloorGameThread(threadId);
-            }
+            // ClickedEvent 的同点接管独立于 A 地板开关，使用同一个游戏线程边界。
+            game::SetAFloorGameThread(threadId);
+            game::command_capacity::BindGameThread(threadId);
+            game::command_capacity::OnGameFrame();
             if (g_RangeDisplayHookReady)
             {
                 game::SetRangeDisplayGameThread(threadId);
@@ -728,6 +733,29 @@ namespace ra_commands::bootstrap
             }
             game::selection_capacity::OnGameFrame(
                 g_ClickedMissionDispatcher.IsSessionActive(), g_ClickedMissionDispatcher.Epoch());
+            if (g_CommandCapacityHooksReady)
+            {
+                const auto stats = game::command_capacity::GetStats();
+                const auto frame = game::GetCurrentGameFrame();
+                if (stats.mFaultedSubmissions != g_LastCommandCapacityFaults ||
+                    (stats.mPending != 0 && (!g_CommandCapacityHadPending ||
+                        frame < g_LastCommandCapacityTraceFrame || frame - g_LastCommandCapacityTraceFrame >= 60)) ||
+                    (stats.mPending == 0 && g_CommandCapacityHadPending))
+                {
+                    TraceRuntime("command-capacity ready=" + std::to_string(stats.mReady) +
+                        " pending=" + std::to_string(stats.mPending) +
+                        " accepted=" + std::to_string(stats.mAccepted) +
+                        " local=" + std::to_string(stats.mLocalSubmitted) +
+                        " extra=" + std::to_string(stats.mExtraSubmitted) +
+                        " fallback=" + std::to_string(stats.mNativeFallbackSubmitted) +
+                        " cancelled=" + std::to_string(stats.mCancelled) +
+                        " rejected=" + std::to_string(stats.mRejected) +
+                        " faults=" + std::to_string(stats.mFaultedSubmissions));
+                    g_LastCommandCapacityTraceFrame = frame;
+                    g_LastCommandCapacityFaults = stats.mFaultedSubmissions;
+                }
+                g_CommandCapacityHadPending = stats.mPending != 0;
+            }
             const auto dragTimeMs = GetTickCount64();
             const bool dragWasEnabled = g_DragFormationCommandService.IsEnabled();
             if (dragWasEnabled)
@@ -891,13 +919,26 @@ namespace ra_commands::bootstrap
             {
                 game::SetManualVehicleOrderObserver(&OnManualVehicleOrder);
             }
-            g_FormationOrderHookReady = g_AFloorHooksReady &&
+            const bool clickedEventHookReady =
                 game::InstallFormationOrderHook(&OnFormationVehicleOrder, hookError);
+            g_FormationOrderHookReady = g_AFloorHooksReady && clickedEventHookReady;
             if (!g_FormationOrderHookReady)
             {
                 OutputDebugStringA(("[RACommandsPlugin] formation: " + hookError + "\n").c_str());
                 TraceRuntime("formation-order hook failed: " + hookError);
             }
+            if (!g_AFloorHooksReady || !clickedEventHookReady)
+            {
+                hookError = "command capacity requires both mission and simple order hooks";
+                g_CommandCapacityHooksReady = false;
+            }
+            else
+            {
+                g_CommandCapacityHooksReady = game::command_capacity::Install(hookError);
+            }
+            TraceRuntime("command-capacity installed=" +
+                std::to_string(g_CommandCapacityHooksReady) +
+                (g_CommandCapacityHooksReady ? std::string{} : "; " + hookError));
             g_RangeDisplayHookReady = game::InstallRangeDisplayHook(
                 &IsRangeDisplayModeEnabled, hookError);
             if (!g_RangeDisplayHookReady)
@@ -945,6 +986,11 @@ namespace ra_commands::bootstrap
         g_IsInitialized = false;
         game::selection_capacity::Disable();
         g_SelectionCapacityInstallAttempted = false;
+        game::command_capacity::Disable();
+        g_CommandCapacityHooksReady = false;
+        g_CommandCapacityHadPending = false;
+        g_LastCommandCapacityTraceFrame = 0;
+        g_LastCommandCapacityFaults = 0;
         game::DisableMainFrameCallback();
         for (auto& command : g_Commands)
         {

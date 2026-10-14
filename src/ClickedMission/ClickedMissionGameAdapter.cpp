@@ -3,6 +3,7 @@
 #include "Game/GameObjectAccess.h"
 #include "Game/NativeEventCapacity.h"
 #include "Game/PluginOrderScope.h"
+#include "NetworkEvent/CommandCapacity.h"
 
 #include <YRPPCore.h>
 #include <HouseClass.h>
@@ -46,7 +47,7 @@ namespace ra_commands::game
 
     std::uint32_t ClickedMissionGameAdapter::GetNativeFreeSlots() const
     {
-        return GetNativeEventFreeSlots();
+        return command_capacity::GetEffectiveClickedMissionFreeSlots();
     }
 
     bool ClickedMissionGameAdapter::ValidateClickedMissionIntent(
@@ -68,7 +69,7 @@ namespace ra_commands::game
         const commands::ClickedMissionIntent& intent) const
     {
         // 原生下令会同步进入命令 Hook；不能将插件自己的调用作为人工取消通知。
-        const PluginOrderScope orderScope;
+        const PluginOrderScope orderScope({static_cast<std::uint8_t>(intent.Producer), intent.Epoch});
         if (const auto* const handler = mHandlers.Find(intent.Producer))
         {
             handler->Attempt(intent);
@@ -84,5 +85,26 @@ namespace ra_commands::game
             }
             return;
         }
+    }
+
+    std::size_t ClickedMissionGameAdapter::CancelSubmittedByProducer(
+        commands::ClickedMissionProducer producer) const
+    {
+        return command_capacity::CancelPendingProducer(static_cast<std::uint8_t>(producer));
+    }
+
+    std::size_t ClickedMissionGameAdapter::CancelSubmittedByProducerAndActor(
+        commands::ClickedMissionProducer producer, const commands::ClickedMissionIdentity& actor) const
+    {
+        // NetID::Pack 对普通 Abstract 对象使用统一目标标记 52，与 WhatAmI 的兵种值不同。
+        return command_capacity::CancelPendingProducerActor(
+            static_cast<std::uint8_t>(producer), actor.UniqueId, 52);
+    }
+
+    bool ClickedMissionGameAdapter::HasSubmittedActor(commands::ClickedMissionProducer producer,
+        std::uintptr_t, std::uint32_t uniqueId, std::uint32_t epoch) const
+    {
+        return command_capacity::HasPendingProducerActor(
+            static_cast<std::uint8_t>(producer), uniqueId, 52, epoch);
     }
 }

@@ -19,11 +19,17 @@ namespace ra_commands::commands
         // 返回不透明的对局身份；结合帧计数回退判定旧命令是否必须清除。
         [[nodiscard]] virtual std::uintptr_t GetSessionIdentity() const = 0;
         [[nodiscard]] virtual std::uint32_t GetCurrentFrame() const = 0;
-        // 原生计数无效时返回 0，使调度器暂停而非冒险提交。
+        // 返回当前提交后端的真实可接收余量；原生计数无效时返回 0。
         [[nodiscard]] virtual std::uint32_t GetNativeFreeSlots() const = 0;
         [[nodiscard]] virtual bool ValidateClickedMissionIntent(
             const ClickedMissionIntent& intent) const = 0;
         // 仅尝试调用游戏接口；ClickedMission 的返回值不能证明原生 OutList 已入队。
         virtual void AttemptClickedMission(const ClickedMissionIntent& intent) const = 0;
+        // 已通过游戏入口、但仍在传输后端等待的意图也属于可取消的待发阶段。
+        virtual std::size_t CancelSubmittedByProducer(ClickedMissionProducer) const { return 0; }
+        virtual std::size_t CancelSubmittedByProducerAndActor(
+            ClickedMissionProducer, const ClickedMissionIdentity&) const { return 0; }
+        [[nodiscard]] virtual bool HasSubmittedActor(ClickedMissionProducer,
+            std::uintptr_t, std::uint32_t, std::uint32_t) const { return false; }
     };
 }

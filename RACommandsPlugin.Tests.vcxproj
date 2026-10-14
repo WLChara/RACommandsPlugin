@@ -171,9 +171,19 @@
     <ClCompile Include="src\Tests\DragFormationProjectionTests.cpp" />
     <ClInclude Include="src\Commands\DragFormationCommand\DragFormationProjection.h" />
   </ItemGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ItemGroup Label="SelectionCapacity">
     <ClCompile Include="src\Tests\CandidateStorageTests.cpp" />
     <ClInclude Include="src\SelectionCapacity\CandidateStorage.h" />
   </ItemGroup>
+  <ItemGroup Label="CommandCapacity">
+    <ClCompile Include="src\NetworkEvent\EventBacklog.cpp" />
+    <ClCompile Include="src\NetworkEvent\ExtraFrame.cpp" />
+    <ClCompile Include="src\Tests\EventBacklogTests.cpp" />
+    <ClCompile Include="src\Tests\ExtraFrameTests.cpp" />
+    <ClCompile Include="src\Tests\CommandCapacityTests.cpp" />
+    <ClCompile Include="src\Tests\ClickedMissionTransportTests.cpp" />
+    <ClInclude Include="src\NetworkEvent\EventBacklog.h" />
+    <ClInclude Include="src\NetworkEvent\ExtraFrame.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

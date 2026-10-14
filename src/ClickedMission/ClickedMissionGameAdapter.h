@@ -22,6 +22,11 @@ namespace ra_commands::game
         [[nodiscard]] bool ValidateClickedMissionIntent(
             const commands::ClickedMissionIntent& intent) const override;
         void AttemptClickedMission(const commands::ClickedMissionIntent& intent) const override;
+        std::size_t CancelSubmittedByProducer(commands::ClickedMissionProducer producer) const override;
+        std::size_t CancelSubmittedByProducerAndActor(commands::ClickedMissionProducer producer,
+            const commands::ClickedMissionIdentity& actor) const override;
+        bool HasSubmittedActor(commands::ClickedMissionProducer producer, std::uintptr_t address,
+            std::uint32_t uniqueId, std::uint32_t epoch) const override;
 
     private:
         commands::ClickedMissionIntentHandlers mHandlers;

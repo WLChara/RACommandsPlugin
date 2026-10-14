@@ -2,6 +2,7 @@
 
 #include "Game/GameObjectAccess.h"
 #include "Game/PluginOrderScope.h"
+#include "NetworkEvent/CommandCapacity.h"
 #include "Memory/ProcessMemory.h"
 
 #include <YRPPCore.h>
@@ -83,12 +84,23 @@ namespace ra_commands::game
             const ClickContext* mPrevious;
         };
 
-        bool IsEntryUnmodified(std::uintptr_t address,
+        bool IsEntrySupported(std::uintptr_t address,
             const std::array<std::uint8_t, 16>& expected)
         {
             std::array<std::uint8_t, 16> actual{};
             return memory::TryReadMemory(address, actual.data(), actual.size()) &&
-                actual == expected;
+                (actual == expected || actual.front() == 0xE9);
+        }
+
+        void CancelTransportOrder(TechnoClass* actor)
+        {
+            const auto threadId = g_AllowedGameThreadId.load(std::memory_order_acquire);
+            if (threadId && threadId == GetCurrentThreadId() && !IsPluginOrderActive() &&
+                IsGameSessionReady() && actor && actor->UniqueID &&
+                actor->Owner == HouseClass::Player.get())
+            {
+                (void)command_capacity::CancelPendingActor(actor->UniqueID, 52);
+            }
         }
 
         void NotifyFormationOrder(TechnoClass* actor)
@@ -125,6 +137,13 @@ namespace ra_commands::game
             }
             // 在事件入队前撤销列队意图，防止队列拥塞时旧 Move 延迟覆盖 Stop 等新命令。
             NotifyFormationOrder(actor);
+            CancelTransportOrder(actor);
+            const auto captured = command_capacity::TryCaptureSimpleClickedEvent(actor,
+                static_cast<int>(event));
+            if (captured != command_capacity::CaptureResult::NotHandled)
+            {
+                return captured == command_capacity::CaptureResult::Queued;
+            }
             return original(actor, event);
         }
 
@@ -186,6 +205,7 @@ namespace ra_commands::game
 
             // 与左键专属的自动碾压观察分开；键盘和右键原生调用也能取消列队。
             NotifyFormationOrder(actor);
+            CancelTransportOrder(actor);
 
             const auto* const context = g_ActiveClick;
             const auto isEnabled = g_ModeQuery.load(std::memory_order_acquire);
@@ -240,8 +260,9 @@ namespace ra_commands::game
             outError = "A-floor hooks failed earlier in this process";
             return false;
         }
-        if (!IsEntryUnmodified(LEFT_MOUSE_UP_ADDRESS, LEFT_MOUSE_UP_ENTRY) ||
-            !IsEntryUnmodified(CLICKED_MISSION_ADDRESS, CLICKED_MISSION_ENTRY))
+        // 完整 EXE 指纹已通过；已有 Syringe E9 入口由 MinHook 重定位并继续转发。
+        if (!IsEntrySupported(LEFT_MOUSE_UP_ADDRESS, LEFT_MOUSE_UP_ENTRY) ||
+            !IsEntrySupported(CLICKED_MISSION_ADDRESS, CLICKED_MISSION_ENTRY))
         {
             outError = "A-floor input or mission entry differs from supported game build";
             return false;
@@ -309,9 +330,9 @@ namespace ra_commands::game
     bool InstallFormationOrderHook(
         ManualVehicleOrderObserver observer, std::string& outError)
     {
-        if (!observer || !g_AreHooksInstalled)
+        if (!observer)
         {
-            outError = "formation order hook requires the native mission hooks";
+            outError = "formation order observer is null";
             return false;
         }
         if (g_IsFormationOrderHookInstalled)
@@ -321,7 +342,7 @@ namespace ra_commands::game
             return true;
         }
         if (g_FormationOrderHookFailed ||
-            !IsEntryUnmodified(CLICKED_EVENT_ADDRESS, CLICKED_EVENT_ENTRY))
+            !IsEntrySupported(CLICKED_EVENT_ADDRESS, CLICKED_EVENT_ENTRY))
         {
             outError = "formation event hook is unavailable or its entry differs";
             return false;
