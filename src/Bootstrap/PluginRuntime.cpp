@@ -818,6 +818,13 @@ namespace ra_commands::bootstrap
                 return false;
             }
             TraceRuntime("host-check succeeded");
+            // Syringe 先装载全部 DLL，随后才统一写入 Hook。原生命令表在 EXE
+            // 开始运行后初始化；自动入口与显式入口都必须经过该就绪门槛。
+            if (!game::IsNativeCommandTableReady())
+            {
+                g_LastError = "native command table is not ready";
+                return false;
+            }
             if (!g_GameSymbols.Resolve(moduleBase, g_LastError))
             {
                 OutputDebugStringA(("[RACommandsPlugin] " + g_LastError + "\n").c_str());

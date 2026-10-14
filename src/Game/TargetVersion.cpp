@@ -26,23 +26,23 @@ namespace ra_commands::game
 
         struct HashResources
         {
-            HANDLE File = INVALID_HANDLE_VALUE;
-            BCRYPT_ALG_HANDLE Algorithm = nullptr;
-            BCRYPT_HASH_HANDLE Hash = nullptr;
+            HANDLE mFile = INVALID_HANDLE_VALUE;
+            BCRYPT_ALG_HANDLE mAlgorithm = nullptr;
+            BCRYPT_HASH_HANDLE mHash = nullptr;
 
             ~HashResources()
             {
-                if (Hash)
+                if (mHash)
                 {
-                    BCryptDestroyHash(Hash);
+                    BCryptDestroyHash(mHash);
                 }
-                if (Algorithm)
+                if (mAlgorithm)
                 {
-                    BCryptCloseAlgorithmProvider(Algorithm, 0);
+                    BCryptCloseAlgorithmProvider(mAlgorithm, 0);
                 }
-                if (File != INVALID_HANDLE_VALUE)
+                if (mFile != INVALID_HANDLE_VALUE)
                 {
-                    CloseHandle(File);
+                    CloseHandle(mFile);
                 }
             }
         };
@@ -72,20 +72,14 @@ namespace ra_commands::game
             }
         }
 
-        bool GetCurrentExeSha256(std::array<std::uint8_t, 32>& outDigest)
+        bool GetFileSha256(const wchar_t* path, std::array<std::uint8_t, 32>& outDigest)
         {
-            std::wstring path;
-            if (!GetCurrentExePath(path))
-            {
-                return false;
-            }
-
             HashResources resources;
-            resources.File = CreateFileW(path.c_str(), GENERIC_READ,
+            resources.mFile = CreateFileW(path, GENERIC_READ,
                 FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                 nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-            if (resources.File == INVALID_HANDLE_VALUE ||
-                BCryptOpenAlgorithmProvider(&resources.Algorithm, BCRYPT_SHA256_ALGORITHM,
+            if (resources.mFile == INVALID_HANDLE_VALUE ||
+                BCryptOpenAlgorithmProvider(&resources.mAlgorithm, BCRYPT_SHA256_ALGORITHM,
                     nullptr, 0) < 0)
             {
                 return false;
@@ -93,7 +87,7 @@ namespace ra_commands::game
 
             DWORD objectBytes = 0;
             DWORD propertyBytes = 0;
-            if (BCryptGetProperty(resources.Algorithm, BCRYPT_OBJECT_LENGTH,
+            if (BCryptGetProperty(resources.mAlgorithm, BCRYPT_OBJECT_LENGTH,
                     reinterpret_cast<PUCHAR>(&objectBytes), sizeof(objectBytes),
                     &propertyBytes, 0) < 0 || objectBytes == 0)
             {
@@ -101,7 +95,7 @@ namespace ra_commands::game
             }
 
             std::vector<std::uint8_t> hashObject(objectBytes);
-            if (BCryptCreateHash(resources.Algorithm, &resources.Hash,
+            if (BCryptCreateHash(resources.mAlgorithm, &resources.mHash,
                     hashObject.data(), objectBytes, nullptr, 0, 0) < 0)
             {
                 return false;
@@ -112,7 +106,7 @@ namespace ra_commands::game
             for (;;)
             {
                 DWORD readBytes = 0;
-                if (!ReadFile(resources.File, buffer.data(),
+                if (!ReadFile(resources.mFile, buffer.data(),
                         static_cast<DWORD>(buffer.size()), &readBytes, nullptr))
                 {
                     return false;
@@ -121,21 +115,42 @@ namespace ra_commands::game
                 {
                     break;
                 }
-                if (BCryptHashData(resources.Hash, buffer.data(), readBytes, 0) < 0)
+                if (BCryptHashData(resources.mHash, buffer.data(), readBytes, 0) < 0)
                 {
                     return false;
                 }
             }
 
-            return BCryptFinishHash(resources.Hash, outDigest.data(),
+            return BCryptFinishHash(resources.mHash, outDigest.data(),
                 static_cast<ULONG>(outDigest.size()), 0) >= 0;
         }
     }
 
-    bool IsSupportedHost(std::string& outError)
+    bool IsCandidateGameHost() noexcept
+    {
+        const auto* image = reinterpret_cast<const std::byte*>(GetModuleHandleW(nullptr));
+        if (!image)
+        {
+            return false;
+        }
+        const auto* dos = reinterpret_cast<const IMAGE_DOS_HEADER*>(image);
+        if (dos->e_magic != IMAGE_DOS_SIGNATURE || dos->e_lfanew <= 0)
+        {
+            return false;
+        }
+        // 主模块由 Windows loader 验证并映射；此处不读取文件、不获取游戏对象。
+        const auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS32*>(image + dos->e_lfanew);
+        return nt->Signature == IMAGE_NT_SIGNATURE &&
+            nt->FileHeader.Machine == IMAGE_FILE_MACHINE_I386 &&
+            nt->FileHeader.TimeDateStamp == SUPPORTED_EXE_TIMESTAMP &&
+            nt->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR32_MAGIC &&
+            nt->OptionalHeader.ImageBase == 0x400000;
+    }
+
+    bool IsSupportedExecutableFile(const wchar_t* path, std::string& outError)
     {
         std::array<std::uint8_t, 32> digest{};
-        if (!GetCurrentExeSha256(digest))
+        if (!path || !GetFileSha256(path, digest))
         {
             outError = "cannot hash host executable";
             return false;
@@ -147,5 +162,62 @@ namespace ra_commands::game
         }
         outError.clear();
         return true;
+    }
+
+    bool IsSupportedHost(std::string& outError)
+    {
+        struct HostVerificationResult
+        {
+            bool mIsSupported = false;
+            std::string mError;
+        };
+        // 函数局部静态初始化串行化两个入口；拒绝结果也缓存，绝不在轮询中重读 EXE。
+        static const HostVerificationResult result = []
+        {
+            HostVerificationResult verification;
+            std::wstring path;
+            if (!GetCurrentExePath(path))
+            {
+                verification.mError = "cannot locate host executable";
+                return verification;
+            }
+            verification.mIsSupported = IsSupportedExecutableFile(path.c_str(), verification.mError);
+            return verification;
+        }();
+        outError = result.mError;
+        return result.mIsSupported;
+    }
+
+    bool IsNativeCommandTableReady() noexcept
+    {
+        // 目标 EXE 的 CommandClass::Array 初始全零。IDA 已确认 0x532150 在
+        // Init_Game (0x52CAE4) 内写入首条原生命令；只有 EXE 入口已运行才可满足此门槛。
+        // Syringe 在恢复 EXE 入口前已完成统一 patch，避免本插件先接入再被其覆盖。
+        constexpr std::uintptr_t COMMAND_ARRAY_ADDRESS = 0x87F658;
+        constexpr std::int32_t MAX_COMMAND_CAPACITY = 32768;
+        struct NativeCommandVectorSnapshot
+        {
+            std::uint32_t mVtable;
+            std::uint32_t mItems;
+            std::int32_t mCapacity;
+            std::uint8_t mIsInitialized;
+            std::uint8_t mIsAllocated;
+            std::uint16_t mPadding;
+            std::int32_t mCount;
+            std::int32_t mCapacityIncrement;
+        };
+        static_assert(sizeof(NativeCommandVectorSnapshot) == 24);
+        static_assert(offsetof(NativeCommandVectorSnapshot, mItems) == 4);
+        static_assert(offsetof(NativeCommandVectorSnapshot, mCount) == 16);
+
+        NativeCommandVectorSnapshot commands{};
+        SIZE_T readBytes = 0;
+        // 工作线程只复制状态，不调用 SDK 方法、不解引用可变 Items 指针。
+        return ReadProcessMemory(GetCurrentProcess(),
+                reinterpret_cast<const void*>(COMMAND_ARRAY_ADDRESS), &commands,
+                sizeof(commands), &readBytes) && readBytes == sizeof(commands) &&
+            commands.mItems != 0 && commands.mIsInitialized != 0 &&
+            commands.mCount > 0 && commands.mCount <= commands.mCapacity &&
+            commands.mCapacity <= MAX_COMMAND_CAPACITY;
     }
 }

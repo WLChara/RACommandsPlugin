@@ -1,27 +1,7 @@
 #include "Bootstrap/PluginRuntime.h"
-#include "Bootstrap/RuntimeDiagnostics.h"
+#include "Bootstrap/PluginStartup.h"
 
 #include <Windows.h>
-
-namespace
-{
-    DWORD WINAPI BootstrapThread(LPVOID)
-    {
-        try
-        {
-            ra_commands::bootstrap::TraceRuntimeStartup();
-            const bool initialized = ra_commands::bootstrap::AutoInitialize();
-            ra_commands::bootstrap::TraceRuntime(initialized ?
-                "bootstrap-complete initialized=1" : "bootstrap-complete initialized=0");
-        }
-        catch (...)
-        {
-            OutputDebugStringA("[RACommandsPlugin] bootstrap initialization failed\n");
-            ra_commands::bootstrap::TraceRuntime("bootstrap initialization threw an exception");
-        }
-        return 0;
-    }
-}
 
 // 保留旧导出用于诊断和兼容；DLL 注入后的启动不依赖此调用。
 extern "C" BOOL __stdcall RACommandsPlugin_Initialize()
@@ -52,6 +32,7 @@ extern "C" void __stdcall RACommandsPlugin_Shutdown()
 {
     try
     {
+        ra_commands::bootstrap::CancelPluginStartup();
         ra_commands::bootstrap::Shutdown();
     }
     catch (...)
@@ -64,13 +45,8 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD reason, LPVOID)
 {
     if (reason == DLL_PROCESS_ATTACH)
     {
-        // 不等待此线程；它要在 DllMain 返回、loader lock 释放后才扫描映像。
-        HANDLE bootstrapThread = CreateThread(nullptr, 0, BootstrapThread, nullptr, 0, nullptr);
-        if (bootstrapThread == nullptr)
-        {
-            return FALSE;
-        }
-        CloseHandle(bootstrapThread);
+        // 适配层只核对内存 PE 指纹；磁盘版本检查和就绪等待都在 loader lock 之外。
+        return ra_commands::bootstrap::StartPluginFromDllMain() ? TRUE : FALSE;
     }
     return TRUE;
 }

@@ -648,6 +648,10 @@
     <ClInclude Include="src\Commands\DragFormationCommand\DragFormationProjection.h" />
   </ItemGroup>
   <ItemGroup Label="NewSourceFallback">
+    <ClCompile Include="src\Bootstrap\PluginStartup.cpp" />
+    <ClCompile Include="src\Bootstrap\SyringeCompatibility.cpp" />
+    <ClInclude Include="src\Bootstrap\PluginStartup.h" />
+    <ClInclude Include="src\Bootstrap\SyringeCompatibility.h" />
     <ClCompile Include="src\**\*.cpp" Exclude="src\Tests\**\*.cpp;src\SDK\**\*.cpp;@(ClCompile)" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

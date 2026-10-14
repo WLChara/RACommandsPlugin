@@ -1770,4 +1770,10 @@
     <ClCompile Include="src\Commands\DragFormationCommand\DragFormationProjection.cpp"><Filter>src\Commands\DragFormationCommand</Filter></ClCompile>
     <ClInclude Include="src\Commands\DragFormationCommand\DragFormationProjection.h"><Filter>src\Commands\DragFormationCommand</Filter></ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Bootstrap\PluginStartup.cpp"><Filter>src\Bootstrap</Filter></ClCompile>
+    <ClCompile Include="src\Bootstrap\SyringeCompatibility.cpp"><Filter>src\Bootstrap</Filter></ClCompile>
+    <ClInclude Include="src\Bootstrap\PluginStartup.h"><Filter>src\Bootstrap</Filter></ClInclude>
+    <ClInclude Include="src\Bootstrap\SyringeCompatibility.h"><Filter>src\Bootstrap</Filter></ClInclude>
+  </ItemGroup>
 </Project>

@@ -56,6 +56,14 @@ RACommandsPlugin/
 
 ## 当前运行方式
 
+### Syringe 自动装载与中途注入
+
+将 DLL 放入 Syringe 启动游戏时扫描的工作目录，即可通过 `.syhks00` 中的零地址声明及 `SyringeHandshake` 识别装载。该声明只要求装载 DLL 和解析已有导出，不安装 Syringe 功能 Hook；插件继续使用 MinHook。握手校验当前受支持游戏的文件大小、时间戳、CRC 和磁盘 SHA-256。
+
+Syringe 在自身进程加载 DLL 进行握手时，插件不创建初始化线程。游戏进程中的自动入口先验证 EXE，再等待原生命令表就绪后安装 MinHook，避免早于 Syringe 的统一 Hook 写入。对局中使用原有 `LoadLibrary` 注入器加载同一个 DLL 时，就绪后沿用同一初始化路径。DLL 在受识别的游戏宿主中保持进程常驻；`Shutdown` 会取消尚未完成的自动启动并停用运行时。
+
+运行 `scripts/test-syringe-metadata.ps1` 和 `scripts/test-syringe-host.ps1` 可核对构建 DLL 的识别段、未修饰握手导出和隔离宿主中的真实加载行为；Syringe 启动游戏、对局中途注入及与其他 DLL 共存仍需实机验收。
+
 使用常规 `LoadLibrary` 注入后，DLL 会自行安排初始化，调用方不需要调用 `RACommandsPlugin_Initialize`。初始化在 `DllMain` 返回后验证 EXE 并解析 AOB，然后安装主帧 Hook；原生命令在游戏命令表就绪的主帧注册。旧的 `RACommandsPlugin_Initialize` 导出仍可手动重试；`RACommandsPlugin_IsReady` 只表示基础解析和主帧 Hook 已就绪，不表示命令、热键或联机已经通过运行时验收。
 
 该 DLL 在安装主帧 Hook 前将自身固定到进程退出；`Shutdown` 仅停用回调并清空待发命令，不会移除原生命令、撤销 Hook 或使 `FreeLibrary` 成为安全操作。目标 EXE 的哈希门禁通过后，主帧 Hook 使用 MinHook 从当前入口建立跳板；已有的 x86 `E9` 跳转会被重定位，调用返回的跳板会继续既有 Hook 链。主帧接入不再要求入口保持原始指令。两层回调与原函式的链式执行可由隔离宿主验证；与回放插件的实际录制、播放及其他功能交互仍需在目标游戏验收。

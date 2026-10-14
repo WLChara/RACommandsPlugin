@@ -1,5 +1,6 @@
 LIBRARY RACommandsPlugin
 EXPORTS
+    SyringeHandshake
     RACommandsPlugin_Initialize = _RACommandsPlugin_Initialize@0
     RACommandsPlugin_IsReady = _RACommandsPlugin_IsReady@0
     RACommandsPlugin_Shutdown = _RACommandsPlugin_Shutdown@0
