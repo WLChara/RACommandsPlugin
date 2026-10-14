@@ -286,7 +286,7 @@ namespace ra_commands::drag_formation
                     continue;
                 }
                 auto_formation::Snapshot snapshot;
-                if (!mGame.TryCapturePlacementSnapshot(ids, cells, snapshot))
+                if (!mGame.TryCapturePlacementSnapshot(ids, cells, layout, snapshot))
                 {
                     continue;
                 }

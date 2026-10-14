@@ -111,7 +111,7 @@ namespace
         const double inf = std::numeric_limits<double>::infinity();
         Require(!BuildLayout({0, 0}, {0.2, 0}, 1).mValid &&
             !BuildLayout({0, 0}, {1, 0}, 0).mValid &&
-            !BuildLayout({0, 0}, {1, 0}, 129).mValid &&
+            !BuildLayout({0, 0}, {1, 0}, 1025).mValid &&
             !BuildLayout({nan, 0}, {1, 0}, 1).mValid &&
             !BuildLayout({0, 0}, {inf, 0}, 1).mValid &&
             !BuildLayout({0, 0}, {1, 0}, 1, 0, 0.3).mValid &&
@@ -218,13 +218,13 @@ namespace
         const auto snapshot = UniformSnapshot(large, cells);
         RequireCompleteAndUnique(snapshot, PlanPlacement(large, snapshot));
 
-        const auto oversized = BuildLayout({100, 100}, {100, 115}, 129);
+        const auto oversized = BuildLayout({100, 100}, {100, 115}, 1025);
         auto tooMany = UniformSnapshot(large, cells);
-        tooMany.mActors.push_back(Actor(129, {100, 100, false}, cells));
+        for (ActorId id = 129; id <= 1025; ++id) tooMany.mActors.push_back(Actor(id, {100, 100, false}, cells));
         const auto result = PlanPlacement(oversized, tooMany);
         Require(result.mBudgetExceeded && result.mAssignments.empty() &&
-            result.mUnassignedActors.size() == 129,
-            "more than 128 actors must fail as one unit");
+            result.mUnassignedActors.size() == 1025,
+            "more than 1024 actors must fail as one unit");
     }
 
     void TestMixedPhysicalDemandAndLogicalPreview()

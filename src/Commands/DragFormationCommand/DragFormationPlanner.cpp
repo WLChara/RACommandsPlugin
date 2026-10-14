@@ -1,4 +1,5 @@
 #include "Commands/DragFormationCommand/DragFormationPlanner.h"
+#include "Commands/AutoFormationCommand/LargeFormationMatching.h"
 
 #include <algorithm>
 #include <cmath>
@@ -168,7 +169,9 @@ namespace ra_commands::drag_formation
                 outBudgetExceeded = true;
                 return {};
             }
-            cells.reserve(std::min(MAX_PLACEMENT_CELLS, physicalCenters.size() * 9));
+            const auto placementCellLimit = layout.mSlots.size() <= auto_formation::LEGACY_DRAG_ACTORS
+                ? auto_formation::LEGACY_PLACEMENT_CELLS : MAX_PLACEMENT_CELLS;
+            cells.reserve(std::min(placementCellLimit, physicalCenters.size() * 9));
             for (const auto slot : physicalCenters)
             {
                 // 远离地图的有限坐标不转换成整数，以免 round 的结果越过表示范围。
@@ -190,7 +193,7 @@ namespace ra_commands::drag_formation
             }
             std::sort(cells.begin(), cells.end(), CellLess);
             cells.erase(std::unique(cells.begin(), cells.end()), cells.end());
-            if (cells.size() > MAX_PLACEMENT_CELLS)
+            if (cells.size() > placementCellLimit)
             {
                 outBudgetExceeded = true;
                 return {};
@@ -360,6 +363,22 @@ namespace ra_commands::drag_formation
         if (!IsUsableLayout(layout) || layout.mSlots.size() != snapshot.mActors.size())
             return result;
 
+        if (layout.mProfiles.empty() && snapshot.mActors.size() > auto_formation::LEGACY_FORMATION_ACTORS)
+        {
+            const auto& first = snapshot.mActors.front();
+            if (first.mKind != auto_formation::ActorKind::Vehicle ||
+                std::any_of(snapshot.mActors.begin(), snapshot.mActors.end(),
+                    [&](const auto& actor)
+                    {
+                        return actor.mKind != first.mKind || actor.mPlane != first.mPlane ||
+                            actor.mCurrentCell.mOnBridge != first.mCurrentCell.mOnBridge;
+                    })) return result;
+            auto packed = snapshot;
+            packed.mCenter = layout.mAnchor;
+            const std::vector<auto_formation::PlaneLayout> planes{
+                {first.mPlane, first.mCurrentCell.mOnBridge, layout.mSlots}};
+            return auto_formation::PlanLargeCellPacking(packed, planes, 1.5, 3);
+        }
         if (!layout.mProfiles.empty())
         {
             std::map<auto_formation::ActorId, auto_formation::ActorProfile> expected;

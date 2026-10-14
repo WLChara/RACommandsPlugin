@@ -205,13 +205,13 @@ namespace
         Require(PlanCellPacking(snapshot, layout, true, 1.5).mAssignments.empty(),
             "duplicate actor identities must reject the complete plan");
         Snapshot large {{100, 100}, {}};
-        for (ActorId id = 1; id <= 257; ++id)
+        for (ActorId id = 1; id <= 1025; ++id)
             large.mActors.push_back(Actor(id, ActorKind::Infantry,
                 OccupancyPlane::Ground, {100, 100, false}, {a}));
         const auto over = PlanCellPacking(large, {Ground({{100, 100}})}, true, 1.5);
         Require(over.mBudgetExceeded && over.mAssignments.empty() &&
-            over.mUnassignedActors.size() == 257,
-            "more than 256 actors must reject the whole plan");
+            over.mUnassignedActors.size() == 1025,
+            "more than 1024 actors must reject the whole plan");
     }
 }
 

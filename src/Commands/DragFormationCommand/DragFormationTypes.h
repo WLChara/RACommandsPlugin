@@ -2,6 +2,7 @@
 
 #include "Commands/AutoFormationCommand/AutoFormationPlanner.h"
 #include "Commands/AutoFormationCommand/FormationCellPacking.h"
+#include "Commands/AutoFormationCommand/FormationLimits.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -11,8 +12,8 @@
 namespace ra_commands::drag_formation
 {
     using WorldPoint = auto_formation::Center;
-    constexpr std::size_t MAX_DEMO_ACTORS = 128;
-    constexpr std::size_t MAX_PLACEMENT_CELLS = 1024;
+    constexpr std::size_t MAX_DEMO_ACTORS = auto_formation::MAX_FORMATION_ACTORS;
+    constexpr std::size_t MAX_PLACEMENT_CELLS = auto_formation::MAX_FORMATION_PLACEMENT_CELLS;
 
     struct Layout
     {

@@ -2,6 +2,8 @@
 #include "Commands/AutoFormationCommand/AutoFormationMoveState.h"
 #include "Commands/AutoFormationCommand/NativeCellOccupancy.h"
 #include "Commands/AutoFormationCommand/AutoFormationDiagnostics.h"
+#include "Commands/AutoFormationCommand/FormationCandidateBands.h"
+#include "Commands/AutoFormationCommand/FormationLimits.h"
 
 #include "ClickedMission/ClickedMissionDispatcher.h"
 #include "Game/GameObjectAccess.h"
@@ -21,6 +23,7 @@
 #include <algorithm>
 #include <cmath>
 #include <sstream>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -33,8 +36,8 @@ namespace ra_commands::game
         using auto_formation::ActorProfile;
         using auto_formation::Cell;
         using auto_formation::OccupancyPlane;
-        constexpr std::size_t MAX_ACTORS = 256;
-        constexpr std::size_t MAX_EDGES = 262144;
+        constexpr std::size_t MAX_ACTORS = auto_formation::MAX_FORMATION_ACTORS;
+        constexpr std::size_t MAX_NATIVE_QUERIES = MAX_ACTORS * auto_formation::LARGE_FORMATION_QUERIES_PER_ACTOR;
         constexpr int SEARCH_RADIUS = 32;
         constexpr int AXIS_LIMIT = 512;
         constexpr int MAX_CONTENT = 64;
@@ -164,7 +167,15 @@ namespace ra_commands::game
                 return nullptr;
             }
             const CellStruct coords{static_cast<short>(cell.mX), static_cast<short>(cell.mY)};
-            if (!map->CoordinatesLegal(coords) || !map->IsWithinUsableArea(coords, false))
+            // 当前 SHA 门禁样本：ECX=Map，坐标按指针传栈，分别 ret 4/ret 8。
+            // 用明确 ABI 避免 SDK 的内联 JMP 改写 EBP，影响当前函数的栈帧。
+            using CoordinatesLegalFunction = bool(__thiscall*)(const MapClass*, const CellStruct*);
+            using IsWithinUsableAreaFunction = bool(__thiscall*)(const MapClass*, const CellStruct*, bool);
+            constexpr std::uintptr_t COORDINATES_LEGAL_ADDRESS = 0x00568300u;
+            constexpr std::uintptr_t IS_WITHIN_USABLE_AREA_ADDRESS = 0x00578460u;
+            const auto coordinatesLegal = reinterpret_cast<CoordinatesLegalFunction>(COORDINATES_LEGAL_ADDRESS);
+            const auto isWithinUsableArea = reinterpret_cast<IsWithinUsableAreaFunction>(IS_WITHIN_USABLE_AREA_ADDRESS);
+            if (!coordinatesLegal(map, &coords) || !isWithinUsableArea(map, &coords, false))
             {
                 return nullptr;
             }
@@ -379,7 +390,7 @@ namespace ra_commands::game
             CellClass* knownOrigin = nullptr, CellClass* knownDestination = nullptr,
             const int* knownSourceZone = nullptr, std::map<std::uint32_t, int>* zoneCache = nullptr,
             const AirContentsByCell* knownAirContents = nullptr,
-            RejectDiagnostic* diagnostic = nullptr)
+            RejectDiagnostic* diagnostic = nullptr, bool knownStaticPassable = false)
         {
             if (destination.mOnBridge != profile.mOnBridge)
             {
@@ -420,7 +431,7 @@ namespace ra_commands::game
                 diagnostic->mOccupation = auto_formation::ReadNativeOccupationByte(
                     reinterpret_cast<const std::uint8_t*>(&storedFlags));
             }
-            if (!HasTerrainSpeed(actor, cell, destination.mOnBridge))
+            if (!knownStaticPassable && !HasTerrainSpeed(actor, cell, destination.mOnBridge))
             {
                 if (diagnostic)
                 {
@@ -430,7 +441,7 @@ namespace ra_commands::game
                 }
                 return 0;
             }
-            if (!SameStaticZone(map, actor, origin, cell, destination.mOnBridge,
+            if (!knownStaticPassable && !SameStaticZone(map, actor, origin, cell, destination.mOnBridge,
                 knownSourceZone, zoneCache, diagnostic))
             {
                 if (diagnostic) { diagnostic->mReason = "static-zone"; }
@@ -554,17 +565,36 @@ namespace ra_commands::game
             return true;
         }
 
-        bool FillCandidates(auto_formation::Snapshot& snapshot,
+        bool FillCandidatePass(auto_formation::Snapshot& snapshot,
             const std::map<ActorId, FootClass*>& actors,
             const std::unordered_set<ActorId>& participants,
-            const std::vector<OrderedCell>& cells, bool stopAtPerActorLimit)
+            const std::vector<OrderedCell>& cells, bool stopAtPerActorLimit,
+            const std::vector<auto_formation::PlaneLayout>& planes,
+            std::uint8_t infantryCapacity, std::size_t& queries,
+            std::unordered_map<ActorId, std::size_t>& queriesByActor,
+            std::unordered_map<ActorId, std::unordered_map<std::size_t, std::uint8_t>>& cachedQueries,
+            std::unordered_map<ActorId, std::unordered_set<std::size_t>>& acceptedIndices)
         {
             auto* const map = MapClass::Instance.get();
             const auto airContents = CaptureAirContents(&participants); // 整份快照只扫描一次。
             std::map<std::uint32_t, int> zoneCache;
+            const bool sparse = snapshot.mActors.size() > auto_formation::LEGACY_FORMATION_ACTORS;
+            std::vector<auto_formation::FormationCandidateBand> bands;
+            std::unordered_map<ActorId, const auto_formation::FormationCandidateBand*> bandByActor;
+            if (sparse)
+            {
+                std::vector<Cell> coordinates;
+                coordinates.reserve(cells.size());
+                for (const auto& cell : cells) coordinates.push_back(cell.mCell);
+                bands = auto_formation::BuildFormationCandidateBands(snapshot, coordinates, planes, infantryCapacity);
+                if (bands.size() != snapshot.mActors.size()) return false;
+                for (const auto& band : bands) bandByActor.emplace(band.mActor, &band);
+            }
+            // 只共享速度/静态连通性；占用链、原生虚调用和对头阻挡仍逐演员判断。
+            using StaticProfileKey = std::tuple<int, int, bool, int>;
+            std::map<StaticProfileKey, std::unordered_map<std::size_t, bool>> staticPassability;
             const std::size_t perActor = (std::min)(std::size_t{4096},
                 (std::max)(std::size_t{64}, std::size_t{4} * snapshot.mActors.size()));
-            std::size_t queries = 0;
             for (auto& item : snapshot.mActors)
             {
                 auto* const actor = actors.at(item.mId);
@@ -572,30 +602,114 @@ namespace ra_commands::game
                     item.mCurrentCell.mOnBridge};
                 CellClass* origin = nullptr;
                 int sourceZone = -1;
+                std::size_t acceptedInBand = 0;
+                std::unordered_map<std::size_t, bool>* knownStatic = nullptr;
                 if (profile.mPlane == OccupancyPlane::Ground)
                 {
                     origin = FindCell(map, item.mCurrentCell);
                     if (!origin) { return false; }
                     sourceZone = MovementZoneIndex(map, origin,
                         actor->GetTechnoType()->MovementZone, profile.mOnBridge);
+                    if (sparse)
+                    {
+                        if (sourceZone < 0) return false;
+                        const auto* type = actor->GetTechnoType();
+                        const StaticProfileKey key{static_cast<int>(type->SpeedType),
+                            static_cast<int>(type->MovementZone), profile.mOnBridge, sourceZone};
+                        knownStatic = &staticPassability[key];
+                    }
                 }
-                for (const auto& candidate : cells)
+                const auto capture = [&](std::size_t index)
                 {
-                    if (++queries > MAX_EDGES) { BudgetDiagnostic(); return false; }
+                    const auto& candidate = cells[index];
                     const Cell destination{candidate.mCell.mX, candidate.mCell.mY,
                         profile.mOnBridge};
-                    const auto available = CanOccupy(map, actor, profile, destination,
-                        &participants, origin, candidate.mNativeCell,
-                        profile.mPlane == OccupancyPlane::Ground ? &sourceZone : nullptr,
-                        &zoneCache, &airContents);
-                    if (available == 0) { continue; }
+                    auto& actorQueries = cachedQueries[item.mId];
+                    const auto cached = sparse ? actorQueries.find(index) : actorQueries.end();
+                    std::uint8_t available = 0;
+                    if (cached != actorQueries.end()) available = cached->second;
+                    else
+                    {
+                        if (knownStatic)
+                        {
+                            const auto [entry, inserted] = knownStatic->try_emplace(index, false);
+                            if (inserted)
+                                entry->second = HasTerrainSpeed(actor, candidate.mNativeCell, profile.mOnBridge)
+                                    && SameStaticZone(map, actor, origin, candidate.mNativeCell, profile.mOnBridge,
+                                        &sourceZone, &zoneCache, nullptr);
+                            if (!entry->second) return true;
+                        }
+                        if (++queries > MAX_NATIVE_QUERIES) { BudgetDiagnostic(); return false; }
+                        if (sparse && ++queriesByActor[item.mId] > auto_formation::LARGE_FORMATION_QUERIES_PER_ACTOR)
+                        { BudgetDiagnostic(); return false; }
+                        available = CanOccupy(map, actor, profile, destination,
+                            &participants, origin, candidate.mNativeCell,
+                            profile.mPlane == OccupancyPlane::Ground ? &sourceZone : nullptr,
+                            &zoneCache, &airContents, nullptr, knownStatic != nullptr);
+                        if (sparse) actorQueries.emplace(index, available);
+                    }
+                    if (available == 0) return true;
+                    ++acceptedInBand;
+                    if (sparse && !acceptedIndices[item.mId].insert(index).second) return true;
                     item.mCandidates.push_back(destination);
                     if (item.mKind == ActorKind::Infantry && available < 3)
                     {
                         item.mCapacityLimits.push_back({destination, available});
                     }
-                    if (stopAtPerActorLimit && item.mCandidates.size() >= perActor) { break; }
+                    return true;
+                };
+                if (sparse)
+                {
+                    for (const auto index : bandByActor.at(item.mId)->mCellIndices)
+                    {
+                        if (!capture(index)) return false;
+                        if (acceptedInBand >= auto_formation::LARGE_FORMATION_ACCEPTED_CANDIDATES) break;
+                    }
+                    if (item.mCandidates.empty()) return false;
                 }
+                else
+                {
+                    for (std::size_t index = 0; index < cells.size(); ++index)
+                    {
+                        if (!capture(index)) return false;
+                        if (stopAtPerActorLimit && item.mCandidates.size() >= perActor) break;
+                    }
+                }
+            }
+            return true;
+        }
+
+        bool FillCandidates(auto_formation::Snapshot& snapshot,
+            const std::map<ActorId, FootClass*>& actors,
+            const std::unordered_set<ActorId>& participants,
+            const std::vector<OrderedCell>& cells, bool stopAtPerActorLimit,
+            std::size_t& sparseQueries,
+            std::unordered_map<ActorId, std::size_t>& queriesByActor,
+            const std::vector<auto_formation::PlaneLayout>& planes = {},
+            std::uint8_t infantryCapacity = 3)
+        {
+            const bool sparse = snapshot.mActors.size() > auto_formation::LEGACY_FORMATION_ACTORS;
+            std::size_t legacyQueries = 0;
+            auto& queries = sparse ? sparseQueries : legacyQueries;
+            std::unordered_map<ActorId, std::unordered_map<std::size_t, std::uint8_t>> cachedQueries;
+            std::unordered_map<ActorId, std::unordered_set<std::size_t>> acceptedIndices;
+            for (int pass = 0; pass < 3; ++pass)
+            {
+                if (!FillCandidatePass(snapshot, actors, participants, cells, stopAtPerActorLimit,
+                        planes, infantryCapacity, queries, queriesByActor, cachedQueries, acceptedIndices)) return false;
+                if (!sparse || !planes.empty()) return true;
+                // 保留较紧凑的首轮图，仅在某演员所有已采候选都降容时补充更大的足迹。
+                // 同次快照按 actor+cell 去重真实查询；不把占用结果跨演员复用。
+                auto capacity = infantryCapacity;
+                for (const auto& actor : snapshot.mActors)
+                    if (actor.mKind == ActorKind::Infantry && actor.mCapacityLimits.size() == actor.mCandidates.size())
+                    {
+                        std::uint8_t maximum = 0;
+                        for (const auto& limit : actor.mCapacityLimits) maximum = std::max(maximum, limit.mAvailable);
+                        capacity = std::min(capacity, maximum);
+                    }
+                if (capacity >= infantryCapacity) return true;
+                infantryCapacity = capacity;
             }
             return true;
         }
@@ -612,6 +726,18 @@ namespace ra_commands::game
 
     std::uint32_t AutoFormationGameAdapter::Epoch() const { return mDispatcher.Epoch(); }
     std::uint32_t AutoFormationGameAdapter::CurrentFrame() const { return GetCurrentGameFrame(); }
+
+    void AutoFormationGameAdapter::PrepareCandidateQueryBudget() const
+    {
+        const auto epoch = Epoch(), frame = CurrentFrame();
+        if (epoch != mCandidateQueryEpoch || frame != mCandidateQueryFrame)
+        {
+            mCandidateQueryEpoch = epoch;
+            mCandidateQueryFrame = frame;
+            mCandidateQueries = 0;
+            mCandidateQueriesByActor.clear();
+        }
+    }
 
     std::vector<ActorProfile> AutoFormationGameAdapter::CaptureSelectedActorProfiles() const
     {
@@ -749,19 +875,24 @@ namespace ra_commands::game
             if (a.mCell.mY != b.mCell.mY) { return a.mCell.mY < b.mCell.mY; }
             return a.mCell.mX < b.mCell.mX;
         });
-        if (!FillCandidates(snapshot, actors, participants, cells, true)) { return false; }
+        PrepareCandidateQueryBudget();
+        if (!FillCandidates(snapshot, actors, participants, cells, true,
+                mCandidateQueries, mCandidateQueriesByActor)) { return false; }
         outSnapshot = std::move(snapshot);
         return true;
     }
 
     bool AutoFormationGameAdapter::TryCaptureSnapshotForCells(
         const std::vector<ActorId>& ids, const std::vector<Cell>& cells,
-        auto_formation::Snapshot& outSnapshot) const
+        auto_formation::Snapshot& outSnapshot,
+        const std::vector<auto_formation::PlaneLayout>& planes,
+        std::uint8_t infantryCapacity) const
     {
-        constexpr std::size_t MAX_REQUESTED_CELLS = 1024;
+        constexpr std::size_t MAX_REQUESTED_CELLS = auto_formation::MAX_FORMATION_RESOURCE_CELLS;
         if (!IsSessionActive() || ids.empty() || ids.size() > MAX_ACTORS ||
             cells.empty() || cells.size() > MAX_REQUESTED_CELLS ||
-            ids.size() * cells.size() > MAX_EDGES)
+            (ids.size() <= auto_formation::LEGACY_FORMATION_ACTORS &&
+                ids.size() * cells.size() > MAX_NATIVE_QUERIES))
         {
             return false;
         }
@@ -784,7 +915,9 @@ namespace ra_commands::game
         {
             requestedCells.push_back({{coordinate.first, coordinate.second, false}, 0.0, nativeCell});
         }
-        if (!FillCandidates(snapshot, actors, participants, requestedCells, false)) { return false; }
+        PrepareCandidateQueryBudget();
+        if (!FillCandidates(snapshot, actors, participants, requestedCells, false,
+                mCandidateQueries, mCandidateQueriesByActor, planes, infantryCapacity)) { return false; }
         snapshot.mCenter = auto_formation::CalculateCenter(snapshot.mActors);
         outSnapshot = std::move(snapshot);
         return true;

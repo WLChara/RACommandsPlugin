@@ -186,4 +186,13 @@
     <ClInclude Include="src\NetworkEvent\ExtraFrame.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ItemGroup Label="LargeFormation">
+    <ClCompile Include="src\Commands\AutoFormationCommand\FormationCandidateBands.cpp" />
+    <ClCompile Include="src\Tests\FormationCandidateBandsTests.cpp" />
+    <ClInclude Include="src\Commands\AutoFormationCommand\FormationCandidateBands.h" />
+    <ClCompile Include="src\Commands\AutoFormationCommand\LargeFormationMatching.cpp" />
+    <ClCompile Include="src\Tests\LargeFormationMatchingTests.cpp" />
+    <ClInclude Include="src\Commands\AutoFormationCommand\LargeFormationMatching.h" />
+    <ClInclude Include="src\Commands\AutoFormationCommand\FormationLimits.h" />
+  </ItemGroup>
 </Project>

@@ -1,5 +1,6 @@
 #include "Commands/AutoFormationCommand/AutoFormationCommandService.h"
 #include "Commands/AutoFormationCommand/FormationCellPacking.h"
+#include "Commands/AutoFormationCommand/FormationLimits.h"
 
 #include <utility>
 #include <vector>
@@ -15,7 +16,7 @@ namespace ra_commands::auto_formation
         // 仅对持续 180 帧没有换格的移动单位重试，给原生寻路留出时间。
         constexpr std::uint32_t MOVING_STALL_FRAMES = 180;
         // 与既有规划器的参与者预算及值型地图坐标范围保持一致。
-        constexpr std::size_t MAX_PLAN_ACTORS = 256;
+        constexpr std::size_t MAX_PLAN_ACTORS = MAX_FORMATION_ACTORS;
         constexpr std::int32_t MAP_AXIS_LIMIT = 512;
 
         bool HasCompatibleTraits(const Assignment& assignment,

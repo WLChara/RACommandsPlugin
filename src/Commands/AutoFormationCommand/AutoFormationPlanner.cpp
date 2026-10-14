@@ -1,5 +1,7 @@
 #include "Commands/AutoFormationCommand/AutoFormationPlanner.h"
 #include "Commands/AutoFormationCommand/FormationCellPacking.h"
+#include "Commands/AutoFormationCommand/FormationLimits.h"
+#include "Commands/AutoFormationCommand/LargeFormationMatching.h"
 
 #include <algorithm>
 #include <cmath>
@@ -560,6 +562,7 @@ namespace ra_commands::auto_formation
 
     PlanResult Plan(const Snapshot& snapshot)
     {
+        if (snapshot.mActors.size() > LEGACY_FORMATION_ACTORS) return PlanLargeCompactPacking(snapshot);
         if (std::any_of(snapshot.mActors.begin(), snapshot.mActors.end(),
             [](const ActorSnapshot& actor)
             {

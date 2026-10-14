@@ -223,9 +223,9 @@ namespace
 
     void TestBudgetAndCoordinateLimits()
     {
-        const auto tooManyActors = Plan(Uniform(257, { { 0, 0, false } }));
+        const auto tooManyActors = Plan(Uniform(1025, { { 0, 0, false } }));
         Require(tooManyActors.mBudgetExceeded && tooManyActors.mAssignments.empty() &&
-            tooManyActors.mUnassignedActors.size() == 257,
+            tooManyActors.mUnassignedActors.size() == 1025,
             "an oversized selection must reject the whole group without truncation");
         const auto tooManyEdges = Plan(Uniform(65, std::vector<Cell>(4096, Cell {})));
         Require(tooManyEdges.mBudgetExceeded && tooManyEdges.mAssignments.empty() &&

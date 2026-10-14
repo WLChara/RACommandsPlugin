@@ -1,4 +1,6 @@
 #include "Commands/AutoFormationCommand/FormationCellPacking.h"
+#include "Commands/AutoFormationCommand/FormationLimits.h"
+#include "Commands/AutoFormationCommand/LargeFormationMatching.h"
 
 #include <algorithm>
 #include <cmath>
@@ -28,9 +30,11 @@ namespace ra_commands::auto_formation
         constexpr double INFINITE_COST = 1e100;
         // 最多256名演员的移动成本先截到每人1e6，故1e9保证先多保留一辆原地车。
         constexpr double NON_CURRENT_PENALTY = 1e9;
+        static_assert(LEGACY_FORMATION_ACTORS * 1000000.0 < NON_CURRENT_PENALTY);
         // 半径最多32格：每段几何成本≤1.024e9，移动成本截到1e9。
         // 256个请求的一条交替路径累计次要成本<1e12，故先最大化实际演员数。
         constexpr std::int64_t ACTOR_PRIORITY = 1000000000000LL;
+        static_assert(LEGACY_FORMATION_ACTORS * (1024000000LL + 1000000000LL) < ACTOR_PRIORITY);
         constexpr std::int64_t INFINITE_FLOW_COST = std::numeric_limits<std::int64_t>::max() / 4;
         constexpr int MAP_AXIS_LIMIT = 512;
         constexpr int NONE = -1;
@@ -767,6 +771,8 @@ namespace ra_commands::auto_formation
         const std::vector<PlaneLayout>& layouts, bool requireComplete,
         double projectionRadius, std::uint8_t infantryCapacity)
     {
+        if (snapshot.mActors.size() > LEGACY_FORMATION_ACTORS)
+            return PlanLargeCellPacking(snapshot, layouts, projectionRadius, infantryCapacity);
         WorkBudget matchBudget {MAX_MATCH_WORK};
         WorkBudget costBudget {MAX_COST_WORK};
         return PlanCellPackingImpl(snapshot, layouts, requireComplete,
@@ -775,6 +781,7 @@ namespace ra_commands::auto_formation
 
     PlanResult PlanCompactPacking(const Snapshot& snapshot)
     {
+        if (snapshot.mActors.size() > LEGACY_FORMATION_ACTORS) return PlanLargeCompactPacking(snapshot);
         PlanResult best = Reject(snapshot);
         if (snapshot.mActors.size() > MAX_ACTORS) return Reject(snapshot, true);
         if (snapshot.mActors.empty() || !IsFinite(snapshot.mCenter)) return best;

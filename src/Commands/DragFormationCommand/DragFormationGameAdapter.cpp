@@ -146,9 +146,11 @@ namespace ra_commands::game
     bool DragFormationGameAdapter::TryCapturePlacementSnapshot(
         const std::vector<auto_formation::ActorId>& actors,
         const std::vector<auto_formation::Cell>& cells,
+        const drag_formation::Layout& layout,
         auto_formation::Snapshot& outSnapshot) const
     {
-        return mGame.TryCaptureSnapshotForCells(actors, cells, outSnapshot);
+        return mGame.TryCaptureSnapshotForCells(actors, cells, outSnapshot,
+            layout.mPlanes, layout.mInfantryCapacity);
     }
 
     bool DragFormationGameAdapter::Commit(const auto_formation::PlanResult& plan)

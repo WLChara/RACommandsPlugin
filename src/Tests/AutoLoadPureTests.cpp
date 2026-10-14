@@ -714,6 +714,8 @@ void RunEventBacklogTests();
 void RunExtraFrameTests();
 void RunCommandCapacityTests();
 void RunClickedMissionTransportTests();
+void RunLargeFormationMatchingTests();
+void RunFormationCandidateBandsTests();
 
 int main()
 {
@@ -772,6 +774,8 @@ int main()
         RunExtraFrameTests();
         RunCommandCapacityTests();
         RunClickedMissionTransportTests();
+        RunLargeFormationMatchingTests();
+        RunFormationCandidateBandsTests();
         std::cout << "RACommandsPlugin pure tests passed\n";
         return 0;
     }

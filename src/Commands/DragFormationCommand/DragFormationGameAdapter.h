@@ -22,6 +22,7 @@ namespace ra_commands::game
         [[nodiscard]] bool TryCapturePlacementSnapshot(
             const std::vector<auto_formation::ActorId>& actors,
             const std::vector<auto_formation::Cell>& cells,
+            const drag_formation::Layout& layout,
             auto_formation::Snapshot& outSnapshot) const override;
         [[nodiscard]] bool Commit(const auto_formation::PlanResult& plan) override;
         /** client坐标必须位于战场视窗；返回连续格坐标，格中心为整数。 */

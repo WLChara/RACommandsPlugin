@@ -1801,4 +1801,13 @@
     <ClInclude Include="src\NetworkEvent\ExtraFrame.h"><Filter>src\NetworkEvent</Filter></ClInclude>
     <ClInclude Include="src\Hooks\CommandCapacityHook.h"><Filter>src\Hooks</Filter></ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Commands\AutoFormationCommand\LargeFormationMatching.cpp"><Filter>src\Commands\AutoFormationCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoFormationCommand\LargeFormationMatching.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
+    <ClInclude Include="src\Commands\AutoFormationCommand\FormationLimits.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Commands\AutoFormationCommand\FormationCandidateBands.cpp"><Filter>src\Commands\AutoFormationCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\AutoFormationCommand\FormationCandidateBands.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
+  </ItemGroup>
 </Project>

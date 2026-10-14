@@ -648,6 +648,11 @@
     <ClInclude Include="src\Commands\DragFormationCommand\DragFormationProjection.h" />
   </ItemGroup>
   <ItemGroup Label="NewSourceFallback">
+    <ClCompile Include="src\Commands\AutoFormationCommand\FormationCandidateBands.cpp" />
+    <ClInclude Include="src\Commands\AutoFormationCommand\FormationCandidateBands.h" />
+    <ClCompile Include="src\Commands\AutoFormationCommand\LargeFormationMatching.cpp" />
+    <ClInclude Include="src\Commands\AutoFormationCommand\LargeFormationMatching.h" />
+    <ClInclude Include="src\Commands\AutoFormationCommand\FormationLimits.h" />
     <ClCompile Include="src\NetworkEvent\CommandCapacity.cpp" />
     <ClCompile Include="src\NetworkEvent\CommandCapacityNativeAdapter.cpp" />
     <ClCompile Include="src\NetworkEvent\EventBacklog.cpp" />

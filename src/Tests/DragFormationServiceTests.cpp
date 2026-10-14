@@ -58,6 +58,7 @@ namespace
         bool TryCapturePlacementSnapshot(
             const std::vector<ra_commands::auto_formation::ActorId>& actors,
             const std::vector<ra_commands::auto_formation::Cell>& cells,
+            const Layout&,
             ra_commands::auto_formation::Snapshot& outSnapshot) const override
         {
             ++mSnapshotCalls;
@@ -290,10 +291,10 @@ namespace
     void TestBoundAndIncompletePlan()
     {
         FakeGame game;
-        game.mSelected.assign(129, 1);
+        game.mSelected.assign(1025, 1);
         DragFormationCommandService service(game);
         service.OnHotkey();
-        Require(!service.IsEnabled(), "more than 128 actors must not arm mode");
+        Require(!service.IsEnabled(), "more than 1024 actors must not arm mode");
         game.mSelected = {1, 1};
         service.OnHotkey();
         Require(!service.IsEnabled(), "duplicate actor identities must not arm mode");
