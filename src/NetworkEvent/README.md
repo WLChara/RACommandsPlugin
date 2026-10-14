@@ -51,4 +51,4 @@
 
 本次解除的是参与者准入限制和规划编辑时的发送容量。原版 DoList 的单次 House 扫描使用 256 槽 MegaMission 缓冲；原生 `PlanCommit` 后续生成的执行事件可能触及这个边界，但尚未取得真实对局中丢命令的具体复现方式。这不等于整次操作只能控制 256 个单位。当前只记录待复现风险，保留原生执行帧和调度方式；出现实际问题后，再按游戏模式、协议模式、人数、任务、House 和执行帧核对发送与消费数量。隔离测试不等于真实联机验收。
 
-验证脚本：`scripts/test-planning-participant-capacity.ps1` 核对中段网关和入口包装；`scripts/test-command-capacity.ps1` 核对共享队列、原生生产 ABI、规划事件顺序和线上字节。
+隔离验证源码：`src/Tests/PlanningParticipantCapacityNativeFixture.cpp` 核对中段网关和入口包装；`src/Tests/CommandCapacityNativeFixture.cpp` 核对共享队列、原生生产 ABI、规划事件顺序和线上字节。

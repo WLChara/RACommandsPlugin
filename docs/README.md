@@ -62,7 +62,7 @@ RACommandsPlugin/
 
 Syringe 在自身进程加载 DLL 进行握手时，插件不创建初始化线程。游戏进程中的自动入口先验证 EXE，再等待原生命令表就绪后安装 MinHook，避免早于 Syringe 的统一 Hook 写入。对局中使用原有 `LoadLibrary` 注入器加载同一个 DLL 时，就绪后沿用同一初始化路径。DLL 在受识别的游戏宿主中保持进程常驻；`Shutdown` 会取消尚未完成的自动启动并停用运行时。
 
-运行 `scripts/test-syringe-metadata.ps1` 和 `scripts/test-syringe-host.ps1` 可核对构建 DLL 的识别段、未修饰握手导出和隔离宿主中的真实加载行为；Syringe 启动游戏、对局中途注入及与其他 DLL 共存仍需实机验收。
+隔离宿主验证源码位于 `src/Tests/SyringeHostTests.cpp`；Syringe 启动游戏、对局中途注入及与其他 DLL 共存仍需实机验收。
 
 使用常规 `LoadLibrary` 注入后，DLL 会自行安排初始化，调用方不需要调用 `RACommandsPlugin_Initialize`。初始化在 `DllMain` 返回后验证 EXE 并解析 AOB，然后安装主帧 Hook；原生命令在游戏命令表就绪的主帧注册。旧的 `RACommandsPlugin_Initialize` 导出仍可手动重试；`RACommandsPlugin_IsReady` 只表示基础解析和主帧 Hook 已就绪，不表示命令、热键或联机已经通过运行时验收。
 
@@ -110,7 +110,7 @@ Syringe 在自身进程加载 DLL 进行握手时，插件不创建初始化线�
 
 插件在游戏线程首次进入就绪对局时，将原生 500 条战术候选表迁移至 DLL 常驻的 4096 条表，同步校验和更新 14 处容量、地址及扫描尾部操作数。中途注入会复制原表已有的有效候选；原有选中集合保持有效。联机与回放使用固定容量，战役和遭遇战可以在候选表满时按需增长；容量受 x86 内存和原生有符号索引范围约束。候选条目数不一定等于选中单位数。
 
-动态扩容只在原生读取者退出后切换表；换对局重置在安全点完成，停用时保留仍被游戏引用的缓冲区。固定表或动态 Hook 不兼容时，日志分别报告可用能力，不阻止其他原生命令注册。`scripts/test-selection-capacity.ps1` 在隔离 Win32 宿主中验证目标 PE 指令页、操作数、增长、网关寄存器、生命周期与已有入口跳转；真实框选和联机仍需游戏内验收。各功能自身的规划预算独立于原生选区容量。
+动态扩容只在原生读取者退出后切换表；换对局重置在安全点完成，停用时保留仍被游戏引用的缓冲区。固定表或动态 Hook 不兼容时，日志分别报告可用能力，不阻止其他原生命令注册。`src/Tests/SelectionCapacityNativeTests.cpp` 在隔离 Win32 宿主中验证目标 PE 指令页、操作数、增长、网关寄存器、生命周期与已有入口跳转；真实框选和联机仍需游戏内验收。各功能自身的规划预算独立于原生选区容量。
 
 ### 单机与联机批量命令
 
@@ -118,7 +118,7 @@ Syringe 在自身进程加载 DLL 进行握手时，插件不创建初始化线�
 
 战役与遭遇战在原生帧解析前将待发事件写入 DoList，计入已有原生事件后，每家每帧的 MegaMission 不超过 256；原生处理与回放入口继续沿既有 Hook 链执行。LAN 和 Internet 的模式 2 使用原版压缩 FrameInfo，额外批次按发送者、目标执行帧、CRC 和计数建构，并以相同事件自回流 DoList；每个执行帧最多额外 128 条，重复窗口或时序变化保留剩余 FIFO。模式 0／1 及需要退化的窗口使用原生 OutList 分帧后端，并保留原生余量。
 
-人工新命令会清除该单位尚未提交的旧传输记录；插件按 producer 和对局代次取消自己的任务，已进入 DoList 或已交给发送接口的记录不能撤回。编队观察将传输等待计为 Queued，避免拥塞时重复发送。规划模式沿用原生规则，回放和观战不接管新命令。运行日志汇总待发、入列、取消与故障；隔离测试见 `scripts/test-command-capacity.ps1`，真实命令入口与容量接管的组合验证见 `scripts/test-native-order-capacity.ps1`。这些测试不表示真实联机送达、未修改对端或 OOS 已验收。
+人工新命令会清除该单位尚未提交的旧传输记录；插件按 producer 和对局代次取消自己的任务，已进入 DoList 或已交给发送接口的记录不能撤回。编队观察将传输等待计为 Queued，避免拥塞时重复发送。规划模式沿用原生规则，回放和观战不接管新命令。运行日志汇总待发、入列、取消与故障；隔离验证源码为 `src/Tests/CommandCapacityNativeFixture.cpp` 和 `src/Tests/NativeOrderCapacityIntegrationFixture.cpp`，覆盖队列及命令入口与容量接管的组合。这些测试不表示真实联机送达、未修改对端或 OOS 已验收。
 
 ### 拖拽矩形编队 Demo
 
