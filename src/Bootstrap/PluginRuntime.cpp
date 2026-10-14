@@ -72,6 +72,7 @@
 #include "Hooks/DragFormationInputHook.h"
 #include "Game/TargetVersion.h"
 #include "Game/SelectionCapacity.h"
+#include "Game/PlanningParticipantCapacity.h"
 #include "NetworkEvent/CommandCapacity.h"
 
 #include <Windows.h>
@@ -167,6 +168,7 @@ namespace ra_commands::bootstrap
         bool g_DragInputHookReady = false;
         bool g_DragInputHookAttempted = false;
         bool g_SelectionCapacityInstallAttempted = false;
+        bool g_PlanningParticipantCapacityInstallAttempted = false;
         bool g_CommandCapacityHooksReady = false;
         std::uint32_t g_LastCommandCapacityTraceFrame = 0;
         std::uint64_t g_LastCommandCapacityFaults = 0;
@@ -733,6 +735,14 @@ namespace ra_commands::bootstrap
             }
             game::selection_capacity::OnGameFrame(
                 g_ClickedMissionDispatcher.IsSessionActive(), g_ClickedMissionDispatcher.Epoch());
+            if (!g_PlanningParticipantCapacityInstallAttempted && g_ClickedMissionDispatcher.IsSessionActive())
+            {
+                g_PlanningParticipantCapacityInstallAttempted = true;
+                std::string planningError;
+                const bool installed = game::planning_participant_capacity::Install(planningError);
+                TraceRuntime("planning-participant-capacity installed=" + std::to_string(installed) +
+                    (planningError.empty() ? std::string{} : "; " + planningError));
+            }
             if (g_CommandCapacityHooksReady)
             {
                 const auto stats = game::command_capacity::GetStats();
@@ -986,6 +996,8 @@ namespace ra_commands::bootstrap
         g_IsInitialized = false;
         game::selection_capacity::Disable();
         g_SelectionCapacityInstallAttempted = false;
+        game::planning_participant_capacity::Disable();
+        g_PlanningParticipantCapacityInstallAttempted = false;
         game::command_capacity::Disable();
         g_CommandCapacityHooksReady = false;
         g_CommandCapacityHadPending = false;

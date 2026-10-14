@@ -1781,6 +1781,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Game\SelectionCapacity.cpp"><Filter>src\Game</Filter></ClCompile>
+    <ClCompile Include="src\Game\PlanningParticipantCapacity.cpp"><Filter>src\Game</Filter></ClCompile>
+    <ClCompile Include="src\Hooks\PlanningParticipantCapacityHook.cpp"><Filter>src\Hooks</Filter></ClCompile>
+    <ClInclude Include="src\Game\PlanningParticipantCapacity.h"><Filter>src\Game</Filter></ClInclude>
+    <ClInclude Include="src\Hooks\PlanningParticipantCapacityHook.h"><Filter>src\Hooks</Filter></ClInclude>
+    <ClInclude Include="src\Game\TargetProfiles\PlanningParticipantCapacityProfile.h"><Filter>src\Game\TargetProfiles</Filter></ClInclude>
     <ClCompile Include="src\Hooks\SelectionCapacityHooks.cpp"><Filter>src\Hooks</Filter></ClCompile>
     <ClCompile Include="src\Memory\VerifiedOperandPatch.cpp"><Filter>src\Memory</Filter></ClCompile>
     <ClInclude Include="src\Game\SelectionCapacity.h"><Filter>src\Game</Filter></ClInclude>

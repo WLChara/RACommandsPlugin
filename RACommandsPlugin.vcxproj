@@ -664,6 +664,11 @@
     <ClInclude Include="src\NetworkEvent\ExtraFrame.h" />
     <ClInclude Include="src\Hooks\CommandCapacityHook.h" />
     <ClCompile Include="src\Game\SelectionCapacity.cpp" />
+    <ClCompile Include="src\Game\PlanningParticipantCapacity.cpp" />
+    <ClCompile Include="src\Hooks\PlanningParticipantCapacityHook.cpp" />
+    <ClInclude Include="src\Game\PlanningParticipantCapacity.h" />
+    <ClInclude Include="src\Hooks\PlanningParticipantCapacityHook.h" />
+    <ClInclude Include="src\Game\TargetProfiles\PlanningParticipantCapacityProfile.h" />
     <ClCompile Include="src\Hooks\SelectionCapacityHooks.cpp" />
     <ClCompile Include="src\Memory\VerifiedOperandPatch.cpp" />
     <ClInclude Include="src\Game\SelectionCapacity.h" />
