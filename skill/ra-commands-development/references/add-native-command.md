@@ -8,5 +8,5 @@
 4. 继承 `src/Commands/NativeCommandRegistry.*` 注册命令。内部名唯一且稳定，可见名称、分类、描述全部使用简体中文；命令对象须保持进程存续期有效。
 5. 在 `src/Bootstrap/PluginRuntime.cpp` 接入游戏线程回调与注册。多条命令共用主帧入口，并在本轮待注册命令结束后统一重读热键；Shutdown 要停用回调并清理该命令状态。
 6. 仅当功能需要游戏任务时接入 `src/ClickedMission/ClickedMissionDispatcher`。若是新 Mission，在 `ClickedMissionGameAdapter` 中明确允许其参数组合并做发送前验证；遵守原生队列发送前至少 13 个空槽的背压规则。不要以 `ClickedMission` 返回值声称原生事件已入队。
-7. 把新源码、头文件和纯测试列入相应 `.vcxproj` 与 `.vcxproj.filters`，确保 Visual Studio 文件夹视图完整。为纯规划规则、开关/会话重置、容量不足、过期或取消等真实行为写测试。
-8. 执行 `& .\scripts\build.ps1`，再进行适用的游戏内验收：注入时机、ESC 中的热键及重启后保存、单机任务效果、不支持版本拒绝加载；联机功能另做双客户端 OOS 检查。没有完成的验证必须在交付说明中列出。
+7. 把新源码、头文件列入正式 `.vcxproj` 与 `.vcxproj.filters`，确保 Visual Studio 文件夹视图完整。为纯规划规则、开关/会话重置、容量不足、过期或取消等真实行为写本机测试；测试工程及夹具受 `.gitignore` 管理，不作为公开构建依赖。
+8. 执行 `& .\scripts\build.ps1`；本机持有测试工程时加 `-RunTests`。再进行适用的游戏内验收：注入时机、ESC 中的热键及重启后保存、单机任务效果、不支持版本拒绝加载；联机功能另做双客户端 OOS 检查。没有完成的验证必须在交付说明中列出。

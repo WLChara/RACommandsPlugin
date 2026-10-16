@@ -48,6 +48,7 @@
 #include "Commands/RangeDisplayCommand/RangeDisplayCommandRegistry.h"
 #include "Commands/RangeDisplayCommand/RangeDisplayCommandService.h"
 #include "Commands/RangeDisplayCommand/RangeDisplayGameAdapter.h"
+#include "Commands/HudToggleCommand/HudToggleCommandRegistry.h"
 #include "Commands/TeslaChargeCommand/TeslaChargeCommandRegistry.h"
 #include "Commands/TeslaChargeCommand/TeslaChargeCommandService.h"
 #include "Commands/TeslaChargeCommand/TeslaChargeGameAdapter.h"
@@ -71,6 +72,10 @@
 #include "Hooks/RangeDisplayHook.h"
 #include "Hooks/DragFormationInputHook.h"
 #include "Game/TargetVersion.h"
+#include "Game/GameHudUi.h"
+#include "Game/GameChatUi.h"
+#include "Game/GameChatSpeedAdapter.h"
+#include "Game/GameAlertsUi.h"
 #include "Game/SelectionCapacity.h"
 #include "Game/PlanningParticipantCapacity.h"
 #include "NetworkEvent/CommandCapacity.h"
@@ -167,6 +172,11 @@ namespace ra_commands::bootstrap
         bool g_FormationOrderHookReady = false;
         bool g_DragInputHookReady = false;
         bool g_DragInputHookAttempted = false;
+        bool g_HudUiInstallAttempted = false;
+        bool g_HudUiReady = false;
+        bool g_ChatUiReady = false;
+        bool g_BeaconUiReady = false;
+        bool g_RadarUiReady = false;
         bool g_SelectionCapacityInstallAttempted = false;
         bool g_PlanningParticipantCapacityInstallAttempted = false;
         bool g_CommandCapacityHooksReady = false;
@@ -379,7 +389,8 @@ namespace ra_commands::bootstrap
             // Capture/ReleaseCapture 可同步重入窗口过程；不等待已被外层持有的锁。
             std::unique_lock lock(g_StateMutex, std::try_to_lock);
             return lock.owns_lock() && g_IsInitialized &&
-                g_GameThreadId == GetCurrentThreadId() && g_DragFormationCommandService.IsEnabled();
+                g_GameThreadId == GetCurrentThreadId() && !game::IsGameChatUiEditing() &&
+                g_DragFormationCommandService.IsEnabled();
         }
 
         void OnDragFormationPointer(const game::DragPointerEvent& raw)
@@ -639,6 +650,40 @@ namespace ra_commands::bootstrap
             }
         }
 
+        void OnBeaconIndicatorToggle()
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
+                game::SetBeaconIndicatorsEnabled(!game::AreBeaconIndicatorsEnabled());
+        }
+
+        void OnRadarFeedToggle()
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
+                game::SetRadarFeedEnabled(!game::IsRadarFeedEnabled());
+        }
+
+        void OnChatPanelToggle()
+        {
+            std::lock_guard lock(g_StateMutex);
+            if (g_IsInitialized && g_GameThreadId == GetCurrentThreadId())
+                game::SetGameChatUiEnabled(game::IsGameHudUiAvailable() && !game::IsGameChatUiEnabled());
+        }
+
+        template<auto TRegister, game::HudToggleCallback TCallback, bool* TReady>
+        game::CommandRegistrationResult RegisterHudCommand(
+            const game::GameSymbols& symbols, void(*)(), std::string& outError)
+        {
+            if (!g_HudUiInstallAttempted) return game::CommandRegistrationResult::Pending;
+            if (!g_HudUiReady || !*TReady)
+            {
+                outError = "requested HUD capability is unavailable";
+                return game::CommandRegistrationResult::Failed;
+            }
+            return TRegister(symbols, TCallback, outError);
+        }
+
         // 所有原生命令共享主帧注册时机与一次热键重读。
         auto g_Commands = std::to_array<CommandEntry>({
             {&RegisterConfiguredCommand<&game::TryRegisterSafeModeToggleCommand, &OnSafeModeToggleHotkey>, &game::DisableSafeModeToggleCommand},
@@ -665,7 +710,13 @@ namespace ra_commands::bootstrap
             {&RegisterConfiguredCommand<&game::TryRegisterIfvModeSelectCommand, &OnIfvModeSelectHotkey>, &game::DisableIfvModeSelectCommand},
             {&RegisterConfiguredCommand<&RegisterAFloorWhenHookReady, &OnAFloorHotkey>, &game::DisableAFloorCommand},
             {&RegisterConfiguredCommand<&game::TryRegisterBeaconClearCommand, &OnBeaconClearHotkey>, &game::DisableBeaconClearCommand},
-            {&RegisterConfiguredCommand<&RegisterRangeWhenHookReady, &OnRangeDisplayHotkey>, &game::DisableRangeDisplayCommand}
+            {&RegisterConfiguredCommand<&RegisterRangeWhenHookReady, &OnRangeDisplayHotkey>, &game::DisableRangeDisplayCommand},
+            {&RegisterConfiguredCommand<&RegisterHudCommand<&game::TryRegisterBeaconIndicatorToggleCommand,
+                &OnBeaconIndicatorToggle, &g_BeaconUiReady>, &OnBeaconIndicatorToggle>, &game::DisableBeaconIndicatorToggleCommand},
+            {&RegisterConfiguredCommand<&RegisterHudCommand<&game::TryRegisterRadarFeedToggleCommand,
+                &OnRadarFeedToggle, &g_RadarUiReady>, &OnRadarFeedToggle>, &game::DisableRadarFeedToggleCommand},
+            {&RegisterConfiguredCommand<&RegisterHudCommand<&game::TryRegisterChatPanelToggleCommand,
+                &OnChatPanelToggle, &g_ChatUiReady>, &OnChatPanelToggle>, &game::DisableChatPanelToggleCommand}
         });
 
         void OnGameFrame()
@@ -683,6 +734,7 @@ namespace ra_commands::bootstrap
             {
                 g_GameThreadId = threadId;
                 g_NativeNetworkEventAdapter.BindGameThread(threadId);
+                game::BindGameChatSpeedAdapter(&g_NativeNetworkEventAdapter);
                 TraceRuntime("first-game-frame thread=" + std::to_string(threadId));
             }
             if (g_GameThreadId != threadId)
@@ -721,6 +773,48 @@ namespace ra_commands::bootstrap
             }
 
             g_ClickedMissionDispatcher.OnGameFrame();
+            if (!g_HudUiInstallAttempted && g_ClickedMissionDispatcher.IsSessionActive())
+            {
+                const auto window = reinterpret_cast<HWND>(g_DragFormationGameAdapter.OwnerWindowHandle());
+                if (window)
+                {
+                    g_HudUiInstallAttempted = true;
+                    std::string hudError;
+                    g_HudUiReady = game::InstallGameHudUi(window, hudError);
+                    TraceRuntime("hud-ui installed=" + std::to_string(g_HudUiReady) +
+                        (hudError.empty() ? std::string{} : "; " + hudError));
+                    if (g_HudUiReady)
+                    {
+                        hudError.clear();
+                        g_ChatUiReady = game::InstallGameChatUi(hudError);
+                        TraceRuntime("chat-ui installed=" + std::to_string(g_ChatUiReady) +
+                            (hudError.empty() ? std::string{} : "; " + hudError));
+                        hudError.clear();
+                        const bool alertsReady = game::InstallGameAlertsUi(hudError);
+                        g_BeaconUiReady = game::AreBeaconIndicatorsEnabled();
+                        g_RadarUiReady = game::IsRadarFeedEnabled();
+                        TraceRuntime("alerts-ui installed=" + std::to_string(alertsReady) +
+                            " beacon=" + std::to_string(g_BeaconUiReady) +
+                            " radar=" + std::to_string(g_RadarUiReady) +
+                            (hudError.empty() ? std::string{} : "; " + hudError));
+                    }
+                }
+            }
+            if (g_HudUiReady)
+            {
+                const auto nowMs = GetTickCount64();
+                const bool isActive = g_ClickedMissionDispatcher.IsSessionActive();
+                const auto sessionIdentity = static_cast<std::uintptr_t>(g_ClickedMissionDispatcher.Epoch());
+                game::UpdateGameChatUi(nowMs, isActive, sessionIdentity);
+                game::UpdateGameAlertsUi(nowMs, isActive, sessionIdentity);
+                game::UpdateGameHudUi();
+                if (game::IsGameChatUiEditing() && g_DragFormationCommandService.IsEnabled())
+                {
+                    // 聊天拥有输入期间取消旧手势，不让松键在聊天背后下达编队任务。
+                    g_DragFormationCommandService.OnHotkey();
+                    game::CancelDragFormationInputCapture();
+                }
+            }
             if (!g_SelectionCapacityInstallAttempted && g_ClickedMissionDispatcher.IsSessionActive())
             {
                 g_SelectionCapacityInstallAttempted = true;
@@ -995,6 +1089,14 @@ namespace ra_commands::bootstrap
         std::lock_guard lock(g_StateMutex);
         g_IsAutoStartCancelled = true;
         g_IsInitialized = false;
+        game::DisableGameChatUi();
+        game::DisableGameAlertsUi();
+        game::DisableGameHudUi();
+        g_HudUiReady = false;
+        g_ChatUiReady = false;
+        g_BeaconUiReady = false;
+        g_RadarUiReady = false;
+        g_HudUiInstallAttempted = false;
         game::selection_capacity::Disable();
         g_SelectionCapacityInstallAttempted = false;
         game::planning_participant_capacity::Disable();
@@ -1037,6 +1139,7 @@ namespace ra_commands::bootstrap
         g_FormationTraceWasActive = false;
         g_LastFormationTraceFrame = 0;
         g_ClickedMissionDispatcher.Reset();
+        game::BindGameChatSpeedAdapter(nullptr);
         g_NativeNetworkEventAdapter.Reset();
         g_LastHotkeyReloadCommandCount = 0;
         g_HasRegistrationTrace = false;

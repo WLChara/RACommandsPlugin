@@ -2,6 +2,8 @@
 
 #include "Game/GameObjectAccess.h"
 #include "Game/SuperWeaponAccess.h"
+#include "Game/TargetProfiles/GameChatSpeedProfile.h"
+#include "Memory/ProcessMemory.h"
 
 #include <YRPPCore.h>
 #include <GeneralDefinitions.h>
@@ -46,6 +48,8 @@ namespace ra_commands::game
             static_cast<std::uint8_t>(NetworkEventKind::Produce));
         static_assert(static_cast<std::uint8_t>(NetworkEvents::Place) ==
             static_cast<std::uint8_t>(NetworkEventKind::Place));
+        static_assert(static_cast<std::uint8_t>(NetworkEvents::GameSpeed) ==
+            static_cast<std::uint8_t>(NetworkEventKind::GameSpeed));
         static_assert(static_cast<std::uint8_t>(NetworkEvents::SpecialPlace) ==
             static_cast<std::uint8_t>(NetworkEventKind::SpecialPlace));
 
@@ -53,6 +57,18 @@ namespace ra_commands::game
             const HouseClass* localPlayer)
         {
             const auto kind = static_cast<NetworkEventKind>(event.Kind);
+            if (kind == NetworkEventKind::GameSpeed)
+            {
+                int mode = -1;
+                std::uint8_t networkActive = 0;
+                network_event::ValuePayload payload{};
+                std::memcpy(&payload, event.Data.Raw, sizeof(payload));
+                return payload.Value <= 5 &&
+                    memory::TryReadMemory(chat_speed_profile::SESSION_MODE_ADDRESS, &mode, sizeof(mode)) &&
+                    (mode == 3 || mode == 4) &&
+                    memory::TryReadMemory(chat_speed_profile::NETWORK_ACTIVE_ADDRESS, &networkActive, sizeof(networkActive)) &&
+                    networkActive == 1;
+            }
             if (kind == NetworkEventKind::SpecialPlace)
             {
                 SpecialPlacePayload payload{};

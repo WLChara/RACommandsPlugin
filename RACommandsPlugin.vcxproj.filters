@@ -1821,4 +1821,62 @@
     <ClCompile Include="src\Commands\AutoFormationCommand\FormationCandidateBands.cpp"><Filter>src\Commands\AutoFormationCommand</Filter></ClCompile>
     <ClInclude Include="src\Commands\AutoFormationCommand\FormationCandidateBands.h"><Filter>src\Commands\AutoFormationCommand</Filter></ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <Filter Include="src\Commands\HudToggleCommand"><UniqueIdentifier>{70E6481B-1B90-40C0-9530-166B546203FC}</UniqueIdentifier></Filter>
+    <Filter Include="src\UI"><UniqueIdentifier>{0E770C7D-F766-4F37-9D2F-CD313D2BECF4}</UniqueIdentifier></Filter>
+    <Filter Include="src\UI\BeaconIndicator"><UniqueIdentifier>{6BC050D3-1CB2-4090-975A-091F69986464}</UniqueIdentifier></Filter>
+    <Filter Include="src\UI\Chat"><UniqueIdentifier>{1C72E1B9-069E-4131-95DA-CEC71D216632}</UniqueIdentifier></Filter>
+    <Filter Include="src\UI\Overlay"><UniqueIdentifier>{278BEBCB-5823-4303-BAB6-A50E0C4FBAE8}</UniqueIdentifier></Filter>
+    <Filter Include="src\UI\RadarFeed"><UniqueIdentifier>{099C2E19-2EE5-4BB8-9888-57284CBA8365}</UniqueIdentifier></Filter>
+    <ClCompile Include="src\Commands\HudToggleCommand\HudToggleCommandRegistry.cpp"><Filter>src\Commands\HudToggleCommand</Filter></ClCompile>
+    <ClInclude Include="src\Commands\HudToggleCommand\HudToggleCommandRegistry.h"><Filter>src\Commands\HudToggleCommand</Filter></ClInclude>
+    <ClCompile Include="src\Game\GameAlertsUi.cpp"><Filter>src\Game</Filter></ClCompile>
+    <ClInclude Include="src\Game\GameAlertsUi.h"><Filter>src\Game</Filter></ClInclude>
+    <ClCompile Include="src\Game\GameChatUi.cpp"><Filter>src\Game</Filter></ClCompile>
+    <ClInclude Include="src\Game\GameChatUi.h"><Filter>src\Game</Filter></ClInclude>
+    <ClCompile Include="src\Game\GameHudUi.cpp"><Filter>src\Game</Filter></ClCompile>
+    <ClInclude Include="src\Game\GameHudUi.h"><Filter>src\Game</Filter></ClInclude>
+    <ClInclude Include="src\Game\TargetProfiles\AlertsUiProfile.h"><Filter>src\Game\TargetProfiles</Filter></ClInclude>
+    <ClInclude Include="src\Game\TargetProfiles\ChatUiProfile.h"><Filter>src\Game\TargetProfiles</Filter></ClInclude>
+    <ClInclude Include="src\Game\TargetProfiles\HudUiProfile.h"><Filter>src\Game\TargetProfiles</Filter></ClInclude>
+    <ClCompile Include="src\Hooks\AlertsUiHook.cpp"><Filter>src\Hooks</Filter></ClCompile>
+    <ClInclude Include="src\Hooks\AlertsUiHook.h"><Filter>src\Hooks</Filter></ClInclude>
+    <ClInclude Include="src\Hooks\HudUiBridge.inl"><Filter>src\Hooks</Filter></ClInclude>
+    <ClCompile Include="src\Hooks\HudUiHook.cpp"><Filter>src\Hooks</Filter></ClCompile>
+    <ClInclude Include="src\Hooks\HudUiHook.h"><Filter>src\Hooks</Filter></ClInclude>
+    <ClCompile Include="src\UI\BeaconIndicator\BeaconNoticeModel.cpp"><Filter>src\UI\BeaconIndicator</Filter></ClCompile>
+    <ClInclude Include="src\UI\BeaconIndicator\BeaconNoticeModel.h"><Filter>src\UI\BeaconIndicator</Filter></ClInclude>
+    <ClCompile Include="src\UI\Chat\ChatState.cpp"><Filter>src\UI\Chat</Filter></ClCompile>
+    <ClInclude Include="src\UI\Chat\ChatState.h"><Filter>src\UI\Chat</Filter></ClInclude>
+    <ClCompile Include="src\UI\Overlay\HudGeometry.cpp"><Filter>src\UI\Overlay</Filter></ClCompile>
+    <ClInclude Include="src\UI\Overlay\HudGeometry.h"><Filter>src\UI\Overlay</Filter></ClInclude>
+    <ClInclude Include="src\UI\Overlay\HudTypes.h"><Filter>src\UI\Overlay</Filter></ClInclude>
+    <ClCompile Include="src\UI\Overlay\NativeHudCanvas.cpp"><Filter>src\UI\Overlay</Filter></ClCompile>
+    <ClInclude Include="src\UI\Overlay\NativeHudCanvas.h"><Filter>src\UI\Overlay</Filter></ClInclude>
+    <ClCompile Include="src\UI\RadarFeed\RadarFeedModel.cpp"><Filter>src\UI\RadarFeed</Filter></ClCompile>
+    <ClInclude Include="src\UI\RadarFeed\RadarFeedModel.h"><Filter>src\UI\RadarFeed</Filter></ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\UI\Overlay\HudTextAbi.h"><Filter>src\UI\Overlay</Filter></ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="src\ChatCommand"><UniqueIdentifier>{5389E06A-A37A-4606-86AA-F6590467C13E}</UniqueIdentifier></Filter>
+    <ClCompile Include="src\ChatCommand\ChatCommandState.cpp"><Filter>src\ChatCommand</Filter></ClCompile>
+    <ClInclude Include="src\ChatCommand\ChatCommandState.h"><Filter>src\ChatCommand</Filter></ClInclude>
+    <ClCompile Include="src\Game\ChatCommandGameAdapter.cpp"><Filter>src\Game</Filter></ClCompile>
+    <ClInclude Include="src\Game\ChatCommandGameAdapter.h"><Filter>src\Game</Filter></ClInclude>
+    <ClInclude Include="src\Game\TargetProfiles\ChatCommandProfile.h"><Filter>src\Game\TargetProfiles</Filter></ClInclude>
+    <ClCompile Include="src\Game\GameChatSpeedAdapter.cpp"><Filter>src\Game</Filter></ClCompile>
+    <ClInclude Include="src\Game\GameChatSpeedAdapter.h"><Filter>src\Game</Filter></ClInclude>
+    <ClInclude Include="src\Game\TargetProfiles\GameChatSpeedProfile.h"><Filter>src\Game\TargetProfiles</Filter></ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\UI\BeaconIndicator\BeaconReconcileSchedule.h"><Filter>src\UI\BeaconIndicator</Filter></ClInclude>
+    <ClCompile Include="src\UI\Overlay\HudTextCache.cpp"><Filter>src\UI\Overlay</Filter></ClCompile>
+    <ClInclude Include="src\UI\Overlay\HudTextCache.h"><Filter>src\UI\Overlay</Filter></ClInclude>
+    <ClInclude Include="src\UI\Overlay\HudPixelFormat.h"><Filter>src\UI\Overlay</Filter></ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\UI\Chat\ImePositionSchedule.h"><Filter>src\UI\Chat</Filter></ClInclude>
+  </ItemGroup>
 </Project>

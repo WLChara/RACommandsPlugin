@@ -55,6 +55,16 @@ namespace ra_commands::network_event
         return event;
     }
 
+    std::optional<NetworkEvent> BuildGameSpeedEvent(std::uint8_t houseIndex, int nativeSpeed)
+    {
+        if (nativeSpeed < 0 || nativeSpeed > 5) return std::nullopt;
+        NetworkEvent event{};
+        event.Kind = static_cast<std::uint8_t>(NetworkEventKind::GameSpeed);
+        event.HouseIndex = houseIndex;
+        event.Data.Value.Value = static_cast<std::uint32_t>(nativeSpeed);
+        return event;
+    }
+
     bool TryAppendNativeEvent(NativeOutListView outList,
         const NetworkEvent& event, std::uint32_t frame,
         std::uint32_t nowMs) noexcept

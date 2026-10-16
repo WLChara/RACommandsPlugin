@@ -51,7 +51,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <TargetMachine>MachineX86</TargetMachine>
       <AdditionalLibraryDirectories>$(MSBuildProjectDirectory)\third_party\libhat\Win32\Release\v143\static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libhat.lib;bcrypt.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libhat.lib;imm32.lib;bcrypt.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup Label="ProjectFiles">
@@ -648,7 +648,50 @@
     <ClCompile Include="src\Commands\DragFormationCommand\DragFormationProjection.cpp" />
     <ClInclude Include="src\Commands\DragFormationCommand\DragFormationProjection.h" />
   </ItemGroup>
+  <ItemGroup Label="ClientHud">
+    <ClInclude Include="src\UI\Overlay\HudTextAbi.h" />
+    <ClCompile Include="src\Commands\HudToggleCommand\HudToggleCommandRegistry.cpp" />
+    <ClInclude Include="src\Commands\HudToggleCommand\HudToggleCommandRegistry.h" />
+    <ClCompile Include="src\Game\GameAlertsUi.cpp" />
+    <ClInclude Include="src\Game\GameAlertsUi.h" />
+    <ClCompile Include="src\Game\GameChatUi.cpp" />
+    <ClInclude Include="src\Game\GameChatUi.h" />
+    <ClCompile Include="src\Game\GameHudUi.cpp" />
+    <ClInclude Include="src\Game\GameHudUi.h" />
+    <ClInclude Include="src\Game\TargetProfiles\AlertsUiProfile.h" />
+    <ClInclude Include="src\Game\TargetProfiles\ChatUiProfile.h" />
+    <ClInclude Include="src\Game\TargetProfiles\HudUiProfile.h" />
+    <ClCompile Include="src\Hooks\AlertsUiHook.cpp" />
+    <ClInclude Include="src\Hooks\AlertsUiHook.h" />
+    <ClInclude Include="src\Hooks\HudUiBridge.inl" />
+    <ClCompile Include="src\Hooks\HudUiHook.cpp" />
+    <ClInclude Include="src\Hooks\HudUiHook.h" />
+    <ClCompile Include="src\UI\BeaconIndicator\BeaconNoticeModel.cpp" />
+    <ClInclude Include="src\UI\BeaconIndicator\BeaconNoticeModel.h" />
+    <ClInclude Include="src\UI\BeaconIndicator\BeaconReconcileSchedule.h" />
+    <ClCompile Include="src\UI\Chat\ChatState.cpp" />
+    <ClInclude Include="src\UI\Chat\ChatState.h" />
+    <ClInclude Include="src\UI\Chat\ImePositionSchedule.h" />
+    <ClCompile Include="src\UI\Overlay\HudGeometry.cpp" />
+    <ClInclude Include="src\UI\Overlay\HudGeometry.h" />
+    <ClInclude Include="src\UI\Overlay\HudTypes.h" />
+    <ClCompile Include="src\UI\Overlay\NativeHudCanvas.cpp" />
+    <ClInclude Include="src\UI\Overlay\NativeHudCanvas.h" />
+    <ClCompile Include="src\UI\RadarFeed\RadarFeedModel.cpp" />
+    <ClInclude Include="src\UI\RadarFeed\RadarFeedModel.h" />
+  </ItemGroup>
   <ItemGroup Label="NewSourceFallback">
+    <ClCompile Include="src\ChatCommand\ChatCommandState.cpp" />
+    <ClCompile Include="src\UI\Overlay\HudTextCache.cpp" />
+    <ClInclude Include="src\UI\Overlay\HudTextCache.h" />
+    <ClInclude Include="src\UI\Overlay\HudPixelFormat.h" />
+    <ClInclude Include="src\ChatCommand\ChatCommandState.h" />
+    <ClCompile Include="src\Game\ChatCommandGameAdapter.cpp" />
+    <ClInclude Include="src\Game\ChatCommandGameAdapter.h" />
+    <ClInclude Include="src\Game\TargetProfiles\ChatCommandProfile.h" />
+    <ClCompile Include="src\Game\GameChatSpeedAdapter.cpp" />
+    <ClInclude Include="src\Game\GameChatSpeedAdapter.h" />
+    <ClInclude Include="src\Game\TargetProfiles\GameChatSpeedProfile.h" />
     <ClCompile Include="src\Commands\AutoFormationCommand\FormationCandidateBands.cpp" />
     <ClInclude Include="src\Commands\AutoFormationCommand\FormationCandidateBands.h" />
     <ClCompile Include="src\Commands\AutoFormationCommand\LargeFormationMatching.cpp" />

@@ -9,7 +9,7 @@ description: Develop or review native CommandClass features in RACommandsPlugin,
 
 ## 项目边界
 
-- 目标是 Win32 x86、MSVC v143 的注入式 DLL。`scripts/build.ps1` 构建 `Release|Win32` 并运行纯逻辑测试。
+- 目标是 Win32 x86、MSVC v143 的注入式 DLL。`scripts/build.ps1` 默认仅构建 `Release|Win32` DLL；本机持有测试工程时用 `-RunTests` 编译并运行纯逻辑测试。测试与安装器文件不随源码仓库分发。
 - `src/Commands/<命令名>/` 拥有命令专属的注册类、状态、规划器、服务、接口和游戏适配器；通用 `NativeCommandRegistry` 留在 `src/Commands/`。
 - 纯规划器和服务通过值对象及端口与游戏隔离，不直接引用 YRpp 或 Windows API。游戏对象布局、类型判断和指针解析属于游戏适配器及 `src/Game/`。
 - 需要下达 `ClickedMission` 时，复用 `src/ClickedMission/` 的调度队列。新增 Mission 必须在游戏适配器中核对参数形状、对象身份、当前归属和即时条件；不要让功能层直接操作原生 OutList。

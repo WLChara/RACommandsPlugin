@@ -14,6 +14,7 @@ namespace ra_commands::network_event
     enum class NetworkEventKind : std::uint8_t
     {
         Place = 0x0B,
+        GameSpeed = 0x0D,
         Produce = 0x0E,
         SpecialPlace = 0x12
     };
@@ -133,6 +134,9 @@ namespace ra_commands::network_event
     [[nodiscard]] NetworkEvent BuildSpecialPlaceEvent(
         std::uint8_t houseIndex, std::uint32_t houseSuperIndex,
         std::int16_t cellX, std::int16_t cellY);
+    /** 原生速度 0 最快、5 为命令支持的最慢档；不接受玩家界面的 1..6。 */
+    [[nodiscard]] std::optional<NetworkEvent> BuildGameSpeedEvent(
+        std::uint8_t houseIndex, int nativeSpeed);
 
     struct NativeOutListView
     {

@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
     [ValidatePattern('^[A-Za-z0-9_-]+$')]
-    [string]$GameSdkVersion = 'mo-7cd005d2'
+    [string]$GameSdkVersion = 'mo-7cd005d2',
+    [switch]$RunTests
 )
 
 $ErrorActionPreference = 'Stop'
@@ -43,19 +44,28 @@ if (-not (Test-Path -LiteralPath $msbuildPath -PathType Leaf)) {
     throw "MSBuild was not found: $msbuildPath"
 }
 
-$solutionPath = Join-Path $projectRoot 'RACommandsPlugin.sln'
-& $msbuildPath $solutionPath '/m' '/p:Configuration=Release' '/p:Platform=Win32' "/p:GameSdkVersion=$GameSdkVersion" '/verbosity:minimal'
+$pluginProject = Join-Path $projectRoot 'RACommandsPlugin.vcxproj'
+& $msbuildPath $pluginProject '/m' '/p:Configuration=Release' '/p:Platform=Win32' "/p:GameSdkVersion=$GameSdkVersion" '/verbosity:minimal'
 if ($LASTEXITCODE -ne 0) {
     throw "RACommandsPlugin Win32 Release build failed with exit code $LASTEXITCODE."
 }
 
-$testsPath = Join-Path $projectRoot 'build\Win32\Release\RACommandsPlugin.Tests.exe'
-if (-not (Test-Path -LiteralPath $testsPath -PathType Leaf)) {
-    throw "Pure test executable was not produced: $testsPath"
-}
-& $testsPath
-if ($LASTEXITCODE -ne 0) {
-    throw "RACommandsPlugin pure tests failed with exit code $LASTEXITCODE."
+if ($RunTests) {
+    # 测试工程与夹具由本机维护；默认源码发布和 DLL 构建不依赖它们。
+    $testsProject = Join-Path $projectRoot 'RACommandsPlugin.Tests.vcxproj'
+    if (-not (Test-Path -LiteralPath $testsProject -PathType Leaf)) {
+        throw 'Local test project is unavailable; omit -RunTests to build the plugin only.'
+    }
+    & $msbuildPath $testsProject '/m' '/p:Configuration=Release' '/p:Platform=Win32' "/p:GameSdkVersion=$GameSdkVersion" '/verbosity:minimal'
+    if ($LASTEXITCODE -ne 0) { throw "Local test build failed with exit code $LASTEXITCODE." }
+    $testsPath = Join-Path $projectRoot 'build\Win32\Release\RACommandsPlugin.Tests.exe'
+    if (-not (Test-Path -LiteralPath $testsPath -PathType Leaf)) {
+        throw "Pure test executable was not produced: $testsPath"
+    }
+    & $testsPath
+    if ($LASTEXITCODE -ne 0) {
+        throw "RACommandsPlugin pure tests failed with exit code $LASTEXITCODE."
+    }
 }
 
 Write-Host (Join-Path $projectRoot 'build\Win32\Release\RACommandsPlugin.dll')

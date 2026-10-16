@@ -11,3 +11,8 @@ AGENTS.md
 
 # 本机测试脚本不纳入版本控制
 /scripts/test-*
+
+# 测试工程、测试夹具与安装器仅保留在本机
+/RACommandsPlugin.Tests.*
+/src/Tests/
+/installer/
