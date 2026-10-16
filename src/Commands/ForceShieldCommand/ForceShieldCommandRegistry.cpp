@@ -1,6 +1,7 @@
 #include "Commands/ForceShieldCommand/ForceShieldCommandRegistry.h"
 
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -13,7 +14,7 @@ namespace ra_commands::game
                 : NativeCommandRegistry({
                     "RAForceShieldAtCursor",
                     L"在鼠标处释放力场护盾",
-                    L"插件",
+                    command_categories::SUPER_WEAPONS,
                     L"将已就绪的本方力场护盾释放到鼠标指向的地图格"
                 }), mCallback(callback)
             {

@@ -1,6 +1,7 @@
 #include "Commands/RangeDisplayCommand/RangeDisplayCommandRegistry.h"
 
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -13,7 +14,7 @@ namespace ra_commands::game
                 : NativeCommandRegistry({
                     "RARangeDisplay",
                     L"显示选中单位射程",
-                    L"插件",
+                    command_categories::DISPLAY_AND_TOOLS,
                     L"开启或关闭选中单位当前武器的静态射程圈"
                 }),
                 mCallback(callback)

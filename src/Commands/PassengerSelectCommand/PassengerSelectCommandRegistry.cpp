@@ -1,6 +1,7 @@
 #include "Commands/PassengerSelectCommand/PassengerSelectCommandRegistry.h"
 
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -13,7 +14,7 @@ namespace ra_commands::game
                 : NativeCommandRegistry({
                     "RAPassengerSelect",
                     L"按载员筛选",
-                    L"插件",
+                    command_categories::UNIT_SELECTION,
                     L"每次按键轮换筛选满载、未满载与空载单位"
                 }),
                 mCallback(callback)

@@ -2,6 +2,7 @@
 
 #include "Commands/IfvModeSelectCommand/IfvKeyPressTracker.h"
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -14,7 +15,7 @@ namespace ra_commands::game
                 : NativeCommandRegistry({
                     "RAIfvModeSelect",
                     L"IFV同类选择",
-                    L"插件",
+                    command_categories::UNIT_SELECTION,
                     L"单击时选择屏幕内与所选 IFV 模式相同的单位；双击时选择全场同类单位"
                 }),
                 mCallback(callback)

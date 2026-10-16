@@ -1,6 +1,7 @@
 #include "Commands/AutoCrushAddCommand/AutoCrushAddCommandRegistry.h"
 
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -13,7 +14,7 @@ namespace ra_commands::game
                 : NativeCommandRegistry({
                     "RAAutoCrushAddSelected",
                     L"选中单位自动碾压",
-                    L"插件",
+                    command_categories::COMBAT_ASSISTANCE,
                     L"将选中的可碾压载具加入持续自动碾压部队"
                 }),
                 mCallback(callback)

@@ -1,6 +1,7 @@
 #include "Commands/UnitKindSelectCommand/UnitKindSelectCommandRegistry.h"
 
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -13,7 +14,7 @@ namespace ra_commands::game
                 : NativeCommandRegistry({
                     "RAUnitKindSelect",
                     L"按兵种筛选",
-                    L"插件",
+                    command_categories::UNIT_SELECTION,
                     L"每次按键轮换筛选载具、步兵与飞机"
                 }),
                 mCallback(callback)

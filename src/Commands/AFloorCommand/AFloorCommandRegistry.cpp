@@ -1,6 +1,7 @@
 #include "Commands/AFloorCommand/AFloorCommandRegistry.h"
 
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -13,7 +14,7 @@ namespace ra_commands::game
                 : NativeCommandRegistry({
                     "RAAFloorMode",
                     L"A地板模式",
-                    L"插件",
+                    command_categories::COMBAT_ASSISTANCE,
                     L"开启或关闭仅作用于本地输入的A地板模式"
                 }),
                 mCallback(callback)

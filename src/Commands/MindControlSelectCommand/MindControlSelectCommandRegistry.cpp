@@ -1,6 +1,7 @@
 #include "Commands/MindControlSelectCommand/MindControlSelectCommandRegistry.h"
 
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -13,7 +14,7 @@ namespace ra_commands::game
                 : NativeCommandRegistry({
                     "RAMindControlSelect",
                     L"筛选心控单位",
-                    L"插件",
+                    command_categories::UNIT_SELECTION,
                     L"每次按键轮换筛选被心灵控制与未被心灵控制的单位"
                 }),
                 mCallback(callback)

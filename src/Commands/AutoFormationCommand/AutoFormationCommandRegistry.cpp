@@ -1,6 +1,7 @@
 #include "Commands/AutoFormationCommand/AutoFormationCommandRegistry.h"
 
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -13,7 +14,7 @@ namespace ra_commands::game
                 : NativeCommandRegistry({
                     "RAAutoFormation",
                     L"自动列队",
-                    L"插件",
+                    command_categories::FORMATION_AND_TRANSPORT,
                     L"将选中的本方步兵和载具向中心紧密列队；陆空分层，步兵每格最多3人，载具1辆，不含飞机类单位"
                 }), mCallback(callback)
             {

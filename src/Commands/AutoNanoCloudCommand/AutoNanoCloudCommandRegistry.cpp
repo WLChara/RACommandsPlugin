@@ -1,6 +1,7 @@
 #include "Commands/AutoNanoCloudCommand/AutoNanoCloudCommandRegistry.h"
 
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -13,7 +14,7 @@ namespace ra_commands::game
                 : NativeCommandRegistry({
                     "RAAutoNanoCloud",
                     L"焚风步兵击杀回血",
-                    L"插件",
+                    command_categories::COMBAT_ASSISTANCE,
                     L"命令选中的猎杀者击杀低价值友方步兵以制造纳米云"
                 }),
                 mCallback(callback)

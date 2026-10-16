@@ -1,6 +1,7 @@
 #include "Commands/AutoSuperWeapon/AutoSuperWeaponCommandRegistry.h"
 
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -75,7 +76,7 @@ namespace ra_commands::game
             g_IronCurtainRegistry = new AutoSuperWeaponToggleRegistry({
                 "RAAutoIronCurtain",
                 L"自动释放铁幕",
-                L"插件",
+                command_categories::SUPER_WEAPONS,
                 L"开启或关闭对选中地面载具的自动铁幕释放"
             }, callback);
         }
@@ -96,7 +97,7 @@ namespace ra_commands::game
             g_RageInductorRegistry = new AutoSuperWeaponToggleRegistry({
                 "RAAutoRageInductor",
                 L"自动释放狂暴",
-                L"插件",
+                command_categories::SUPER_WEAPONS,
                 L"开启或关闭对选中步兵和地面载具的自动狂暴释放"
             }, callback);
         }

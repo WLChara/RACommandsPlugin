@@ -2,6 +2,7 @@
 
 #include "Commands/AutoBuild/AutoBuildKeyPressTracker.h"
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -60,7 +61,7 @@ namespace ra_commands::game
             g_MainAutoBuildRegistry = new AutoBuildToggleRegistry({
                 "RAAutoContinueMainBuild",
                 L"主建造栏自动续建",
-                L"插件",
+                command_categories::BUILDING_MANAGEMENT,
                 L"开启或关闭主建造栏自动续建；记录当前或下次手动建造的建筑"
             }, callback);
         }
@@ -81,7 +82,7 @@ namespace ra_commands::game
             g_DefenseAutoBuildRegistry = new AutoBuildToggleRegistry({
                 "RAAutoContinueDefenseBuild",
                 L"防御建造栏自动续建",
-                L"插件",
+                command_categories::BUILDING_MANAGEMENT,
                 L"开启或关闭防御建造栏自动续建；记录当前或下次手动建造的建筑"
             }, callback);
         }

@@ -1,6 +1,7 @@
 #include "Commands/AutoCrushRemoveCommand/AutoCrushRemoveCommandRegistry.h"
 
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -13,7 +14,7 @@ namespace ra_commands::game
                 : NativeCommandRegistry({
                     "RAAutoCrushRemoveSelected",
                     L"退出自动碾压",
-                    L"插件",
+                    command_categories::COMBAT_ASSISTANCE,
                     L"取消选中载具的自动碾压标记和待发任务，不中断当前移动"
                 }),
                 mCallback(callback)

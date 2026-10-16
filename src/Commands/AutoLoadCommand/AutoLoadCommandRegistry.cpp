@@ -1,6 +1,7 @@
 #include "Commands/AutoLoadCommand/AutoLoadCommandRegistry.h"
 
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -13,7 +14,7 @@ namespace ra_commands::game
                 : NativeCommandRegistry({
                     "YRHMAutoLoad",
                     L"自动装车",
-                    L"插件",
+                    command_categories::FORMATION_AND_TRANSPORT,
                     L"令选中的单位执行一次自动装车"
                 }),
                 mCallback(callback)

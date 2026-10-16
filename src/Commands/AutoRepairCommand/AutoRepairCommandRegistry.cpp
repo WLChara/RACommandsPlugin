@@ -1,6 +1,7 @@
 #include "Commands/AutoRepairCommand/AutoRepairCommandRegistry.h"
 
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -13,7 +14,7 @@ namespace ra_commands::game
                 : NativeCommandRegistry({
                     "RAAutoRepairAllBuildings",
                     L"自动修理全部建筑物",
-                    L"插件",
+                    command_categories::BUILDING_MANAGEMENT,
                     L"开启或关闭自动修理本方受损建筑物"
                 }),
                 mCallback(callback)

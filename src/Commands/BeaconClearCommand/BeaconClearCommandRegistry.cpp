@@ -1,6 +1,7 @@
 #include "Commands/BeaconClearCommand/BeaconClearCommandRegistry.h"
 
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -13,7 +14,7 @@ namespace ra_commands::game
                 : NativeCommandRegistry({
                     "RAClearAllPlayerBeacons",
                     L"清除所有信标",
-                    L"插件",
+                    command_categories::DISPLAY_AND_TOOLS,
                     L"尝试清除全场所有玩家信标；需联机验证"
                 }),
                 mCallback(callback)

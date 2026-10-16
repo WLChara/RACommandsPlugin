@@ -1330,6 +1330,9 @@
     <ClInclude Include="src\Commands\NativeCommandRegistry.h">
       <Filter>src\Commands</Filter>
     </ClInclude>
+    <ClInclude Include="src\Commands\CommandCategories.h">
+      <Filter>src\Commands</Filter>
+    </ClInclude>
     <ClCompile Include="src\Game\TargetVersion.cpp">
       <Filter>src\Game</Filter>
     </ClCompile>

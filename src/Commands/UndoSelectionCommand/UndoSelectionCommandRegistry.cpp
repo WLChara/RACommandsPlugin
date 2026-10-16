@@ -1,6 +1,7 @@
 #include "Commands/UndoSelectionCommand/UndoSelectionCommandRegistry.h"
 
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -13,7 +14,7 @@ namespace ra_commands::game
                 : NativeCommandRegistry({
                     "RAUndoSelection",
                     L"撤销选择",
-                    L"插件",
+                    command_categories::UNIT_SELECTION,
                     L"每次按键恢复一条历史选择记录，最多保留最近 12 次"
                 }),
                 mCallback(callback)

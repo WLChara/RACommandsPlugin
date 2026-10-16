@@ -1,6 +1,7 @@
 #include "Commands/SafeModeToggleCommand/SafeModeToggleCommandRegistry.h"
 
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -13,7 +14,7 @@ namespace ra_commands::game
                 : NativeCommandRegistry({
                     "RASafeModeToggle",
                     L"切换安全模式",
-                    L"插件",
+                    command_categories::DISPLAY_AND_TOOLS,
                     L"开启或关闭安全模式，调整部分功能强度"
                 }),
                 mCallback(callback)

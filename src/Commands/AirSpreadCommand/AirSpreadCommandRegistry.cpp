@@ -1,6 +1,7 @@
 #include "Commands/AirSpreadCommand/AirSpreadCommandRegistry.h"
 
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -13,7 +14,7 @@ namespace ra_commands::game
                 : NativeCommandRegistry({
                     "RAAirSpreadMove",
                     L"空军分散移动",
-                    L"插件",
+                    command_categories::FORMATION_AND_TRANSPORT,
                     L"将选中的飞行单位分散移动到鼠标附近"
                 }),
                 mCallback(callback)

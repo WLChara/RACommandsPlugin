@@ -1,6 +1,7 @@
 #include "Commands/TeslaChargeCommand/TeslaChargeCommandRegistry.h"
 
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -13,7 +14,7 @@ namespace ra_commands::game
                 : NativeCommandRegistry({
                     "RAAutoTeslaCharge",
                     L"自动为线圈充电",
-                    L"插件",
+                    command_categories::BUILDING_MANAGEMENT,
                     L"开启或关闭为磁暴线圈自动充能"
                 }),
                 mCallback(callback)

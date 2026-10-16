@@ -468,6 +468,7 @@
     <ClInclude Include="src\Hooks\RangeDisplayHook.h" />
     <ClCompile Include="src\Commands\NativeCommandRegistry.cpp" />
     <ClInclude Include="src\Commands\NativeCommandRegistry.h" />
+    <ClInclude Include="src\Commands\CommandCategories.h" />
     <ClCompile Include="src\Game\TargetVersion.cpp" />
     <ClInclude Include="src\Game\TargetVersion.h" />
     <ClCompile Include="src\Game\YRppAbiSmoke.cpp" />

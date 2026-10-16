@@ -1,6 +1,7 @@
 #include "Commands/AmmoSelectCommand/AmmoSelectCommandRegistry.h"
 
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -13,7 +14,7 @@ namespace ra_commands::game
                 : NativeCommandRegistry({
                     "RAAmmoSelect",
                     L"按弹药筛选",
-                    L"插件",
+                    command_categories::UNIT_SELECTION,
                     L"每次按键轮换筛选满弹、未满弹与无弹药单位"
                 }),
                 mCallback(callback)

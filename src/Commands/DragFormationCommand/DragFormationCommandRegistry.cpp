@@ -1,6 +1,7 @@
 #include "Commands/DragFormationCommand/DragFormationCommandRegistry.h"
 
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -11,7 +12,7 @@ namespace ra_commands::game
         public:
             explicit DragFormationCommandRegistry(void(*callback)())
                 : NativeCommandRegistry({"RADragFormationDemo", L"拖拽矩形编队（演示）",
-                    L"插件", L"本方步兵和载具矩形编队，不含飞机类单位；同时按住左右键0.5秒拖拽，松开执行，Esc取消"}),
+                    command_categories::FORMATION_AND_TRANSPORT, L"本方步兵和载具矩形编队，不含飞机类单位；同时按住左右键0.5秒拖拽，松开执行，Esc取消"}),
                   mCallback(callback) { }
 
         protected:

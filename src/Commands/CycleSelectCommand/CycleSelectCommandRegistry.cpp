@@ -1,6 +1,7 @@
 #include "Commands/CycleSelectCommand/CycleSelectCommandRegistry.h"
 
 #include "Commands/NativeCommandRegistry.h"
+#include "Commands/CommandCategories.h"
 
 namespace ra_commands::game
 {
@@ -13,7 +14,7 @@ namespace ra_commands::game
                 : NativeCommandRegistry({
                     "RACycleSelect",
                     L"逐个选择单位",
-                    L"插件",
+                    command_categories::UNIT_SELECTION,
                     L"每次按键依次选择下一个符合条件的单位"
                 }),
                 mCallback(callback)
